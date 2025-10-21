@@ -73,7 +73,7 @@ const CheckoutCustomizer = () => {
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden">
           {/* Preview */}
-          <div className="flex-1 p-6 overflow-auto bg-muted/20">
+          <div className="flex-1 overflow-auto">
             <CheckoutPreview customization={customization} />
           </div>
 

@@ -1,15 +1,26 @@
-import { useState } from "react";
-import { CreditCard, User, CreditCard as CardIcon } from "lucide-react";
-import { CheckoutCustomization, ViewMode, CheckoutComponent, LayoutType } from "@/pages/CheckoutCustomizer";
+import { CheckoutCustomization, CheckoutComponent, CheckoutRow, ViewMode } from "@/pages/CheckoutCustomizer";
+import { CreditCard, User, CreditCard as CardIcon, Trash2 } from "lucide-react";
+
+interface CheckoutPreviewProps {
+  customization: CheckoutCustomization;
+  viewMode: ViewMode;
+  onAddComponent: (type: CheckoutComponent["type"], rowId?: string) => void;
+  selectedComponentId: string | null;
+  onSelectComponent: (id: string | null) => void;
+  selectedRow: string;
+  onSelectRow: (id: string) => void;
+}
 
 const ComponentRenderer = ({ 
   component, 
   isSelected, 
-  onClick 
+  onClick,
+  customization
 }: { 
   component: CheckoutComponent;
   isSelected: boolean;
   onClick: () => void;
+  customization: CheckoutCustomization;
 }) => {
   const baseClasses = `cursor-pointer transition-all ${
     isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:ring-1 hover:ring-primary/50"
@@ -125,186 +136,94 @@ const ComponentRenderer = ({
   }
 };
 
-const LayoutRenderer = ({ 
-  layout, 
-  components, 
-  isDragOver,
-  onDragOver,
-  onDragLeave,
-  onDrop,
+const RowRenderer = ({ 
+  row,
+  customization,
   selectedComponentId,
-  onSelectComponent
-}: {
-  layout: LayoutType;
-  components: CheckoutComponent[];
-  isDragOver: boolean;
-  onDragOver: (e: React.DragEvent) => void;
-  onDragLeave: () => void;
-  onDrop: (e: React.DragEvent) => void;
-  selectedComponentId: string | null;
-  onSelectComponent: (id: string) => void;
-}) => {
-  const baseClasses = `rounded-lg border-2 border-dashed transition-all ${
-    isDragOver
-      ? "border-primary bg-primary/5"
-      : components.length === 0
-      ? "border-white/20 bg-white/5 min-h-[120px]"
-      : "border-transparent"
-  }`;
-
-  const emptyState = (
-    <div className="flex items-center justify-center h-[120px]">
-      <p className="text-sm text-muted-foreground">
-        Arraste componentes aqui
-      </p>
-    </div>
-  );
-
-  const renderComponents = (
-    <div className="space-y-3 p-4">
-      {components.map((component) => (
-        <ComponentRenderer 
-          key={component.id} 
-          component={component}
-          isSelected={selectedComponentId === component.id}
-          onClick={() => onSelectComponent(component.id)}
-        />
-      ))}
-    </div>
-  );
-
-  // Layout único (padrão)
-  if (layout === "single") {
-    return (
-      <div
-        onDragOver={onDragOver}
-        onDragLeave={onDragLeave}
-        onDrop={onDrop}
-        className={baseClasses}
-      >
-        {components.length === 0 ? emptyState : renderComponents}
-      </div>
-    );
-  }
-
-  // Layout de 2 colunas iguais
-  if (layout === "two-columns") {
-    return (
-      <div className="grid grid-cols-2 gap-4">
-        <div
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          className={baseClasses}
-        >
-          {components.length === 0 ? emptyState : renderComponents}
-        </div>
-        <div
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          className={baseClasses}
-        >
-          {components.length === 0 ? emptyState : renderComponents}
-        </div>
-      </div>
-    );
-  }
-
-  // Layout de 2 colunas assimétricas (1/3 - 2/3)
-  if (layout === "two-columns-asymmetric") {
-    return (
-      <div className="grid grid-cols-3 gap-4">
-        <div
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          className={baseClasses}
-        >
-          {components.length === 0 ? emptyState : renderComponents}
-        </div>
-        <div
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          className={`col-span-2 ${baseClasses}`}
-        >
-          {components.length === 0 ? emptyState : renderComponents}
-        </div>
-      </div>
-    );
-  }
-
-  // Layout de 3 colunas
-  if (layout === "three-columns") {
-    return (
-      <div className="grid grid-cols-3 gap-4">
-        <div
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          className={baseClasses}
-        >
-          {components.length === 0 ? emptyState : renderComponents}
-        </div>
-        <div
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          className={baseClasses}
-        >
-          {components.length === 0 ? emptyState : renderComponents}
-        </div>
-        <div
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          className={baseClasses}
-        >
-          {components.length === 0 ? emptyState : renderComponents}
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-};
-
-interface CheckoutPreviewProps {
+  onSelectComponent,
+  isSelected,
+  onSelectRow,
+}: { 
+  row: CheckoutRow;
   customization: CheckoutCustomization;
-  viewMode: ViewMode;
-  onAddComponent: (type: CheckoutComponent["type"]) => void;
   selectedComponentId: string | null;
-  onSelectComponent: (id: string) => void;
-}
+  onSelectComponent: (id: string | null) => void;
+  isSelected: boolean;
+  onSelectRow: (id: string) => void;
+}) => {
+  const { layout, components, id: rowId } = row;
+
+  const renderColumn = (columnComponents: CheckoutComponent[]) => (
+    <div 
+      className="min-h-[200px] rounded-lg border-2 border-dashed border-muted-foreground/30 p-4 flex flex-col gap-3"
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelectRow(rowId);
+      }}
+    >
+      {columnComponents.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          Arraste componentes aqui
+        </div>
+      ) : (
+        columnComponents.map((component) => (
+          <ComponentRenderer
+            key={component.id}
+            component={component}
+            customization={customization}
+            isSelected={selectedComponentId === component.id}
+            onClick={() => onSelectComponent(component.id)}
+          />
+        ))
+      )}
+    </div>
+  );
+
+  return (
+    <div 
+      className={`w-full rounded-lg p-2 transition-all ${isSelected ? 'ring-2 ring-primary' : ''}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelectRow(rowId);
+      }}
+    >
+      {layout === "single" && renderColumn(components)}
+      
+      {layout === "two-columns" && (
+        <div className="grid grid-cols-2 gap-4">
+          {renderColumn(components.slice(0, Math.ceil(components.length / 2)))}
+          {renderColumn(components.slice(Math.ceil(components.length / 2)))}
+        </div>
+      )}
+      
+      {layout === "two-columns-asymmetric" && (
+        <div className="grid grid-cols-3 gap-4">
+          <div className="col-span-1">{renderColumn(components.slice(0, Math.ceil(components.length / 2)))}</div>
+          <div className="col-span-2">{renderColumn(components.slice(Math.ceil(components.length / 2)))}</div>
+        </div>
+      )}
+      
+      {layout === "three-columns" && (
+        <div className="grid grid-cols-3 gap-4">
+          {renderColumn(components.slice(0, Math.ceil(components.length / 3)))}
+          {renderColumn(components.slice(Math.ceil(components.length / 3), Math.ceil(2 * components.length / 3)))}
+          {renderColumn(components.slice(Math.ceil(2 * components.length / 3)))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const CheckoutPreview = ({ 
   customization, 
-  viewMode, 
+  viewMode,
   onAddComponent,
   selectedComponentId,
-  onSelectComponent 
+  onSelectComponent,
+  selectedRow,
+  onSelectRow,
 }: CheckoutPreviewProps) => {
-  const [isDragOver, setIsDragOver] = useState(false);
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const componentType = e.dataTransfer.getData("componentType");
-    if (componentType) {
-      onAddComponent(componentType as CheckoutComponent["type"]);
-    }
-  };
   if (viewMode === "mobile") {
     return (
       <div 
@@ -315,17 +234,23 @@ export const CheckoutPreview = ({
         }}
       >
         <div className="w-full max-w-md space-y-4">
-          {/* Drop Zone for Components - Mobile always uses single layout */}
-          <LayoutRenderer
-            layout="single"
-            components={customization.components}
-            isDragOver={isDragOver}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            selectedComponentId={selectedComponentId}
-            onSelectComponent={onSelectComponent}
-          />
+          {/* Rows Area - Mobile always uses single layout */}
+          <div className="space-y-4">
+            {customization.rows.map((row) => (
+              <RowRenderer
+                key={row.id}
+                row={{
+                  ...row,
+                  layout: "single",
+                }}
+                customization={customization}
+                selectedComponentId={selectedComponentId}
+                onSelectComponent={onSelectComponent}
+                isSelected={selectedRow === row.id}
+                onSelectRow={onSelectRow}
+              />
+            ))}
+          </div>
 
           {/* Product Header */}
           <div
@@ -534,17 +459,20 @@ export const CheckoutPreview = ({
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column - Form */}
         <div className="space-y-6">
-          {/* Drop Zone for Components - Desktop uses selected layout */}
-          <LayoutRenderer
-            layout={customization.layout}
-            components={customization.components}
-            isDragOver={isDragOver}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            selectedComponentId={selectedComponentId}
-            onSelectComponent={onSelectComponent}
-          />
+          {/* Rows Area */}
+          <div className="space-y-4">
+            {customization.rows.map((row) => (
+              <RowRenderer
+                key={row.id}
+                row={row}
+                customization={customization}
+                selectedComponentId={selectedComponentId}
+                onSelectComponent={onSelectComponent}
+                isSelected={selectedRow === row.id}
+                onSelectRow={onSelectRow}
+              />
+            ))}
+          </div>
 
           {/* Product Info */}
           <div

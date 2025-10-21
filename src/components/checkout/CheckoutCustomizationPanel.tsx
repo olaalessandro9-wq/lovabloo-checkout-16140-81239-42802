@@ -1,21 +1,25 @@
-import { CheckoutCustomization, CheckoutComponent, LayoutType, ViewMode } from "@/pages/CheckoutCustomizer";
+import { CheckoutCustomization, CheckoutComponent, CheckoutRow, ViewMode, LayoutType } from "@/pages/CheckoutCustomizer";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Type, Image, CheckCircle, Award, Clock, MessageSquare, Columns2, Columns3, RectangleHorizontal } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Type, Image, CheckCircle, Award, Clock, MessageSquare, Columns2, Columns3, RectangleHorizontal, Trash2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface CheckoutCustomizationPanelProps {
   customization: CheckoutCustomization;
   onChange: (customization: CheckoutCustomization) => void;
-  onAddComponent: (type: CheckoutComponent["type"]) => void;
+  onAddComponent: (type: CheckoutComponent["type"], rowId?: string) => void;
+  onAddRow: (layout: LayoutType) => void;
+  onDeleteRow: (rowId: string) => void;
   selectedComponentId: string | null;
   onUpdateComponent: (componentId: string, updates: Partial<CheckoutComponent>) => void;
   onDeleteComponent: (componentId: string) => void;
   onDeselectComponent: () => void;
   viewMode: ViewMode;
+  selectedRow: string;
+  onSelectRow: (id: string) => void;
 }
 
 const ColorPicker = ({
@@ -119,24 +123,28 @@ const componentItems = [
   { id: "testimonial", label: "Depoimento", icon: MessageSquare },
 ];
 
-const layoutItems = [
-  { id: "single" as LayoutType, label: "1 Coluna", icon: RectangleHorizontal },
-  { id: "two-columns" as LayoutType, label: "2 Colunas", icon: Columns2 },
-  { id: "two-columns-asymmetric" as LayoutType, label: "2 Colunas Assimétrico", icon: Columns2 },
-  { id: "three-columns" as LayoutType, label: "3 Colunas", icon: Columns3 },
-];
-
 export const CheckoutCustomizationPanel = ({
   customization,
   onChange,
   onAddComponent,
+  onAddRow,
+  onDeleteRow,
   selectedComponentId,
   onUpdateComponent,
   onDeleteComponent,
   onDeselectComponent,
   viewMode,
+  selectedRow,
+  onSelectRow,
 }: CheckoutCustomizationPanelProps) => {
-  const selectedComponent = customization.components.find(c => c.id === selectedComponentId);
+  // Encontrar o componente e linha selecionados
+  const selectedRowData = customization.rows.find(row => row.id === selectedRow);
+  let selectedComponent: CheckoutComponent | undefined;
+  for (const row of customization.rows) {
+    selectedComponent = row.components.find(comp => comp.id === selectedComponentId);
+    if (selectedComponent) break;
+  }
+
   const updateCustomization = (
     key: keyof CheckoutCustomization,
     value: string
@@ -152,7 +160,7 @@ export const CheckoutCustomizationPanel = ({
       <Tabs defaultValue="components" className="flex-1 flex flex-col h-full">
         <TabsList className="w-full grid grid-cols-3 rounded-none border-b">
           <TabsTrigger value="components">Componentes</TabsTrigger>
-          <TabsTrigger value="lines">Linhas</TabsTrigger>
+          <TabsTrigger value="linhas">Linhas</TabsTrigger>
           <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
 
@@ -453,7 +461,7 @@ export const CheckoutCustomizationPanel = ({
                     Componentes
                   </h2>
                   <p className="text-sm text-muted-foreground mb-6">
-                    Arraste componentes para personalizar seu checkout
+                    Clique para adicionar componentes à linha selecionada
                   </p>
                   
                   <div className="grid grid-cols-2 gap-3">
@@ -462,12 +470,8 @@ export const CheckoutCustomizationPanel = ({
                       return (
                         <Card
                           key={item.id}
-                          draggable
-                          onDragStart={(e) => {
-                            e.dataTransfer.setData("componentType", item.id);
-                          }}
-                          onClick={() => onAddComponent(item.id as CheckoutComponent["type"])}
-                          className="p-4 flex flex-col items-center justify-center gap-2 cursor-move hover:bg-accent transition-colors h-24 active:opacity-50"
+                          onClick={() => onAddComponent(item.id as CheckoutComponent["type"], selectedRow)}
+                          className="p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-accent transition-colors h-24"
                         >
                           <Icon className="w-6 h-6 text-muted-foreground" />
                           <span className="text-sm font-medium">{item.label}</span>
@@ -482,52 +486,116 @@ export const CheckoutCustomizationPanel = ({
         </TabsContent>
 
         {/* Linhas Tab */}
-        <TabsContent value="lines" className="flex-1 mt-0">
+        <TabsContent value="linhas" className="space-y-4 mt-4">
           <ScrollArea className="h-full">
-            <div className="p-6">
-              <h2 className="text-lg font-semibold mb-2 text-foreground">
-                Layout
-              </h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                Escolha o layout para organizar seus componentes {viewMode === "mobile" && "(Apenas layout padrão disponível no mobile)"}
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Adicione e gerencie linhas com diferentes layouts:
               </p>
               
-              <div className="space-y-3">
-                {layoutItems.map((item) => {
-                  const Icon = item.icon;
-                  const isDisabled = viewMode === "mobile" && item.id !== "single";
-                  const isSelected = customization.layout === item.id;
-                  
-                  return (
-                    <Card
-                      key={item.id}
-                      onClick={() => {
-                        if (!isDisabled) {
-                          onChange({ ...customization, layout: item.id });
-                        }
-                      }}
-                      className={`p-4 flex items-center gap-3 transition-all ${
-                        isDisabled 
-                          ? "opacity-40 cursor-not-allowed" 
-                          : "cursor-pointer hover:bg-accent"
-                      } ${
-                        isSelected ? "ring-2 ring-primary" : ""
-                      }`}
-                    >
-                      <div className={`w-12 h-12 rounded flex items-center justify-center ${
-                        isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
-                      }`}>
-                        <Icon className="w-6 h-6" />
+              {viewMode === "mobile" && (
+                <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                  No modo mobile, todas as linhas são exibidas em coluna única.
+                </div>
+              )}
+
+              {/* Lista de linhas existentes */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Linhas Atuais:</p>
+                {customization.rows.map((row, index) => (
+                  <Card 
+                    key={row.id}
+                    className={`cursor-pointer transition-all hover:border-primary ${
+                      selectedRow === row.id ? "border-primary" : ""
+                    }`}
+                    onClick={() => onSelectRow(row.id)}
+                  >
+                    <CardContent className="p-3 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {row.layout === "single" && <RectangleHorizontal className="w-4 h-4" />}
+                        {row.layout === "two-columns" && <Columns2 className="w-4 h-4" />}
+                        {row.layout === "two-columns-asymmetric" && <Columns2 className="w-4 h-4" />}
+                        {row.layout === "three-columns" && <Columns3 className="w-4 h-4" />}
+                        <span className="text-sm">
+                          Linha {index + 1} - {row.components.length} componente(s)
+                        </span>
                       </div>
-                      <div className="flex-1">
-                        <span className="text-sm font-medium block">{item.label}</span>
-                        {isDisabled && (
-                          <span className="text-xs text-muted-foreground">Disponível apenas no desktop</span>
-                        )}
+                      {customization.rows.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteRow(row.id);
+                          }}
+                          className="h-8 px-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Adicionar novas linhas */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Adicionar Nova Linha:</p>
+                <div className="grid gap-2">
+                  <Card 
+                    className="cursor-pointer transition-all hover:border-primary"
+                    onClick={() => onAddRow("single")}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <RectangleHorizontal className="w-4 h-4 text-muted-foreground" />
+                        <p className="text-sm font-medium">1 Coluna</p>
                       </div>
-                    </Card>
-                  );
-                })}
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className={`cursor-pointer transition-all hover:border-primary ${
+                      viewMode === "mobile" ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    onClick={() => viewMode !== "mobile" && onAddRow("two-columns")}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Columns2 className="w-4 h-4 text-muted-foreground" />
+                        <p className="text-sm font-medium">2 Colunas Iguais</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className={`cursor-pointer transition-all hover:border-primary ${
+                      viewMode === "mobile" ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    onClick={() => viewMode !== "mobile" && onAddRow("two-columns-asymmetric")}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Columns2 className="w-4 h-4 text-muted-foreground" />
+                        <p className="text-sm font-medium">2 Colunas Assimétricas</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card 
+                    className={`cursor-pointer transition-all hover:border-primary ${
+                      viewMode === "mobile" ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    onClick={() => viewMode !== "mobile" && onAddRow("three-columns")}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <Columns3 className="w-4 h-4 text-muted-foreground" />
+                        <p className="text-sm font-medium">3 Colunas</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </div>
           </ScrollArea>

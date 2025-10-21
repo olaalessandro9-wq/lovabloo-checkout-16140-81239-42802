@@ -15,6 +15,12 @@ export interface CheckoutComponent {
 
 export type LayoutType = "single" | "two-columns" | "two-columns-asymmetric" | "three-columns";
 
+export interface CheckoutRow {
+  id: string;
+  layout: LayoutType;
+  components: CheckoutComponent[];
+}
+
 export interface CheckoutCustomization {
   primaryColor: string;
   secondaryColor: string;
@@ -25,8 +31,7 @@ export interface CheckoutCustomization {
   formBackgroundColor: string;
   selectedPaymentColor: string;
   font: string;
-  layout: LayoutType;
-  components: CheckoutComponent[];
+  rows: CheckoutRow[];
 }
 
 const CheckoutCustomizer = () => {
@@ -45,13 +50,49 @@ const CheckoutCustomizer = () => {
     formBackgroundColor: "hsl(216, 15%, 18%)",
     selectedPaymentColor: "hsl(142, 76%, 36%)",
     font: "Inter",
-    layout: "single",
-    components: [],
+    rows: [
+      {
+        id: "row-1",
+        layout: "single",
+        components: [],
+      },
+    ],
   });
+
+  const [selectedRow, setSelectedRow] = useState<string>("row-1");
 
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
 
-  const handleAddComponent = (type: CheckoutComponent["type"]) => {
+  const handleAddRow = (layout: LayoutType) => {
+    const newRow: CheckoutRow = {
+      id: `row-${Date.now()}`,
+      layout,
+      components: [],
+    };
+    setCustomization({
+      ...customization,
+      rows: [...customization.rows, newRow],
+    });
+    setSelectedRow(newRow.id);
+  };
+
+  const handleDeleteRow = (rowId: string) => {
+    const updatedRows = customization.rows.filter(row => row.id !== rowId);
+    setCustomization({
+      ...customization,
+      rows: updatedRows.length > 0 ? updatedRows : [{
+        id: "row-1",
+        layout: "single",
+        components: [],
+      }],
+    });
+    if (selectedRow === rowId) {
+      setSelectedRow(updatedRows[0]?.id || "row-1");
+    }
+  };
+
+  const handleAddComponent = (type: CheckoutComponent["type"], rowId?: string) => {
+    const targetRowId = rowId || selectedRow;
     const newComponent: CheckoutComponent = {
       id: `${type}-${Date.now()}`,
       type,
@@ -72,7 +113,11 @@ const CheckoutCustomizer = () => {
     };
     setCustomization({
       ...customization,
-      components: [...customization.components, newComponent],
+      rows: customization.rows.map(row =>
+        row.id === targetRowId
+          ? { ...row, components: [...row.components, newComponent] }
+          : row
+      ),
     });
     setSelectedComponent(newComponent.id);
   };
@@ -80,16 +125,22 @@ const CheckoutCustomizer = () => {
   const handleUpdateComponent = (componentId: string, updates: Partial<CheckoutComponent>) => {
     setCustomization({
       ...customization,
-      components: customization.components.map(comp =>
-        comp.id === componentId ? { ...comp, ...updates } : comp
-      ),
+      rows: customization.rows.map(row => ({
+        ...row,
+        components: row.components.map(comp =>
+          comp.id === componentId ? { ...comp, ...updates } : comp
+        ),
+      })),
     });
   };
 
   const handleDeleteComponent = (componentId: string) => {
     setCustomization({
       ...customization,
-      components: customization.components.filter(comp => comp.id !== componentId),
+      rows: customization.rows.map(row => ({
+        ...row,
+        components: row.components.filter(comp => comp.id !== componentId),
+      })),
     });
     if (selectedComponent === componentId) {
       setSelectedComponent(null);
@@ -166,6 +217,8 @@ const CheckoutCustomizer = () => {
             onAddComponent={handleAddComponent}
             selectedComponentId={selectedComponent}
             onSelectComponent={setSelectedComponent}
+            selectedRow={selectedRow}
+            onSelectRow={setSelectedRow}
           />
         </div>
 
@@ -174,11 +227,15 @@ const CheckoutCustomizer = () => {
           customization={customization}
           onChange={setCustomization}
           onAddComponent={handleAddComponent}
+          onAddRow={handleAddRow}
+          onDeleteRow={handleDeleteRow}
           selectedComponentId={selectedComponent}
           onUpdateComponent={handleUpdateComponent}
           onDeleteComponent={handleDeleteComponent}
           onDeselectComponent={() => setSelectedComponent(null)}
           viewMode={viewMode}
+          selectedRow={selectedRow}
+          onSelectRow={setSelectedRow}
         />
       </div>
     </div>

@@ -322,13 +322,6 @@ const ProductEdit = () => {
     });
   };
 
-  const handleCustomizeLink = (link: CheckoutLink) => {
-    toast({
-      title: "Personalização",
-      description: "Funcionalidade de personalização em desenvolvimento",
-    });
-  };
-
   const handleDeleteLink = (id: string) => {
     const link = checkoutLinks.find(l => l.id === id);
     
@@ -1022,7 +1015,6 @@ const ProductEdit = () => {
                 onAdd={handleAddLink}
                 onToggleAffiliateVisibility={handleToggleAffiliateVisibility}
                 onToggleStatus={handleToggleLinkStatus}
-                onCustomize={handleCustomizeLink}
                 onDelete={handleDeleteLink}
               />
               

@@ -36,7 +36,6 @@ interface LinksTableProps {
   onAdd: () => void;
   onToggleAffiliateVisibility: (id: string) => void;
   onToggleStatus: (id: string) => void;
-  onCustomize: (link: CheckoutLink) => void;
   onDelete: (id: string) => void;
 }
 
@@ -45,7 +44,6 @@ export function LinksTable({
   onAdd,
   onToggleAffiliateVisibility,
   onToggleStatus,
-  onCustomize,
   onDelete,
 }: LinksTableProps) {
   const [searchTerm, setSearchTerm] = useState("");

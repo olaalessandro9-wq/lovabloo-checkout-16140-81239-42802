@@ -329,12 +329,12 @@ export const CheckoutPreview = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="Nome do comprador"
-                  className="w-full px-4 py-2.5 rounded-xl outline-none text-sm"
+                  placeholder="Digite seu nome completo"
+                  className="w-full px-4 py-2.5 rounded-lg outline-none text-sm border"
                   style={{
                     backgroundColor: customization.backgroundColor,
                     color: customization.textColor,
-                    border: `1px solid ${customization.backgroundColor}`,
+                    borderColor: customization.backgroundColor,
                   }}
                 />
               </div>
@@ -348,31 +348,12 @@ export const CheckoutPreview = ({
                 </label>
                 <input
                   type="email"
-                  placeholder="email@email.com"
-                  className="w-full px-4 py-2.5 rounded-xl outline-none text-sm"
+                  placeholder="Digite seu email"
+                  className="w-full px-4 py-2.5 rounded-lg outline-none text-sm border"
                   style={{
                     backgroundColor: customization.backgroundColor,
                     color: customization.textColor,
-                    border: `1px solid ${customization.backgroundColor}`,
-                  }}
-                />
-              </div>
-
-              <div>
-                <label 
-                  className="block text-sm font-medium mb-1.5"
-                  style={{ color: customization.textColor }}
-                >
-                  CPF
-                </label>
-                <input
-                  type="text"
-                  placeholder="000.000.000-00"
-                  className="w-full px-4 py-2.5 rounded-xl outline-none text-sm"
-                  style={{
-                    backgroundColor: customization.backgroundColor,
-                    color: customization.textColor,
-                    border: `1px solid ${customization.backgroundColor}`,
+                    borderColor: customization.backgroundColor,
                   }}
                 />
               </div>
@@ -386,22 +367,23 @@ export const CheckoutPreview = ({
                 </label>
                 <div className="flex gap-2">
                   <div 
-                    className="w-14 px-3 py-2.5 rounded-xl flex items-center justify-center text-sm"
+                    className="w-14 px-3 py-2.5 rounded-lg flex items-center justify-center text-sm border"
                     style={{
                       backgroundColor: customization.backgroundColor,
                       color: customization.textColor,
+                      borderColor: customization.backgroundColor,
                     }}
                   >
                     🇧🇷
                   </div>
                   <input
                     type="tel"
-                    placeholder="+55 (99) 99999-9999"
-                    className="flex-1 px-4 py-2.5 rounded-xl outline-none text-sm"
+                    placeholder="+55 (00) 00000-0000"
+                    className="flex-1 px-4 py-2.5 rounded-lg outline-none text-sm border"
                     style={{
                       backgroundColor: customization.backgroundColor,
                       color: customization.textColor,
-                      border: `1px solid ${customization.backgroundColor}`,
+                      borderColor: customization.backgroundColor,
                     }}
                   />
                 </div>
@@ -434,24 +416,134 @@ export const CheckoutPreview = ({
 
             <div className="grid grid-cols-2 gap-3">
               <button
-                className="p-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
+                className="p-3 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2"
+                style={{
+                  backgroundColor: customization.backgroundColor,
+                  color: customization.textColor,
+                  border: `2px solid ${customization.backgroundColor}`,
+                }}
+              >
+                <span className="text-lg">⬛</span>
+                PIX
+              </button>
+              <button
+                className="p-3 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2"
                 style={{
                   backgroundColor: customization.selectedPaymentColor,
                   color: "#ffffff",
                 }}
               >
-                PIX
-              </button>
-              <button
-                className="p-3 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
-                style={{
-                  backgroundColor: "#ffffff",
-                  color: "#000000",
-                }}
-              >
                 <CreditCard className="w-4 h-4" />
-                Cartão
+                Cartão de Crédito
               </button>
+            </div>
+          </div>
+
+          {/* Order Summary */}
+          <div
+            className="p-5 rounded-2xl space-y-4"
+            style={{ 
+              backgroundColor: customization.formBackgroundColor,
+            }}
+          >
+            <h3 
+              className="font-bold text-base"
+              style={{ color: customization.textColor }}
+            >
+              Resumo do pedido
+            </h3>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: customization.backgroundColor }}>
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-12 h-12 rounded-lg flex items-center justify-center text-xs"
+                    style={{ 
+                      backgroundColor: customization.formBackgroundColor,
+                      color: customization.textColor,
+                    }}
+                  >
+                    IMG
+                  </div>
+                  <span 
+                    className="text-sm font-medium"
+                    style={{ color: customization.textColor }}
+                  >
+                    Nome do Produto
+                  </span>
+                </div>
+                <span 
+                  className="text-sm font-bold"
+                  style={{ color: customization.textColor }}
+                >
+                  R$ 19,90
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-1">
+                  <span style={{ color: customization.textColor, opacity: 0.7 }}>Taxa de serviço</span>
+                  <span className="text-xs" style={{ color: customization.textColor, opacity: 0.5 }}>ⓘ</span>
+                </div>
+                <span 
+                  className="font-medium"
+                  style={{ color: customization.textColor }}
+                >
+                  R$ 0,99
+                </span>
+              </div>
+
+              <div className="h-px" style={{ backgroundColor: customization.backgroundColor }} />
+
+              <div className="flex items-center justify-between">
+                <span 
+                  className="text-sm font-medium"
+                  style={{ color: customization.textColor }}
+                >
+                  Total
+                </span>
+                <span 
+                  className="text-lg font-bold"
+                  style={{ color: customization.textColor }}
+                >
+                  R$ 20,89
+                </span>
+              </div>
+            </div>
+
+            <button
+              className="w-full py-3 rounded-lg font-bold text-base transition-all"
+              style={{
+                backgroundColor: customization.selectedPaymentColor,
+                color: "#ffffff",
+              }}
+            >
+              Pagar com PIX
+            </button>
+
+            <div className="pt-3 space-y-2 text-center">
+              <div className="flex items-center justify-center gap-2">
+                <span className="text-2xl" style={{ color: customization.textColor, opacity: 0.6 }}>🔒</span>
+              </div>
+              <p 
+                className="text-xs leading-relaxed"
+                style={{ color: customization.textColor, opacity: 0.6 }}
+              >
+                Cakto está processando este pagamento para o vendedor <span className="font-semibold">Nome do Vendedor</span>
+              </p>
+              <div className="flex items-center justify-center gap-1">
+                <span className="text-xs font-medium" style={{ color: customization.selectedPaymentColor }}>✓</span>
+                <span className="text-xs" style={{ color: customization.selectedPaymentColor }}>Compra 100% segura</span>
+              </div>
+              <p 
+                className="text-xs leading-relaxed"
+                style={{ color: customization.textColor, opacity: 0.5 }}
+              >
+                Este site é protegido pelo reCAPTCHA do Google<br />
+                <a href="#" className="underline">Política de privacidade</a> e <a href="#" className="underline">Termos de serviço</a><br />
+                * Parcelamento com acréscimo<br />
+                Ao continuar, você concorda com os <a href="#" className="underline">Termos de Compra</a>
+              </p>
             </div>
           </div>
         </div>
@@ -545,12 +637,12 @@ export const CheckoutPreview = ({
               </label>
               <input
                 type="text"
-                placeholder="Nome do comprador"
-                className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+                placeholder="Digite seu nome completo"
+                className="w-full px-4 py-3 rounded-lg outline-none transition-all border"
                 style={{
                   backgroundColor: customization.backgroundColor,
                   color: customization.textColor,
-                  border: `1px solid ${customization.backgroundColor}`,
+                  borderColor: customization.backgroundColor,
                 }}
               />
             </div>
@@ -564,50 +656,42 @@ export const CheckoutPreview = ({
               </label>
               <input
                 type="email"
-                placeholder="email@email.com"
-                className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+                placeholder="Digite seu email"
+                className="w-full px-4 py-3 rounded-lg outline-none transition-all border"
                 style={{
                   backgroundColor: customization.backgroundColor,
                   color: customization.textColor,
-                  border: `1px solid ${customization.backgroundColor}`,
+                  borderColor: customization.backgroundColor,
                 }}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label 
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: customization.textColor }}
-                >
-                  CPF/CNPJ
-                </label>
-                <input
-                  type="text"
-                  placeholder="000.000.000-00"
-                  className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+            <div>
+              <label 
+                className="block text-sm font-medium mb-2"
+                style={{ color: customization.textColor }}
+              >
+                Celular
+              </label>
+              <div className="flex gap-3">
+                <div 
+                  className="w-16 px-3 py-3 rounded-lg flex items-center justify-center border"
                   style={{
                     backgroundColor: customization.backgroundColor,
                     color: customization.textColor,
-                    border: `1px solid ${customization.backgroundColor}`,
+                    borderColor: customization.backgroundColor,
                   }}
-                />
-              </div>
-              <div>
-                <label 
-                  className="block text-sm font-medium mb-2"
-                  style={{ color: customization.textColor }}
                 >
-                  Celular
-                </label>
+                  🇧🇷
+                </div>
                 <input
                   type="tel"
                   placeholder="+55 (00) 00000-0000"
-                  className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+                  className="flex-1 px-4 py-3 rounded-lg outline-none transition-all border"
                   style={{
                     backgroundColor: customization.backgroundColor,
                     color: customization.textColor,
-                    border: `1px solid ${customization.backgroundColor}`,
+                    borderColor: customization.backgroundColor,
                   }}
                 />
               </div>
@@ -639,32 +723,158 @@ export const CheckoutPreview = ({
 
             <div className="grid grid-cols-2 gap-3">
               <button
-                className="p-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                className="p-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 border-2"
                 style={{
-                  backgroundColor: customization.selectedPaymentColor,
-                  color: "#ffffff",
+                  backgroundColor: customization.backgroundColor,
+                  color: customization.textColor,
+                  borderColor: customization.backgroundColor,
                 }}
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
-                </svg>
+                <span className="text-lg">⬛</span>
                 PIX
               </button>
               <button
-                className="p-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                className="p-4 rounded-lg font-semibold transition-all flex items-center justify-center gap-2"
                 style={{
-                  backgroundColor: "#ffffff",
-                  color: customization.backgroundColor,
+                  backgroundColor: customization.selectedPaymentColor,
+                  color: "#ffffff",
                 }}
               >
                 <CreditCard className="w-5 h-5" />
                 Cartão de Crédito
               </button>
             </div>
+
+            <div>
+              <label 
+                className="block text-sm font-medium mb-2"
+                style={{ color: customization.textColor }}
+              >
+                Número do cartão
+              </label>
+              <input
+                type="text"
+                placeholder="0000 0000 0000 0000"
+                className="w-full px-4 py-3 rounded-lg outline-none transition-all border"
+                style={{
+                  backgroundColor: customization.backgroundColor,
+                  color: customization.textColor,
+                  borderColor: customization.backgroundColor,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Order Summary Desktop */}
+          <div
+            className="p-6 rounded-2xl space-y-4"
+            style={{ 
+              backgroundColor: customization.formBackgroundColor,
+            }}
+          >
+            <h3 
+              className="font-bold text-lg"
+              style={{ color: customization.textColor }}
+            >
+              Resumo do pedido
+            </h3>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: customization.backgroundColor }}>
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-14 h-14 rounded-lg flex items-center justify-center text-xs"
+                    style={{ 
+                      backgroundColor: customization.formBackgroundColor,
+                      color: customization.textColor,
+                    }}
+                  >
+                    IMG
+                  </div>
+                  <span 
+                    className="text-base font-medium"
+                    style={{ color: customization.textColor }}
+                  >
+                    Nome do Produto
+                  </span>
+                </div>
+                <span 
+                  className="text-base font-bold"
+                  style={{ color: customization.textColor }}
+                >
+                  R$ 19,90
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <span className="text-sm" style={{ color: customization.textColor, opacity: 0.7 }}>Taxa de serviço</span>
+                  <span className="text-xs" style={{ color: customization.textColor, opacity: 0.5 }}>ⓘ</span>
+                </div>
+                <span 
+                  className="text-sm font-medium"
+                  style={{ color: customization.textColor }}
+                >
+                  R$ 0,99
+                </span>
+              </div>
+
+              <div className="h-px" style={{ backgroundColor: customization.backgroundColor }} />
+
+              <div className="flex items-center justify-between">
+                <span 
+                  className="text-base font-medium"
+                  style={{ color: customization.textColor }}
+                >
+                  Total
+                </span>
+                <span 
+                  className="text-xl font-bold"
+                  style={{ color: customization.textColor }}
+                >
+                  R$ 20,89
+                </span>
+              </div>
+            </div>
+
+            <button
+              className="w-full py-4 rounded-lg font-bold text-lg transition-all"
+              style={{
+                backgroundColor: customization.selectedPaymentColor,
+                color: "#ffffff",
+              }}
+            >
+              Pagar com PIX
+            </button>
+
+            <div className="pt-4 space-y-2 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="text-3xl" style={{ color: customization.textColor, opacity: 0.6 }}>🔒</span>
+              </div>
+              <p 
+                className="text-sm leading-relaxed"
+                style={{ color: customization.textColor, opacity: 0.6 }}
+              >
+                Cakto está processando este pagamento para o vendedor <span className="font-semibold">Nome do Vendedor</span>
+              </p>
+              <div className="flex items-center justify-center gap-1">
+                <span className="text-sm font-medium" style={{ color: customization.selectedPaymentColor }}>✓</span>
+                <span className="text-sm" style={{ color: customization.selectedPaymentColor }}>Compra 100% segura</span>
+              </div>
+              <p 
+                className="text-xs leading-relaxed"
+                style={{ color: customization.textColor, opacity: 0.5 }}
+              >
+                Este site é protegido pelo reCAPTCHA do Google<br />
+                <a href="#" className="underline">Política de privacidade</a> e <a href="#" className="underline">Termos de serviço</a><br />
+                * Parcelamento com acréscimo<br />
+                Ao continuar, você concorda com os <a href="#" className="underline">Termos de Compra</a>
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Right Column - Summary */}
+        {/* Right Column - Summary Sidebar */}
         <div className="space-y-6">
           <div
             className="p-6 rounded-2xl sticky top-8"
@@ -673,42 +883,42 @@ export const CheckoutPreview = ({
             }}
           >
             <button
-              className="w-full py-4 rounded-xl font-bold text-lg transition-all hover:opacity-90 mb-6"
+              className="w-full py-3 rounded-lg font-bold text-base transition-all hover:opacity-90 mb-6"
               style={{
-                backgroundColor: customization.buttonColor,
-                color: customization.buttonTextColor,
+                backgroundColor: customization.selectedPaymentColor,
+                color: "#ffffff",
               }}
             >
               Compra segura
             </button>
 
             <div className="space-y-4">
-              <div className="flex items-start gap-4 pb-4 border-b" style={{ borderColor: customization.backgroundColor }}>
+              <div className="flex items-start gap-3 pb-4 border-b" style={{ borderColor: customization.backgroundColor }}>
                 <div 
-                  className="w-16 h-16 rounded-xl flex items-center justify-center text-xs"
+                  className="w-14 h-14 rounded-lg flex items-center justify-center text-xs flex-shrink-0"
                   style={{ 
                     backgroundColor: customization.backgroundColor,
                     color: customization.textColor,
                   }}
                 >
-                  Produto
+                  IMG
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <h4 
-                    className="font-bold mb-1"
+                    className="font-bold mb-1 text-sm"
                     style={{ color: customization.textColor }}
                   >
                     Nome do Produto
                   </h4>
                   <p 
-                    className="text-sm"
+                    className="text-xs mb-1"
                     style={{ color: customization.textColor, opacity: 0.7 }}
                   >
                     Precisa de ajuda?
                   </p>
                   <a 
                     href="#" 
-                    className="text-sm"
+                    className="text-xs hover:underline"
                     style={{ color: customization.buttonColor }}
                   >
                     Veja o contato do vendedor
@@ -717,26 +927,28 @@ export const CheckoutPreview = ({
               </div>
 
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-start">
                   <span 
-                    className="font-bold text-lg"
+                    className="font-bold text-base"
                     style={{ color: customization.textColor }}
                   >
                     Total
                   </span>
-                  <span 
-                    className="font-bold text-xl"
-                    style={{ color: customization.buttonColor }}
-                  >
-                    R$ 99,00
-                  </span>
+                  <div className="text-right">
+                    <div 
+                      className="font-bold text-lg"
+                      style={{ color: customization.selectedPaymentColor }}
+                    >
+                      Em até 4 X de R$ 5,77
+                    </div>
+                    <p 
+                      className="text-xs mt-1"
+                      style={{ color: customization.textColor, opacity: 0.7 }}
+                    >
+                      ou R$ 19,90 à vista
+                    </p>
+                  </div>
                 </div>
-                <p 
-                  className="text-sm"
-                  style={{ color: customization.textColor, opacity: 0.7 }}
-                >
-                  ou R$ 99,00 à vista
-                </p>
                 <p 
                   className="text-xs"
                   style={{ color: customization.textColor, opacity: 0.6 }}
@@ -745,26 +957,34 @@ export const CheckoutPreview = ({
                 </p>
               </div>
 
-              <div className="pt-4 border-t space-y-2" style={{ borderColor: customization.backgroundColor }}>
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <svg className="w-8 h-8 opacity-60" style={{ color: customization.textColor }} viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                  </svg>
-                  <span 
-                    className="text-xs font-medium"
-                    style={{ color: customization.textColor, opacity: 0.6 }}
-                  >
-                    Processamento seguro
-                  </span>
+              <div className="pt-4 border-t space-y-3" style={{ borderColor: customization.backgroundColor }}>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-2xl" style={{ color: customization.textColor, opacity: 0.6 }}>🔒</span>
                 </div>
+                <p 
+                  className="text-xs text-center leading-relaxed"
+                  style={{ color: customization.textColor, opacity: 0.6 }}
+                >
+                  Cakto está processando este pagamento para o vendedor <span className="font-semibold">Nome do Vendedor</span>
+                </p>
                 <p 
                   className="text-xs text-center leading-relaxed"
                   style={{ color: customization.textColor, opacity: 0.5 }}
                 >
                   Este site é protegido pelo reCAPTCHA do Google<br />
-                  Política de privacidade e Termos de serviço<br />
-                  Parcelamento com acréscimo<br />
-                  Ao continuar, você concorda com os Termos de Compra
+                  <a href="#" className="underline">Política de privacidade</a> e <a href="#" className="underline">Termos de serviço</a>
+                </p>
+                <p 
+                  className="text-xs text-center"
+                  style={{ color: customization.textColor, opacity: 0.5 }}
+                >
+                  * Parcelamento com acréscimo
+                </p>
+                <p 
+                  className="text-xs text-center"
+                  style={{ color: customization.textColor, opacity: 0.5 }}
+                >
+                  Ao continuar, você concorda com os <a href="#" className="underline">Termos de Compra</a>
                 </p>
               </div>
             </div>

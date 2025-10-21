@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Monitor, Smartphone, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CheckoutPreview } from "@/components/checkout/CheckoutPreview";
 import { CheckoutCustomizationPanel } from "@/components/checkout/CheckoutCustomizationPanel";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export type ViewMode = "desktop" | "mobile";
 
@@ -40,6 +42,8 @@ const CheckoutCustomizer = () => {
   const checkoutId = searchParams.get("id");
   const [viewMode, setViewMode] = useState<ViewMode>("desktop");
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
   const [customization, setCustomization] = useState<CheckoutCustomization>({
     primaryColor: "hsl(0, 84%, 60%)",
@@ -63,6 +67,85 @@ const CheckoutCustomizer = () => {
   const [selectedRow, setSelectedRow] = useState<string>("row-1");
 
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
+
+  // Load checkout data from Supabase
+  useEffect(() => {
+    if (checkoutId) {
+      loadCheckoutData(checkoutId);
+    }
+  }, [checkoutId]);
+
+  const loadCheckoutData = async (id: string) => {
+    setLoading(true);
+    try {
+      // Load checkout configuration
+      const { data: checkout, error: checkoutError } = await supabase
+        .from("checkouts")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (checkoutError) throw checkoutError;
+
+      // Load checkout rows
+      const { data: rows, error: rowsError } = await supabase
+        .from("checkout_rows")
+        .select("*")
+        .eq("checkout_id", id)
+        .order("row_order");
+
+      if (rowsError) throw rowsError;
+
+      // Load components for all rows
+      const rowIds = rows.map(r => r.id);
+      const { data: components, error: componentsError } = await supabase
+        .from("checkout_components")
+        .select("*")
+        .in("row_id", rowIds)
+        .order("component_order");
+
+      if (componentsError) throw componentsError;
+
+      // Reconstruct customization state
+      const loadedRows = rows.map(row => ({
+        id: row.id,
+        layout: row.layout as LayoutType,
+        components: components
+          .filter(c => c.row_id === row.id)
+          .map(c => ({
+            id: c.id,
+            type: c.type as CheckoutComponent["type"],
+            content: c.content,
+          })),
+      }));
+
+      setCustomization({
+        primaryColor: checkout.primary_color,
+        secondaryColor: checkout.secondary_color,
+        backgroundColor: checkout.background_color,
+        textColor: checkout.text_color,
+        buttonColor: checkout.button_color,
+        buttonTextColor: checkout.button_text_color,
+        formBackgroundColor: checkout.form_background_color,
+        selectedPaymentColor: checkout.selected_payment_color,
+        font: checkout.font,
+        rows: loadedRows,
+      });
+
+      if (loadedRows.length > 0) {
+        setSelectedRow(loadedRows[0].id);
+      }
+    } catch (error) {
+      console.error("Error loading checkout:", error);
+      toast({
+        title: "Erro ao carregar",
+        description: "Não foi possível carregar as configurações do checkout.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddRow = (layout: LayoutType) => {
     const newRow: CheckoutRow = {
@@ -148,10 +231,119 @@ const CheckoutCustomizer = () => {
     }
   };
 
-  const handleSave = () => {
-    // Salvar customização (será implementado com banco de dados depois)
-    console.log("Saving customization:", customization);
-    navigate("/produtos/editar");
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      if (checkoutId) {
+        // Update existing checkout
+        await updateCheckout(checkoutId);
+      } else {
+        // Create new checkout
+        await createCheckout();
+      }
+
+      toast({
+        title: "Sucesso!",
+        description: "Checkout salvo com sucesso.",
+      });
+      
+      navigate("/produtos/editar");
+    } catch (error) {
+      console.error("Error saving checkout:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o checkout.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createCheckout = async () => {
+    // Create checkout record
+    const { data: checkout, error: checkoutError } = await supabase
+      .from("checkouts")
+      .insert({
+        name: "Novo Checkout",
+        primary_color: customization.primaryColor,
+        secondary_color: customization.secondaryColor,
+        background_color: customization.backgroundColor,
+        text_color: customization.textColor,
+        button_color: customization.buttonColor,
+        button_text_color: customization.buttonTextColor,
+        form_background_color: customization.formBackgroundColor,
+        selected_payment_color: customization.selectedPaymentColor,
+        font: customization.font,
+      })
+      .select()
+      .single();
+
+    if (checkoutError) throw checkoutError;
+
+    // Create rows and components
+    await saveRowsAndComponents(checkout.id);
+  };
+
+  const updateCheckout = async (id: string) => {
+    // Update checkout record
+    const { error: checkoutError } = await supabase
+      .from("checkouts")
+      .update({
+        primary_color: customization.primaryColor,
+        secondary_color: customization.secondaryColor,
+        background_color: customization.backgroundColor,
+        text_color: customization.textColor,
+        button_color: customization.buttonColor,
+        button_text_color: customization.buttonTextColor,
+        form_background_color: customization.formBackgroundColor,
+        selected_payment_color: customization.selectedPaymentColor,
+        font: customization.font,
+      })
+      .eq("id", id);
+
+    if (checkoutError) throw checkoutError;
+
+    // Delete existing rows and components (cascade will handle components)
+    await supabase.from("checkout_rows").delete().eq("checkout_id", id);
+
+    // Create new rows and components
+    await saveRowsAndComponents(id);
+  };
+
+  const saveRowsAndComponents = async (checkoutId: string) => {
+    for (let i = 0; i < customization.rows.length; i++) {
+      const row = customization.rows[i];
+
+      // Insert row
+      const { data: rowData, error: rowError } = await supabase
+        .from("checkout_rows")
+        .insert({
+          checkout_id: checkoutId,
+          row_order: i,
+          layout: row.layout,
+        })
+        .select()
+        .single();
+
+      if (rowError) throw rowError;
+
+      // Insert components
+      for (let j = 0; j < row.components.length; j++) {
+        const component = row.components[j];
+
+        const { error: componentError } = await supabase
+          .from("checkout_components")
+          .insert({
+            row_id: rowData.id,
+            component_order: j,
+            type: component.type,
+            content: component.content,
+          });
+
+        if (componentError) throw componentError;
+      }
+    }
   };
 
   return (
@@ -209,8 +401,12 @@ const CheckoutCustomizer = () => {
               <Eye className="w-4 h-4" />
               Preview
             </Button>
-            <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
-              Salvar Alterações
+            <Button 
+              onClick={handleSave} 
+              disabled={loading}
+              className="bg-primary hover:bg-primary/90"
+            >
+              {loading ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </div>
         </div>

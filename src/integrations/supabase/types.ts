@@ -225,7 +225,11 @@ export type Database = {
           image_url: string | null
           name: string
           price: number
+          status: string | null
+          support_email: string | null
+          support_name: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -234,7 +238,11 @@ export type Database = {
           image_url?: string | null
           name: string
           price: number
+          status?: string | null
+          support_email?: string | null
+          support_name?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -243,7 +251,11 @@ export type Database = {
           image_url?: string | null
           name?: string
           price?: number
+          status?: string | null
+          support_email?: string | null
+          support_name?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

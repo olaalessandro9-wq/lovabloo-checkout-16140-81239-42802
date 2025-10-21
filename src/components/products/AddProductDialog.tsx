@@ -10,31 +10,60 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AddProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onProductAdded?: () => void;
 }
 
-export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) {
+export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProductDialogProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
   });
 
-  const handleContinue = () => {
-    if (!formData.name || !formData.description || !formData.price) {
+  const handleContinue = async () => {
+    if (!formData.name || !formData.description || !formData.price || !user) {
       return;
     }
     
-    // Close dialog and reset form
-    onOpenChange(false);
-    setFormData({ name: "", description: "", price: "" });
-    
-    // Navigate to product edit page (without state since there's no database)
-    navigate("/produtos/editar");
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .insert({
+          name: formData.name,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          user_id: user.id,
+          status: "active",
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success("Produto criado com sucesso!");
+      onOpenChange(false);
+      setFormData({ name: "", description: "", price: "" });
+      
+      if (onProductAdded) onProductAdded();
+      
+      navigate(`/produtos/editar?id=${data.id}`);
+    } catch (error: any) {
+      toast.error("Erro ao criar produto");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -101,9 +130,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
           <Button 
             onClick={handleContinue}
             className="bg-primary hover:bg-primary/90"
-            disabled={!formData.name || !formData.description || !formData.price}
+            disabled={!formData.name || !formData.description || !formData.price || loading}
           >
-            Continuar
+            {loading ? "Criando..." : "Continuar"}
           </Button>
         </div>
       </DialogContent>

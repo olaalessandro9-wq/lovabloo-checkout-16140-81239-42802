@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, MoreVertical } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Product {
   id: string;
@@ -25,24 +29,92 @@ interface Product {
   status: "active" | "blocked";
 }
 
-const mockProducts: Product[] = [
-  { id: "1", name: "Rise community", price: 47.0, status: "active" },
-  { id: "2", name: "Rise community", price: 19.9, status: "active" },
-  { id: "3", name: "Drives Oculto - Conteúdos guardados a sete chaves... e liberados só para você.", price: 14.9, status: "active" },
-  { id: "4", name: "1000 Grupos", price: 9.9, status: "active" },
-  { id: "5", name: "Fluxos de rain", price: 9.9, status: "active" },
-  { id: "6", name: "Rise community", price: 37.0, status: "active" },
-];
-
 export function ProductsTable() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("active");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredProducts = mockProducts.filter(product => 
+  useEffect(() => {
+    loadProducts();
+  }, [user]);
+
+  const loadProducts = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setProducts((data || []) as Product[]);
+    } catch (error: any) {
+      toast.error("Erro ao carregar produtos");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (productId: string) => {
+    navigate(`/produtos/editar?id=${productId}`);
+  };
+
+  const handleDuplicate = async (product: Product) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.from("products").insert({
+        name: `${product.name} (Cópia)`,
+        price: product.price,
+        status: product.status,
+        user_id: user.id,
+      });
+
+      if (error) throw error;
+      toast.success("Produto duplicado com sucesso");
+      loadProducts();
+    } catch (error: any) {
+      toast.error("Erro ao duplicar produto");
+      console.error(error);
+    }
+  };
+
+  const handleDelete = async (productId: string) => {
+    try {
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", productId);
+
+      if (error) throw error;
+      toast.success("Produto excluído com sucesso");
+      loadProducts();
+    } catch (error: any) {
+      toast.error("Erro ao excluir produto");
+      console.error(error);
+    }
+  };
+
+  const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
     (statusFilter === "all" || product.status === statusFilter)
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -107,9 +179,18 @@ export function ProductsTable() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-popover border-border">
-                        <DropdownMenuItem>Editar</DropdownMenuItem>
-                        <DropdownMenuItem>Duplicar</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Excluir</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(product.id)}>
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDuplicate(product)}>
+                          Duplicar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={() => handleDelete(product.id)}
+                        >
+                          Excluir
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </td>
@@ -135,7 +216,8 @@ export function ProductsTable() {
 
         <AddProductDialog 
           open={isAddDialogOpen} 
-          onOpenChange={setIsAddDialogOpen} 
+          onOpenChange={setIsAddDialogOpen}
+          onProductAdded={loadProducts}
         />
     </div>
   );

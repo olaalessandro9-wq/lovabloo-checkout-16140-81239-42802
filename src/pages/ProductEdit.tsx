@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, CreditCard, Link2, Sparkles } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
+import { useProduct } from "@/hooks/useProduct";
 import { OrderBumpList } from "@/components/products/OrderBumpList";
 import { OrderBumpDialog, type OrderBump } from "@/components/products/OrderBumpDialog";
 import { CheckoutTable, type Checkout } from "@/components/products/CheckoutTable";
@@ -23,15 +24,27 @@ import { LinksTable, type CheckoutLink } from "@/components/products/LinksTable"
 const ProductEdit = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, productId } = useProduct();
   
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
-    productImage: null as File | null,
-    supportName: "",
-    supportEmail: "",
+    support_name: "",
+    support_email: "",
   });
+
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        support_name: product.support_name,
+        support_email: product.support_email,
+      });
+    }
+  }, [product]);
 
   const [paymentSettings, setPaymentSettings] = useState({
     pixEnabled: true,
@@ -111,12 +124,12 @@ const ProductEdit = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData({ ...formData, productImage: file });
+      setImageFile(file);
     }
   };
 
-  const handleSave = () => {
-    if (!formData.supportName || !formData.supportEmail) {
+  const handleSave = async () => {
+    if (!formData.support_name || !formData.support_email) {
       toast({
         title: "Campos obrigatórios",
         description: "Preencha o nome de exibição e email de suporte",
@@ -125,21 +138,22 @@ const ProductEdit = () => {
       return;
     }
 
-    // Here you would save to database
-    toast({
-      title: "Produto salvo",
-      description: "O produto foi salvo com sucesso",
+    await saveProduct({
+      name: formData.name,
+      description: formData.description,
+      price: formData.price,
+      support_name: formData.support_name,
+      support_email: formData.support_email,
+      status: "active",
+      image_url: product?.image_url || null,
     });
   };
 
-  const handleDelete = () => {
-    // Here you would delete from database
-    toast({
-      title: "Produto excluído",
-      description: "O produto foi excluído",
-      variant: "destructive",
-    });
-    navigate("/produtos");
+  const handleDelete = async () => {
+    const success = await deleteProduct();
+    if (success) {
+      navigate("/produtos");
+    }
   };
 
   const handleBack = () => {
@@ -341,6 +355,16 @@ const ProductEdit = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="space-y-6">
@@ -355,9 +379,10 @@ const ProductEdit = () => {
           </Button>
           <Button 
             onClick={handleSave}
+            disabled={loading}
             className="bg-primary hover:bg-primary/90"
           >
-            Salvar Produto
+            {loading ? "Salvando..." : "Salvar Produto"}
           </Button>
         </div>
 
@@ -407,6 +432,24 @@ const ProductEdit = () => {
               <div className="border-t border-border pt-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Imagem do Produto</h3>
                 <div className="space-y-4">
+                  {product?.image_url && !imageFile && (
+                    <div className="mb-4">
+                      <img 
+                        src={product.image_url} 
+                        alt="Imagem do produto" 
+                        className="max-w-xs rounded-lg border border-border"
+                      />
+                    </div>
+                  )}
+                  {imageFile && (
+                    <div className="mb-4">
+                      <img 
+                        src={URL.createObjectURL(imageFile)} 
+                        alt="Preview" 
+                        className="max-w-xs rounded-lg border border-border"
+                      />
+                    </div>
+                  )}
                   <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
                     <input
                       type="file"
@@ -457,8 +500,8 @@ const ProductEdit = () => {
                     </Label>
                     <Input
                       id="support-name"
-                      value={formData.supportName}
-                      onChange={(e) => setFormData({ ...formData, supportName: e.target.value })}
+                      value={formData.support_name}
+                      onChange={(e) => setFormData({ ...formData, support_name: e.target.value })}
                       className="bg-background border-border text-foreground"
                       placeholder="Digite o nome de exibição"
                     />
@@ -471,8 +514,8 @@ const ProductEdit = () => {
                     <Input
                       id="support-email"
                       type="email"
-                      value={formData.supportEmail}
-                      onChange={(e) => setFormData({ ...formData, supportEmail: e.target.value })}
+                      value={formData.support_email}
+                      onChange={(e) => setFormData({ ...formData, support_email: e.target.value })}
                       className="bg-background border-border text-foreground"
                       placeholder="Digite o e-mail de suporte"
                     />
@@ -489,9 +532,10 @@ const ProductEdit = () => {
                 </Button>
                 <Button 
                   onClick={handleSave}
+                  disabled={loading}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  Salvar Alterações
+                  {loading ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>
             </div>

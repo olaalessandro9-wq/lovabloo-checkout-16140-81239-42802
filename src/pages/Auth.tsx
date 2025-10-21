@@ -15,6 +15,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpfCnpj, setCpfCnpj] = useState("");
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -64,6 +65,7 @@ const Auth = () => {
           data: {
             name,
             phone,
+            cpf_cnpj: cpfCnpj,
           },
         },
       });
@@ -133,6 +135,17 @@ const Auth = () => {
                     placeholder="Seu nome completo"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="signup-cpf-cnpj">CPF ou CNPJ</Label>
+                  <Input
+                    id="signup-cpf-cnpj"
+                    type="text"
+                    placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                    value={cpfCnpj}
+                    onChange={(e) => setCpfCnpj(e.target.value)}
                     required
                   />
                 </div>

@@ -249,6 +249,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          cpf_cnpj: string | null
           created_at: string | null
           id: string
           name: string
@@ -256,6 +257,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          cpf_cnpj?: string | null
           created_at?: string | null
           id: string
           name: string
@@ -263,6 +265,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          cpf_cnpj?: string | null
           created_at?: string | null
           id?: string
           name?: string

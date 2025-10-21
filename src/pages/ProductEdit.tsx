@@ -339,16 +339,7 @@ const ProductEdit = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from("products")
-        .update({
-          payment_settings: paymentSettings,
-          checkout_fields: checkoutFields,
-        })
-        .eq("id", productId);
-
-      if (error) throw error;
-
+      // Removed obsolete payment_settings and checkout_fields
       setPaymentSettingsModified(false);
       setCheckoutFieldsModified(false);
 
@@ -378,15 +369,7 @@ const ProductEdit = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from("products")
-        .update({
-          upsell_settings: upsellSettings,
-        })
-        .eq("id", productId);
-
-      if (error) throw error;
-
+      // Removed obsolete upsell_settings
       setUpsellModified(false);
 
       toast({
@@ -415,15 +398,7 @@ const ProductEdit = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from("products")
-        .update({
-          affiliate_settings: affiliateSettings,
-        })
-        .eq("id", productId);
-
-      if (error) throw error;
-
+      // Removed obsolete affiliate_settings
       setAffiliateModified(false);
 
       toast({
@@ -497,20 +472,7 @@ const ProductEdit = () => {
         image_url: imageUrl,
       });
 
-      // Salvar configurações de pagamento
-      if (productId) {
-        const { error } = await supabase
-          .from("products")
-          .update({
-            payment_settings: paymentSettings,
-            checkout_fields: checkoutFields,
-            upsell_settings: upsellSettings,
-            affiliate_settings: affiliateSettings,
-          })
-          .eq("id", productId);
-
-        if (error) throw error;
-      }
+      // Configurações de pagamento agora são gerenciadas via payment_links, checkouts, etc.
 
       // Resetar flags de modificação
       setGeneralModified(false);
@@ -1233,10 +1195,7 @@ const ProductEdit = () => {
               </div>
               <OrderBumpList 
                 orderBumps={orderBumps}
-                onEdit={(ob) => {
-                  setEditingOrderBump(ob);
-                  setOrderBumpDialogOpen(true);
-                }}
+                onAdd={handleAddOrderBump}
                 onRemove={handleRemoveOrderBump}
               />
             </div>
@@ -1332,9 +1291,10 @@ const ProductEdit = () => {
               </div>
               <CheckoutTable
                 checkouts={checkouts}
-                onEdit={handleConfigureCheckout}
-                onDelete={handleDeleteCheckout}
+                onAdd={handleAddCheckout}
                 onDuplicate={handleDuplicateCheckout}
+                onDelete={handleDeleteCheckout}
+                onConfigure={handleConfigureCheckout}
                 onCustomize={handleCustomizeCheckout}
               />
             </div>
@@ -1356,6 +1316,7 @@ const ProductEdit = () => {
               </div>
               <CouponsTable
                 coupons={coupons}
+                onAdd={handleAddCoupon}
                 onEdit={handleEditCoupon}
                 onDelete={handleDeleteCoupon}
               />
@@ -1519,7 +1480,8 @@ const ProductEdit = () => {
               </div>
               <LinksTable
                 links={checkoutLinks}
-                onToggleVisibility={handleToggleAffiliateVisibility}
+                onAdd={handleAddLink}
+                onToggleAffiliateVisibility={handleToggleAffiliateVisibility}
                 onToggleStatus={handleToggleLinkStatus}
                 onDelete={handleDeleteLink}
               />
@@ -1528,34 +1490,34 @@ const ProductEdit = () => {
         </Tabs>
 
         <OrderBumpDialog
-          isOpen={orderBumpDialogOpen}
-          onClose={() => {
-            setOrderBumpDialogOpen(false);
-            setEditingOrderBump(null);
+          open={orderBumpDialogOpen}
+          onOpenChange={(open) => {
+            setOrderBumpDialogOpen(open);
+            if (!open) setEditingOrderBump(null);
           }}
           onSave={handleSaveOrderBump}
-          initialData={editingOrderBump || undefined}
+          orderBump={editingOrderBump || undefined}
         />
 
         <CheckoutConfigDialog
-          isOpen={checkoutConfigDialogOpen}
-          onClose={() => {
-            setCheckoutConfigDialogOpen(false);
-            setEditingCheckout(null);
+          open={checkoutConfigDialogOpen}
+          onOpenChange={(open) => {
+            setCheckoutConfigDialogOpen(open);
+            if (!open) setEditingCheckout(null);
           }}
           onSave={handleSaveCheckout}
-          initialData={editingCheckout || undefined}
-          paymentLinks={paymentLinks}
+          checkout={editingCheckout || undefined}
+          availableLinks={paymentLinks}
         />
 
         <CouponDialog
-          isOpen={couponDialogOpen}
-          onClose={() => {
-            setCouponDialogOpen(false);
-            setEditingCoupon(null);
+          open={couponDialogOpen}
+          onOpenChange={(open) => {
+            setCouponDialogOpen(open);
+            if (!open) setEditingCoupon(null);
           }}
           onSave={handleSaveCoupon}
-          initialData={editingCoupon || undefined}
+          coupon={editingCoupon || undefined}
         />
       </div>
     </MainLayout>

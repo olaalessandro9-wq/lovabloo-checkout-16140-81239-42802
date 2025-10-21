@@ -1,10 +1,10 @@
-import { CheckoutCustomization, CheckoutComponent } from "@/pages/CheckoutCustomizer";
+import { CheckoutCustomization, CheckoutComponent, LayoutType, ViewMode } from "@/pages/CheckoutCustomizer";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Type, Image, CheckCircle, Award, Clock, MessageSquare } from "lucide-react";
+import { Type, Image, CheckCircle, Award, Clock, MessageSquare, Columns2, Columns3, RectangleHorizontal } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 interface CheckoutCustomizationPanelProps {
@@ -15,6 +15,7 @@ interface CheckoutCustomizationPanelProps {
   onUpdateComponent: (componentId: string, updates: Partial<CheckoutComponent>) => void;
   onDeleteComponent: (componentId: string) => void;
   onDeselectComponent: () => void;
+  viewMode: ViewMode;
 }
 
 const ColorPicker = ({
@@ -118,6 +119,13 @@ const componentItems = [
   { id: "testimonial", label: "Depoimento", icon: MessageSquare },
 ];
 
+const layoutItems = [
+  { id: "single" as LayoutType, label: "1 Coluna", icon: RectangleHorizontal },
+  { id: "two-columns" as LayoutType, label: "2 Colunas", icon: Columns2 },
+  { id: "two-columns-asymmetric" as LayoutType, label: "2 Colunas Assimétrico", icon: Columns2 },
+  { id: "three-columns" as LayoutType, label: "3 Colunas", icon: Columns3 },
+];
+
 export const CheckoutCustomizationPanel = ({
   customization,
   onChange,
@@ -126,6 +134,7 @@ export const CheckoutCustomizationPanel = ({
   onUpdateComponent,
   onDeleteComponent,
   onDeselectComponent,
+  viewMode,
 }: CheckoutCustomizationPanelProps) => {
   const selectedComponent = customization.components.find(c => c.id === selectedComponentId);
   const updateCustomization = (
@@ -477,11 +486,49 @@ export const CheckoutCustomizationPanel = ({
           <ScrollArea className="h-full">
             <div className="p-6">
               <h2 className="text-lg font-semibold mb-2 text-foreground">
-                Linhas
+                Layout
               </h2>
-              <p className="text-sm text-muted-foreground">
-                Esta seção será implementada em breve
+              <p className="text-sm text-muted-foreground mb-6">
+                Escolha o layout para organizar seus componentes {viewMode === "mobile" && "(Apenas layout padrão disponível no mobile)"}
               </p>
+              
+              <div className="space-y-3">
+                {layoutItems.map((item) => {
+                  const Icon = item.icon;
+                  const isDisabled = viewMode === "mobile" && item.id !== "single";
+                  const isSelected = customization.layout === item.id;
+                  
+                  return (
+                    <Card
+                      key={item.id}
+                      onClick={() => {
+                        if (!isDisabled) {
+                          onChange({ ...customization, layout: item.id });
+                        }
+                      }}
+                      className={`p-4 flex items-center gap-3 transition-all ${
+                        isDisabled 
+                          ? "opacity-40 cursor-not-allowed" 
+                          : "cursor-pointer hover:bg-accent"
+                      } ${
+                        isSelected ? "ring-2 ring-primary" : ""
+                      }`}
+                    >
+                      <div className={`w-12 h-12 rounded flex items-center justify-center ${
+                        isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
+                      }`}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-sm font-medium block">{item.label}</span>
+                        {isDisabled && (
+                          <span className="text-xs text-muted-foreground">Disponível apenas no desktop</span>
+                        )}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
             </div>
           </ScrollArea>
         </TabsContent>

@@ -13,6 +13,8 @@ export interface CheckoutComponent {
   content?: any;
 }
 
+export type LayoutType = "single" | "two-columns" | "two-columns-asymmetric" | "three-columns";
+
 export interface CheckoutCustomization {
   primaryColor: string;
   secondaryColor: string;
@@ -23,6 +25,7 @@ export interface CheckoutCustomization {
   formBackgroundColor: string;
   selectedPaymentColor: string;
   font: string;
+  layout: LayoutType;
   components: CheckoutComponent[];
 }
 
@@ -42,6 +45,7 @@ const CheckoutCustomizer = () => {
     formBackgroundColor: "hsl(216, 15%, 18%)",
     selectedPaymentColor: "hsl(142, 76%, 36%)",
     font: "Inter",
+    layout: "single",
     components: [],
   });
 
@@ -174,6 +178,7 @@ const CheckoutCustomizer = () => {
           onUpdateComponent={handleUpdateComponent}
           onDeleteComponent={handleDeleteComponent}
           onDeselectComponent={() => setSelectedComponent(null)}
+          viewMode={viewMode}
         />
       </div>
     </div>

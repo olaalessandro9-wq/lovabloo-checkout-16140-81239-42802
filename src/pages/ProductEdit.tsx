@@ -20,6 +20,7 @@ import { CheckoutConfigDialog } from "@/components/products/CheckoutConfigDialog
 import { CouponsTable, type Coupon } from "@/components/products/CouponsTable";
 import { CouponDialog } from "@/components/products/CouponDialog";
 import { LinksTable, type CheckoutLink } from "@/components/products/LinksTable";
+import { supabase } from "@/integrations/supabase/client";
 
 const ProductEdit = () => {
   const navigate = useNavigate();
@@ -69,30 +70,124 @@ const ProductEdit = () => {
     redirectIgnoringOrderBumpFailures: false,
   });
 
-  // Mock data para links (será substituído pela aba Links mais tarde)
-  const mockLinks = [
-    { id: "link-1", name: "Rise community", price: 47.00 },
-    { id: "link-2", name: "Premium Access", price: 97.00 },
-    { id: "link-3", name: "VIP Members", price: 147.00 },
-  ];
+  const [paymentLinks, setPaymentLinks] = useState<CheckoutLink[]>([]);
 
-  const [checkouts, setCheckouts] = useState<Checkout[]>([
-    {
-      id: "checkout-1",
-      name: "Checkout Principal",
-      price: 47.00,
-      visits: 34,
-      offer: "Rise community",
-      isDefault: true,
-      linkId: "link-1",
-    },
-  ]);
+  const [checkouts, setCheckouts] = useState<Checkout[]>([]);
   const [checkoutConfigDialogOpen, setCheckoutConfigDialogOpen] = useState(false);
   const [editingCheckout, setEditingCheckout] = useState<Checkout | null>(null);
 
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [couponDialogOpen, setCouponDialogOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
+
+  // Load data from database
+  useEffect(() => {
+    if (productId) {
+      loadPaymentLinks();
+      loadCheckouts();
+      loadCoupons();
+      loadOrderBumps();
+    }
+  }, [productId]);
+
+  const loadPaymentLinks = async () => {
+    if (!productId) return;
+    try {
+      const { data, error } = await supabase
+        .from("payment_links")
+        .select("*")
+        .eq("product_id", productId)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setPaymentLinks((data || []).map(link => ({
+        id: link.id,
+        name: link.name,
+        price: Number(link.price),
+        url: link.url || "",
+        offer: link.name,
+        type: "Checkout" as const,
+        status: link.active ? "active" as const : "inactive" as const,
+        hiddenFromAffiliates: false,
+        isDefault: false,
+      })));
+    } catch (error) {
+      console.error("Error loading payment links:", error);
+    }
+  };
+
+  const loadCheckouts = async () => {
+    if (!productId) return;
+    try {
+      const { data, error } = await supabase
+        .from("checkouts")
+        .select(`
+          *,
+          payment_links (
+            id,
+            name,
+            price
+          )
+        `)
+        .eq("product_id", productId)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setCheckouts((data || []).map(checkout => ({
+        id: checkout.id,
+        name: checkout.name,
+        price: checkout.payment_links?.price || 0,
+        visits: 0,
+        offer: checkout.payment_links?.name || "",
+        isDefault: false,
+        linkId: checkout.link_id || "",
+      })));
+    } catch (error) {
+      console.error("Error loading checkouts:", error);
+    }
+  };
+
+  const loadCoupons = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("coupons")
+        .select(`
+          *,
+          coupon_products (
+            product_id
+          )
+        `)
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      setCoupons((data || []).map(coupon => ({
+        id: coupon.id,
+        code: coupon.code,
+        discount: Number(coupon.discount_value),
+        startDate: coupon.created_at ? new Date(coupon.created_at) : new Date(),
+        endDate: coupon.expires_at ? new Date(coupon.expires_at) : new Date(),
+        usageCount: coupon.uses_count || 0,
+        applyToOrderBumps: false,
+      })));
+    } catch (error) {
+      console.error("Error loading coupons:", error);
+    }
+  };
+
+  const loadOrderBumps = async () => {
+    if (!productId) return;
+    try {
+      const { data, error } = await supabase
+        .from("order_bumps")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (error) throw error;
+      // Order bumps will be filtered by checkout_id when needed
+    } catch (error) {
+      console.error("Error loading order bumps:", error);
+    }
+  };
 
   const [affiliateSettings, setAffiliateSettings] = useState({
     enabled: false,
@@ -209,12 +304,28 @@ const ProductEdit = () => {
     });
   };
 
-  const handleDeleteCheckout = (id: string) => {
-    setCheckouts(checkouts.filter(c => c.id !== id));
-    toast({
-      title: "Checkout excluído",
-      description: "O checkout foi removido",
-    });
+  const handleDeleteCheckout = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("checkouts")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setCheckouts(checkouts.filter(c => c.id !== id));
+      toast({
+        title: "Checkout excluído",
+        description: "O checkout foi removido",
+      });
+    } catch (error) {
+      console.error("Error deleting checkout:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o checkout",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleConfigureCheckout = (checkout: Checkout) => {
@@ -226,29 +337,49 @@ const ProductEdit = () => {
     navigate(`/produtos/checkout/personalizar?id=${checkout.id}`);
   };
 
-  const handleSaveCheckout = (checkout: Checkout) => {
-    if (editingCheckout) {
-      // Se estiver definindo como padrão, remover padrão dos outros
-      if (checkout.isDefault) {
-        setCheckouts(checkouts.map(c => ({
-          ...c,
-          isDefault: c.id === checkout.id,
-        })));
+  const handleSaveCheckout = async (checkout: Checkout) => {
+    if (!productId) return;
+
+    try {
+      if (editingCheckout) {
+        const { error } = await supabase
+          .from("checkouts")
+          .update({
+            name: checkout.name,
+            link_id: checkout.linkId,
+          })
+          .eq("id", checkout.id);
+
+        if (error) throw error;
+        
+        setCheckouts(checkouts.map(c => c.id === checkout.id ? checkout : c));
+        toast({
+          title: "Checkout atualizado",
+          description: "O checkout foi atualizado com sucesso",
+        });
+      } else {
+        const { error } = await supabase
+          .from("checkouts")
+          .insert({
+            name: checkout.name,
+            product_id: productId,
+            link_id: checkout.linkId,
+          });
+
+        if (error) throw error;
+        
+        toast({
+          title: "Checkout adicionado",
+          description: "O checkout foi adicionado com sucesso",
+        });
       }
-      setCheckouts(checkouts.map(c => c.id === checkout.id ? checkout : c));
+      loadCheckouts();
+    } catch (error) {
+      console.error("Error saving checkout:", error);
       toast({
-        title: "Checkout atualizado",
-        description: "O checkout foi atualizado com sucesso",
-      });
-    } else {
-      // Se for o primeiro ou estiver marcado como padrão
-      if (checkouts.length === 0 || checkout.isDefault) {
-        setCheckouts(checkouts.map(c => ({ ...c, isDefault: false })));
-      }
-      setCheckouts([...checkouts, checkout]);
-      toast({
-        title: "Checkout adicionado",
-        description: "O checkout foi adicionado com sucesso",
+        title: "Erro",
+        description: "Não foi possível salvar o checkout",
+        variant: "destructive",
       });
     }
   };
@@ -263,26 +394,73 @@ const ProductEdit = () => {
     setCouponDialogOpen(true);
   };
 
-  const handleDeleteCoupon = (id: string) => {
-    setCoupons(coupons.filter(c => c.id !== id));
-    toast({
-      title: "Cupom excluído",
-      description: "O cupom foi removido",
-    });
+  const handleDeleteCoupon = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("coupons")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setCoupons(coupons.filter(c => c.id !== id));
+      toast({
+        title: "Cupom excluído",
+        description: "O cupom foi removido",
+      });
+    } catch (error) {
+      console.error("Error deleting coupon:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o cupom",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSaveCoupon = (coupon: Coupon) => {
-    if (editingCoupon) {
-      setCoupons(coupons.map(c => c.id === coupon.id ? coupon : c));
+  const handleSaveCoupon = async (coupon: Coupon) => {
+    try {
+      if (editingCoupon) {
+        const { error } = await supabase
+          .from("coupons")
+          .update({
+            code: coupon.code,
+            discount_value: coupon.discount,
+            discount_type: "percentage",
+            expires_at: coupon.endDate.toISOString(),
+          })
+          .eq("id", coupon.id);
+
+        if (error) throw error;
+        
+        toast({
+          title: "Cupom atualizado",
+          description: "O cupom foi atualizado com sucesso",
+        });
+      } else {
+        const { error } = await supabase
+          .from("coupons")
+          .insert({
+            code: coupon.code,
+            discount_value: coupon.discount,
+            discount_type: "percentage",
+            expires_at: coupon.endDate.toISOString(),
+          });
+
+        if (error) throw error;
+        
+        toast({
+          title: "Cupom adicionado",
+          description: "O cupom foi adicionado com sucesso",
+        });
+      }
+      loadCoupons();
+    } catch (error) {
+      console.error("Error saving coupon:", error);
       toast({
-        title: "Cupom atualizado",
-        description: "O cupom foi atualizado com sucesso",
-      });
-    } else {
-      setCoupons([...coupons, coupon]);
-      toast({
-        title: "Cupom adicionado",
-        description: "O cupom foi adicionado com sucesso",
+        title: "Erro",
+        description: "Não foi possível salvar o cupom",
+        variant: "destructive",
       });
     }
   };
@@ -834,7 +1012,7 @@ const ProductEdit = () => {
             onOpenChange={setCheckoutConfigDialogOpen}
             onSave={handleSaveCheckout}
             checkout={editingCheckout}
-            availableLinks={mockLinks}
+            availableLinks={paymentLinks}
           />
 
           <TabsContent value="cupons">

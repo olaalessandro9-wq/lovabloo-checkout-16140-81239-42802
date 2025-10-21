@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      affiliates: {
+        Row: {
+          active: boolean | null
+          code: string
+          commission_percentage: number
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          product_id: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          code: string
+          commission_percentage: number
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          product_id?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          code?: string
+          commission_percentage?: number
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          product_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliates_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkout_components: {
         Row: {
           component_order: number
@@ -90,6 +131,7 @@ export type Database = {
           font: string | null
           form_background_color: string | null
           id: string
+          link_id: string | null
           name: string
           primary_color: string | null
           product_id: string | null
@@ -107,6 +149,7 @@ export type Database = {
           font?: string | null
           form_background_color?: string | null
           id?: string
+          link_id?: string | null
           name: string
           primary_color?: string | null
           product_id?: string | null
@@ -124,6 +167,7 @@ export type Database = {
           font?: string | null
           form_background_color?: string | null
           id?: string
+          link_id?: string | null
           name?: string
           primary_color?: string | null
           product_id?: string | null
@@ -135,7 +179,47 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "checkouts_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "payment_links"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "checkouts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupon_products: {
+        Row: {
+          coupon_id: string | null
+          id: string
+          product_id: string | null
+        }
+        Insert: {
+          coupon_id?: string | null
+          id?: string
+          product_id?: string | null
+        }
+        Update: {
+          coupon_id?: string | null
+          id?: string
+          product_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_products_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_products_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
@@ -179,6 +263,47 @@ export type Database = {
         }
         Relationships: []
       }
+      downsells: {
+        Row: {
+          active: boolean | null
+          checkout_id: string | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          name: string
+          price: number
+        }
+        Insert: {
+          active?: boolean | null
+          checkout_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name: string
+          price: number
+        }
+        Update: {
+          active?: boolean | null
+          checkout_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name?: string
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "downsells_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_bumps: {
         Row: {
           active: boolean | null
@@ -213,6 +338,47 @@ export type Database = {
             columns: ["checkout_id"]
             isOneToOne: false
             referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_links: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string
+          name: string
+          price: number
+          product_id: string | null
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          name: string
+          price: number
+          product_id?: string | null
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          price?: number
+          product_id?: string | null
+          updated_at?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_links_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -285,6 +451,47 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      upsells: {
+        Row: {
+          active: boolean | null
+          checkout_id: string | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          name: string
+          price: number
+        }
+        Insert: {
+          active?: boolean | null
+          checkout_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name: string
+          price: number
+        }
+        Update: {
+          active?: boolean | null
+          checkout_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name?: string
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "upsells_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

@@ -13,6 +13,13 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { z } from "zod";
+
+const productSchema = z.object({
+  name: z.string().trim().min(1, { message: "Nome é obrigatório" }).max(200, { message: "Nome muito longo" }),
+  description: z.string().trim().max(2000, { message: "Descrição muito longa" }).optional(),
+  price: z.string().trim().regex(/^\d+(\.\d{1,2})?$/, { message: "Preço inválido" }),
+});
 
 interface AddProductDialogProps {
   open: boolean;
@@ -37,12 +44,24 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
     
     setLoading(true);
     try {
+      const validation = productSchema.safeParse({ 
+        name: formData.name, 
+        description: formData.description, 
+        price: formData.price 
+      });
+      
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("products")
         .insert({
-          name: formData.name,
-          description: formData.description,
-          price: parseFloat(formData.price),
+          name: validation.data.name,
+          description: validation.data.description || "",
+          price: parseFloat(validation.data.price),
           user_id: user.id,
           status: "active",
         })

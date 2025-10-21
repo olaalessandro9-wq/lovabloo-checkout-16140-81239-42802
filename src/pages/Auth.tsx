@@ -7,6 +7,20 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().trim().email({ message: "Email inválido" }),
+  password: z.string().min(6, { message: "Senha deve ter no mínimo 6 caracteres" }),
+});
+
+const signupSchema = z.object({
+  email: z.string().trim().email({ message: "Email inválido" }),
+  password: z.string().min(6, { message: "Senha deve ter no mínimo 6 caracteres" }),
+  name: z.string().trim().min(1, { message: "Nome é obrigatório" }).max(100, { message: "Nome muito longo" }),
+  phone: z.string().trim().max(20, { message: "Telefone muito longo" }).optional(),
+  cpf_cnpj: z.string().trim().min(1, { message: "CPF/CNPJ é obrigatório" }).max(18, { message: "CPF/CNPJ muito longo" }),
+});
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -38,9 +52,16 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      const validation = loginSchema.safeParse({ email, password });
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: validation.data.email,
+        password: validation.data.password,
       });
 
       if (error) throw error;
@@ -57,15 +78,29 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      const validation = signupSchema.safeParse({ 
+        email, 
+        password, 
+        name,
+        phone: phone || undefined,
+        cpf_cnpj: cpfCnpj,
+      });
+      
+      if (!validation.success) {
+        toast.error(validation.error.errors[0].message);
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: validation.data.email,
+        password: validation.data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
-            name,
-            phone,
-            cpf_cnpj: cpfCnpj,
+            name: validation.data.name,
+            phone: validation.data.phone || "",
+            cpf_cnpj: validation.data.cpf_cnpj,
           },
         },
       });

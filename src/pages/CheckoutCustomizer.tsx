@@ -45,16 +45,51 @@ const CheckoutCustomizer = () => {
     components: [],
   });
 
+  const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
+
   const handleAddComponent = (type: CheckoutComponent["type"]) => {
     const newComponent: CheckoutComponent = {
       id: `${type}-${Date.now()}`,
       type,
-      content: {},
+      content: {
+        text: type === "text" ? "Digite seu texto aqui" : undefined,
+        fontSize: type === "text" ? "16" : undefined,
+        color: type === "text" ? customization.textColor : undefined,
+        imageUrl: type === "image" ? "" : undefined,
+        title: type === "advantage" ? "Vantagem" : undefined,
+        icon: type === "advantage" ? "check" : type === "seal" ? "star" : undefined,
+        minutes: type === "timer" ? 15 : undefined,
+        seconds: type === "timer" ? 0 : undefined,
+        timerColor: type === "timer" ? customization.buttonColor : undefined,
+        testimonialText: type === "testimonial" ? "Depoimento do cliente aqui" : undefined,
+        authorName: type === "testimonial" ? "Nome do Cliente" : undefined,
+        sealText: type === "seal" ? "GARANTIA" : undefined,
+      },
     };
     setCustomization({
       ...customization,
       components: [...customization.components, newComponent],
     });
+    setSelectedComponent(newComponent.id);
+  };
+
+  const handleUpdateComponent = (componentId: string, updates: Partial<CheckoutComponent>) => {
+    setCustomization({
+      ...customization,
+      components: customization.components.map(comp =>
+        comp.id === componentId ? { ...comp, ...updates } : comp
+      ),
+    });
+  };
+
+  const handleDeleteComponent = (componentId: string) => {
+    setCustomization({
+      ...customization,
+      components: customization.components.filter(comp => comp.id !== componentId),
+    });
+    if (selectedComponent === componentId) {
+      setSelectedComponent(null);
+    }
   };
 
   const handleSave = () => {
@@ -125,6 +160,8 @@ const CheckoutCustomizer = () => {
             customization={customization} 
             viewMode={viewMode}
             onAddComponent={handleAddComponent}
+            selectedComponentId={selectedComponent}
+            onSelectComponent={setSelectedComponent}
           />
         </div>
 
@@ -133,6 +170,10 @@ const CheckoutCustomizer = () => {
           customization={customization}
           onChange={setCustomization}
           onAddComponent={handleAddComponent}
+          selectedComponentId={selectedComponent}
+          onUpdateComponent={handleUpdateComponent}
+          onDeleteComponent={handleDeleteComponent}
+          onDeselectComponent={() => setSelectedComponent(null)}
         />
       </div>
     </div>

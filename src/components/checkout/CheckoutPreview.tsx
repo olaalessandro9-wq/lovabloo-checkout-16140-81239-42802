@@ -2,51 +2,107 @@ import { useState } from "react";
 import { CreditCard, User, CreditCard as CardIcon } from "lucide-react";
 import { CheckoutCustomization, ViewMode, CheckoutComponent } from "@/pages/CheckoutCustomizer";
 
-const ComponentRenderer = ({ component }: { component: CheckoutComponent }) => {
+const ComponentRenderer = ({ 
+  component, 
+  isSelected, 
+  onClick 
+}: { 
+  component: CheckoutComponent;
+  isSelected: boolean;
+  onClick: () => void;
+}) => {
+  const baseClasses = `cursor-pointer transition-all ${
+    isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:ring-1 hover:ring-primary/50"
+  }`;
+
   switch (component.type) {
     case "text":
       return (
-        <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-          <p className="text-sm">Texto editável - Clique para editar</p>
+        <div 
+          className={`p-4 bg-white/5 rounded-lg border border-white/10 ${baseClasses}`}
+          onClick={onClick}
+        >
+          <p 
+            className="text-sm"
+            style={{
+              color: component.content?.color || "inherit",
+              fontSize: `${component.content?.fontSize || 16}px`,
+            }}
+          >
+            {component.content?.text || "Texto editável - Clique para editar"}
+          </p>
         </div>
       );
     case "image":
       return (
-        <div className="p-4 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center h-32">
-          <p className="text-sm text-muted-foreground">Imagem - Clique para adicionar</p>
+        <div 
+          className={`p-4 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center ${baseClasses}`}
+          onClick={onClick}
+          style={{ minHeight: component.content?.imageUrl ? "auto" : "128px" }}
+        >
+          {component.content?.imageUrl ? (
+            <img 
+              src={component.content.imageUrl} 
+              alt="Componente" 
+              className="max-w-full h-auto rounded"
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">Imagem - Clique para adicionar</p>
+          )}
         </div>
       );
     case "advantage":
       return (
-        <div className="p-4 bg-white/5 rounded-lg border border-white/10 flex items-center gap-3">
+        <div 
+          className={`p-4 bg-white/5 rounded-lg border border-white/10 flex items-center gap-3 ${baseClasses}`}
+          onClick={onClick}
+        >
           <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
             <span className="text-white text-xs">✓</span>
           </div>
-          <p className="text-sm">Vantagem - Clique para editar</p>
+          <p className="text-sm">{component.content?.title || "Vantagem - Clique para editar"}</p>
         </div>
       );
     case "seal":
       return (
-        <div className="p-4 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center">
+        <div 
+          className={`p-4 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center ${baseClasses}`}
+          onClick={onClick}
+        >
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
-            <span className="text-white text-xs font-bold">SELO</span>
+            <span className="text-white text-xs font-bold">
+              {component.content?.sealText || "SELO"}
+            </span>
           </div>
         </div>
       );
     case "timer":
+      const minutes = component.content?.minutes || 15;
+      const seconds = component.content?.seconds || 0;
       return (
-        <div className="p-4 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-lg border border-red-500/30">
+        <div 
+          className={`p-4 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-lg border border-red-500/30 ${baseClasses}`}
+          onClick={onClick}
+        >
           <div className="flex items-center justify-center gap-2">
-            <span className="text-lg font-bold">00:15:30</span>
+            <span 
+              className="text-lg font-bold"
+              style={{ color: component.content?.timerColor }}
+            >
+              {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}:00
+            </span>
           </div>
           <p className="text-xs text-center mt-1 text-muted-foreground">Oferta expira em</p>
         </div>
       );
     case "testimonial":
       return (
-        <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-          <p className="text-sm italic">"Depoimento do cliente aqui"</p>
-          <p className="text-xs text-muted-foreground mt-2">- Nome do Cliente</p>
+        <div 
+          className={`p-4 bg-white/5 rounded-lg border border-white/10 ${baseClasses}`}
+          onClick={onClick}
+        >
+          <p className="text-sm italic">"{component.content?.testimonialText || "Depoimento do cliente aqui"}"</p>
+          <p className="text-xs text-muted-foreground mt-2">- {component.content?.authorName || "Nome do Cliente"}</p>
         </div>
       );
     default:
@@ -58,9 +114,17 @@ interface CheckoutPreviewProps {
   customization: CheckoutCustomization;
   viewMode: ViewMode;
   onAddComponent: (type: CheckoutComponent["type"]) => void;
+  selectedComponentId: string | null;
+  onSelectComponent: (id: string) => void;
 }
 
-export const CheckoutPreview = ({ customization, viewMode, onAddComponent }: CheckoutPreviewProps) => {
+export const CheckoutPreview = ({ 
+  customization, 
+  viewMode, 
+  onAddComponent,
+  selectedComponentId,
+  onSelectComponent 
+}: CheckoutPreviewProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -113,7 +177,12 @@ export const CheckoutPreview = ({ customization, viewMode, onAddComponent }: Che
             ) : (
               <div className="space-y-3 p-4">
                 {customization.components.map((component) => (
-                  <ComponentRenderer key={component.id} component={component} />
+                  <ComponentRenderer 
+                    key={component.id} 
+                    component={component}
+                    isSelected={selectedComponentId === component.id}
+                    onClick={() => onSelectComponent(component.id)}
+                  />
                 ))}
               </div>
             )}
@@ -348,7 +417,12 @@ export const CheckoutPreview = ({ customization, viewMode, onAddComponent }: Che
             ) : (
               <div className="space-y-3 p-4">
                 {customization.components.map((component) => (
-                  <ComponentRenderer key={component.id} component={component} />
+                  <ComponentRenderer 
+                    key={component.id} 
+                    component={component}
+                    isSelected={selectedComponentId === component.id}
+                    onClick={() => onSelectComponent(component.id)}
+                  />
                 ))}
               </div>
             )}

@@ -1,5 +1,6 @@
 import { CheckoutCustomization, CheckoutComponent } from "@/pages/CheckoutCustomizer";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,6 +11,10 @@ interface CheckoutCustomizationPanelProps {
   customization: CheckoutCustomization;
   onChange: (customization: CheckoutCustomization) => void;
   onAddComponent: (type: CheckoutComponent["type"]) => void;
+  selectedComponentId: string | null;
+  onUpdateComponent: (componentId: string, updates: Partial<CheckoutComponent>) => void;
+  onDeleteComponent: (componentId: string) => void;
+  onDeselectComponent: () => void;
 }
 
 const ColorPicker = ({
@@ -117,7 +122,12 @@ export const CheckoutCustomizationPanel = ({
   customization,
   onChange,
   onAddComponent,
+  selectedComponentId,
+  onUpdateComponent,
+  onDeleteComponent,
+  onDeselectComponent,
 }: CheckoutCustomizationPanelProps) => {
+  const selectedComponent = customization.components.find(c => c.id === selectedComponentId);
   const updateCustomization = (
     key: keyof CheckoutCustomization,
     value: string
@@ -141,32 +151,293 @@ export const CheckoutCustomizationPanel = ({
         <TabsContent value="components" className="flex-1 mt-0">
           <ScrollArea className="h-full">
             <div className="p-6">
-              <h2 className="text-lg font-semibold mb-2 text-foreground">
-                Componentes
-              </h2>
-              <p className="text-sm text-muted-foreground mb-6">
-                Arraste componentes para personalizar seu checkout
-              </p>
-              
-              <div className="grid grid-cols-2 gap-3">
-                {componentItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Card
-                      key={item.id}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData("componentType", item.id);
-                      }}
-                      onClick={() => onAddComponent(item.id as CheckoutComponent["type"])}
-                      className="p-4 flex flex-col items-center justify-center gap-2 cursor-move hover:bg-accent transition-colors h-24 active:opacity-50"
+              {selectedComponent ? (
+                // Editor de componente selecionado
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Editar {componentItems.find(i => i.id === selectedComponent.type)?.label}
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onDeselectComponent}
                     >
-                      <Icon className="w-6 h-6 text-muted-foreground" />
-                      <span className="text-sm font-medium">{item.label}</span>
-                    </Card>
-                  );
-                })}
-              </div>
+                      Voltar
+                    </Button>
+                  </div>
+
+                  {/* Text Editor */}
+                  {selectedComponent.type === "text" && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Texto</Label>
+                        <textarea
+                          value={selectedComponent.content?.text || ""}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                            content: { ...selectedComponent.content, text: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground min-h-[100px]"
+                          placeholder="Digite seu texto aqui"
+                        />
+                      </div>
+                      <div>
+                        <Label>Tamanho da Fonte</Label>
+                        <input
+                          type="number"
+                          value={selectedComponent.content?.fontSize || 16}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                            content: { ...selectedComponent.content, fontSize: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
+                          min="10"
+                          max="72"
+                        />
+                      </div>
+                      <ColorPicker
+                        label="Cor do Texto"
+                        value={selectedComponent.content?.color || customization.textColor}
+                        onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                          content: { ...selectedComponent.content, color: value }
+                        })}
+                      />
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={() => onDeleteComponent(selectedComponent.id)}
+                      >
+                        Excluir Componente
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Image Editor */}
+                  {selectedComponent.type === "image" && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label>URL da Imagem</Label>
+                        <input
+                          type="text"
+                          value={selectedComponent.content?.imageUrl || ""}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                            content: { ...selectedComponent.content, imageUrl: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
+                          placeholder="https://exemplo.com/imagem.jpg"
+                        />
+                      </div>
+                      {selectedComponent.content?.imageUrl && (
+                        <div className="border border-border rounded p-2">
+                          <img 
+                            src={selectedComponent.content.imageUrl} 
+                            alt="Preview" 
+                            className="w-full h-auto rounded"
+                          />
+                        </div>
+                      )}
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={() => onDeleteComponent(selectedComponent.id)}
+                      >
+                        Excluir Componente
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Advantage Editor */}
+                  {selectedComponent.type === "advantage" && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Texto da Vantagem</Label>
+                        <input
+                          type="text"
+                          value={selectedComponent.content?.title || ""}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                            content: { ...selectedComponent.content, title: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
+                          placeholder="Digite a vantagem"
+                        />
+                      </div>
+                      <div>
+                        <Label>Ícone</Label>
+                        <select
+                          value={selectedComponent.content?.icon || "check"}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                            content: { ...selectedComponent.content, icon: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
+                        >
+                          <option value="check">✓ Check</option>
+                          <option value="star">★ Estrela</option>
+                          <option value="heart">♥ Coração</option>
+                          <option value="shield">🛡️ Escudo</option>
+                        </select>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={() => onDeleteComponent(selectedComponent.id)}
+                      >
+                        Excluir Componente
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Seal Editor */}
+                  {selectedComponent.type === "seal" && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Texto do Selo</Label>
+                        <input
+                          type="text"
+                          value={selectedComponent.content?.sealText || ""}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                            content: { ...selectedComponent.content, sealText: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
+                          placeholder="GARANTIA"
+                        />
+                      </div>
+                      <div>
+                        <Label>Ícone</Label>
+                        <select
+                          value={selectedComponent.content?.icon || "star"}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                            content: { ...selectedComponent.content, icon: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
+                        >
+                          <option value="star">★ Estrela</option>
+                          <option value="badge">🏆 Troféu</option>
+                          <option value="certificate">📜 Certificado</option>
+                          <option value="medal">🥇 Medalha</option>
+                        </select>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={() => onDeleteComponent(selectedComponent.id)}
+                      >
+                        Excluir Componente
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Timer Editor */}
+                  {selectedComponent.type === "timer" && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Minutos</Label>
+                        <input
+                          type="number"
+                          value={selectedComponent.content?.minutes || 15}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                            content: { ...selectedComponent.content, minutes: parseInt(e.target.value) }
+                          })}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
+                          min="0"
+                          max="59"
+                        />
+                      </div>
+                      <div>
+                        <Label>Segundos</Label>
+                        <input
+                          type="number"
+                          value={selectedComponent.content?.seconds || 0}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                            content: { ...selectedComponent.content, seconds: parseInt(e.target.value) }
+                          })}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
+                          min="0"
+                          max="59"
+                        />
+                      </div>
+                      <ColorPicker
+                        label="Cor do Cronômetro"
+                        value={selectedComponent.content?.timerColor || customization.buttonColor}
+                        onChange={(value) => onUpdateComponent(selectedComponent.id, {
+                          content: { ...selectedComponent.content, timerColor: value }
+                        })}
+                      />
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={() => onDeleteComponent(selectedComponent.id)}
+                      >
+                        Excluir Componente
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Testimonial Editor */}
+                  {selectedComponent.type === "testimonial" && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Depoimento</Label>
+                        <textarea
+                          value={selectedComponent.content?.testimonialText || ""}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                            content: { ...selectedComponent.content, testimonialText: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground min-h-[100px]"
+                          placeholder="Digite o depoimento aqui"
+                        />
+                      </div>
+                      <div>
+                        <Label>Nome do Cliente</Label>
+                        <input
+                          type="text"
+                          value={selectedComponent.content?.authorName || ""}
+                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
+                            content: { ...selectedComponent.content, authorName: e.target.value }
+                          })}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
+                          placeholder="Nome do Cliente"
+                        />
+                      </div>
+                      <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={() => onDeleteComponent(selectedComponent.id)}
+                      >
+                        Excluir Componente
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Lista de componentes quando nenhum está selecionado
+                <>
+                  <h2 className="text-lg font-semibold mb-2 text-foreground">
+                    Componentes
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-6">
+                    Arraste componentes para personalizar seu checkout
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    {componentItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Card
+                          key={item.id}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("componentType", item.id);
+                          }}
+                          onClick={() => onAddComponent(item.id as CheckoutComponent["type"])}
+                          className="p-4 flex flex-col items-center justify-center gap-2 cursor-move hover:bg-accent transition-colors h-24 active:opacity-50"
+                        >
+                          <Icon className="w-6 h-6 text-muted-foreground" />
+                          <span className="text-sm font-medium">{item.label}</span>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           </ScrollArea>
         </TabsContent>

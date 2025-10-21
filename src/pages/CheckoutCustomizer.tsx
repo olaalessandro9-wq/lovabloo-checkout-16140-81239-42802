@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Monitor, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CheckoutPreview } from "@/components/checkout/CheckoutPreview";
 import { CheckoutCustomizationPanel } from "@/components/checkout/CheckoutCustomizationPanel";
+
+export type ViewMode = "desktop" | "mobile";
 
 export interface CheckoutCustomization {
   primaryColor: string;
@@ -21,6 +23,7 @@ const CheckoutCustomizer = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const checkoutId = searchParams.get("id");
+  const [viewMode, setViewMode] = useState<ViewMode>("desktop");
 
   const [customization, setCustomization] = useState<CheckoutCustomization>({
     primaryColor: "hsl(0, 84%, 60%)",
@@ -62,9 +65,34 @@ const CheckoutCustomizer = () => {
               </p>
             </div>
           </div>
-          <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
-            Salvar Alterações
-          </Button>
+          
+          <div className="flex items-center gap-3">
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
+              <Button
+                variant={viewMode === "desktop" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("desktop")}
+                className="gap-2"
+              >
+                <Monitor className="w-4 h-4" />
+                Desktop
+              </Button>
+              <Button
+                variant={viewMode === "mobile" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("mobile")}
+                className="gap-2"
+              >
+                <Smartphone className="w-4 h-4" />
+                Mobile
+              </Button>
+            </div>
+            
+            <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
+              Salvar Alterações
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -72,7 +100,7 @@ const CheckoutCustomizer = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* Preview */}
         <div className="flex-1 overflow-auto">
-          <CheckoutPreview customization={customization} />
+          <CheckoutPreview customization={customization} viewMode={viewMode} />
         </div>
 
         {/* Customization Panel */}

@@ -9,20 +9,23 @@ interface CheckoutPreviewProps {
   onSelectComponent: (id: string | null) => void;
   selectedRow: string;
   onSelectRow: (id: string) => void;
+  isPreviewMode?: boolean;
 }
 
 const ComponentRenderer = ({ 
   component, 
   isSelected, 
   onClick,
-  customization
+  customization,
+  isPreviewMode = false,
 }: { 
   component: CheckoutComponent;
   isSelected: boolean;
   onClick: () => void;
   customization: CheckoutCustomization;
+  isPreviewMode?: boolean;
 }) => {
-  const baseClasses = `cursor-pointer transition-all ${
+  const baseClasses = isPreviewMode ? '' : `cursor-pointer transition-all ${
     isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:ring-1 hover:ring-primary/50"
   }`;
 
@@ -143,6 +146,7 @@ const RowRenderer = ({
   onSelectComponent,
   isSelected,
   onSelectRow,
+  isPreviewMode = false,
 }: { 
   row: CheckoutRow;
   customization: CheckoutCustomization;
@@ -150,18 +154,23 @@ const RowRenderer = ({
   onSelectComponent: (id: string | null) => void;
   isSelected: boolean;
   onSelectRow: (id: string) => void;
+  isPreviewMode?: boolean;
 }) => {
   const { layout, components, id: rowId } = row;
 
   const renderColumn = (columnComponents: CheckoutComponent[]) => (
     <div 
-      className="min-h-[200px] rounded-lg border-2 border-dashed border-muted-foreground/30 p-4 flex flex-col gap-3"
-      onClick={(e) => {
+      className={`rounded-lg p-4 flex flex-col gap-3 ${
+        isPreviewMode 
+          ? 'min-h-0' 
+          : 'min-h-[200px] border-2 border-dashed border-muted-foreground/30'
+      }`}
+      onClick={!isPreviewMode ? (e) => {
         e.stopPropagation();
         onSelectRow(rowId);
-      }}
+      } : undefined}
     >
-      {columnComponents.length === 0 ? (
+      {columnComponents.length === 0 && !isPreviewMode ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground">
           Arraste componentes aqui
         </div>
@@ -172,7 +181,8 @@ const RowRenderer = ({
             component={component}
             customization={customization}
             isSelected={selectedComponentId === component.id}
-            onClick={() => onSelectComponent(component.id)}
+            onClick={() => !isPreviewMode && onSelectComponent(component.id)}
+            isPreviewMode={isPreviewMode}
           />
         ))
       )}
@@ -181,11 +191,11 @@ const RowRenderer = ({
 
   return (
     <div 
-      className={`w-full rounded-lg p-2 transition-all ${isSelected ? 'ring-2 ring-primary' : ''}`}
-      onClick={(e) => {
+      className={`w-full rounded-lg p-2 transition-all ${!isPreviewMode && isSelected ? 'ring-2 ring-primary' : ''}`}
+      onClick={!isPreviewMode ? (e) => {
         e.stopPropagation();
         onSelectRow(rowId);
-      }}
+      } : undefined}
     >
       {layout === "single" && renderColumn(components)}
       
@@ -214,14 +224,15 @@ const RowRenderer = ({
   );
 };
 
-export const CheckoutPreview = ({ 
-  customization, 
+export const CheckoutPreview = ({
+  customization,
   viewMode,
   onAddComponent,
   selectedComponentId,
   onSelectComponent,
   selectedRow,
   onSelectRow,
+  isPreviewMode = false,
 }: CheckoutPreviewProps) => {
 
   if (viewMode === "mobile") {
@@ -248,6 +259,7 @@ export const CheckoutPreview = ({
                 onSelectComponent={onSelectComponent}
                 isSelected={selectedRow === row.id}
                 onSelectRow={onSelectRow}
+                isPreviewMode={isPreviewMode}
               />
             ))}
           </div>
@@ -470,6 +482,7 @@ export const CheckoutPreview = ({
                 onSelectComponent={onSelectComponent}
                 isSelected={selectedRow === row.id}
                 onSelectRow={onSelectRow}
+                isPreviewMode={isPreviewMode}
               />
             ))}
           </div>

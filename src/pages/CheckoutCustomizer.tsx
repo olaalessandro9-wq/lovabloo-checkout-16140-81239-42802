@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Monitor, Smartphone } from "lucide-react";
+import { ArrowLeft, Monitor, Smartphone, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CheckoutPreview } from "@/components/checkout/CheckoutPreview";
 import { CheckoutCustomizationPanel } from "@/components/checkout/CheckoutCustomizationPanel";
@@ -39,6 +39,7 @@ const CheckoutCustomizer = () => {
   const [searchParams] = useSearchParams();
   const checkoutId = searchParams.get("id");
   const [viewMode, setViewMode] = useState<ViewMode>("desktop");
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   const [customization, setCustomization] = useState<CheckoutCustomization>({
     primaryColor: "hsl(0, 84%, 60%)",
@@ -200,6 +201,14 @@ const CheckoutCustomizer = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => setIsPreviewMode(!isPreviewMode)} 
+              variant={isPreviewMode ? "default" : "outline"}
+              className="gap-2"
+            >
+              <Eye className="w-4 h-4" />
+              Preview
+            </Button>
             <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
               Salvar Alterações
             </Button>
@@ -219,11 +228,13 @@ const CheckoutCustomizer = () => {
             onSelectComponent={setSelectedComponent}
             selectedRow={selectedRow}
             onSelectRow={setSelectedRow}
+            isPreviewMode={isPreviewMode}
           />
         </div>
 
         {/* Customization Panel */}
-        <CheckoutCustomizationPanel
+        {!isPreviewMode && (
+          <CheckoutCustomizationPanel
           customization={customization}
           onChange={setCustomization}
           onAddComponent={handleAddComponent}
@@ -236,7 +247,8 @@ const CheckoutCustomizer = () => {
           viewMode={viewMode}
           selectedRow={selectedRow}
           onSelectRow={setSelectedRow}
-        />
+          />
+        )}
       </div>
     </div>
   );

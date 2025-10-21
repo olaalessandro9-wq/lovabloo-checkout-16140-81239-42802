@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useUserRole } from "./useUserRole";
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const { isAdmin, role, loading: roleLoading } = useUserRole(user?.id);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -34,9 +32,7 @@ export const useAuth = () => {
   return { 
     user, 
     session, 
-    loading: loading || roleLoading, 
-    signOut, 
-    isAdmin, 
-    role 
+    loading, 
+    signOut
   };
 };

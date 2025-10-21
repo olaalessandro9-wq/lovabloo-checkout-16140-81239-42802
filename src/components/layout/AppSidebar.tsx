@@ -6,8 +6,7 @@ import {
   Users,
   Settings,
   Zap,
-  LogOut,
-  Shield
+  LogOut
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,7 +31,7 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const { signOut, isAdmin } = useAuth();
+  const { signOut } = useAuth();
 
   return (
     <Sidebar className="border-r border-sidebar-border">
@@ -73,32 +72,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/admin"
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-                          isActive
-                            ? "bg-sidebar-accent text-primary font-medium"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/50"
-                        }`
-                      }
-                    >
-                      <Shield className="w-5 h-5" />
-                      <span>Administração</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-        
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <Button

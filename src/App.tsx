@@ -5,14 +5,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AdminRoute } from "@/components/AdminRoute";
 import Index from "./pages/Index";
 import Produtos from "./pages/Produtos";
 import ProductEdit from "./pages/ProductEdit";
 import Afiliados from "./pages/Afiliados";
 import CheckoutCustomizer from "./pages/CheckoutCustomizer";
 import Auth from "./pages/Auth";
-import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +28,6 @@ const App = () => (
           <Route path="/produtos/editar" element={<ProtectedRoute><ProductEdit /></ProtectedRoute>} />
           <Route path="/produtos/checkout/personalizar" element={<ProtectedRoute><CheckoutCustomizer /></ProtectedRoute>} />
           <Route path="/afiliados" element={<ProtectedRoute><Afiliados /></ProtectedRoute>} />
-          <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

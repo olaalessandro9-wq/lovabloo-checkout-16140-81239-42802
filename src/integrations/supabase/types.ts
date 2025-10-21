@@ -14,7 +14,239 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      checkout_components: {
+        Row: {
+          component_order: number
+          content: Json
+          created_at: string | null
+          id: string
+          row_id: string
+          type: string
+        }
+        Insert: {
+          component_order: number
+          content?: Json
+          created_at?: string | null
+          id?: string
+          row_id: string
+          type: string
+        }
+        Update: {
+          component_order?: number
+          content?: Json
+          created_at?: string | null
+          id?: string
+          row_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_components_row_id_fkey"
+            columns: ["row_id"]
+            isOneToOne: false
+            referencedRelation: "checkout_rows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkout_rows: {
+        Row: {
+          checkout_id: string
+          created_at: string | null
+          id: string
+          layout: string
+          row_order: number
+        }
+        Insert: {
+          checkout_id: string
+          created_at?: string | null
+          id?: string
+          layout: string
+          row_order: number
+        }
+        Update: {
+          checkout_id?: string
+          created_at?: string | null
+          id?: string
+          layout?: string
+          row_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_rows_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkouts: {
+        Row: {
+          background_color: string | null
+          button_color: string | null
+          button_text_color: string | null
+          created_at: string | null
+          font: string | null
+          form_background_color: string | null
+          id: string
+          name: string
+          primary_color: string | null
+          product_id: string | null
+          secondary_color: string | null
+          selected_payment_color: string | null
+          seller_name: string | null
+          text_color: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          background_color?: string | null
+          button_color?: string | null
+          button_text_color?: string | null
+          created_at?: string | null
+          font?: string | null
+          form_background_color?: string | null
+          id?: string
+          name: string
+          primary_color?: string | null
+          product_id?: string | null
+          secondary_color?: string | null
+          selected_payment_color?: string | null
+          seller_name?: string | null
+          text_color?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          background_color?: string | null
+          button_color?: string | null
+          button_text_color?: string | null
+          created_at?: string | null
+          font?: string | null
+          form_background_color?: string | null
+          id?: string
+          name?: string
+          primary_color?: string | null
+          product_id?: string | null
+          secondary_color?: string | null
+          selected_payment_color?: string | null
+          seller_name?: string | null
+          text_color?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkouts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          active: boolean | null
+          code: string
+          created_at: string | null
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          uses_count: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          code: string
+          created_at?: string | null
+          discount_type: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          uses_count?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          code?: string
+          created_at?: string | null
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          uses_count?: number | null
+        }
+        Relationships: []
+      }
+      order_bumps: {
+        Row: {
+          active: boolean | null
+          checkout_id: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          price: number
+        }
+        Insert: {
+          active?: boolean | null
+          checkout_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          price: number
+        }
+        Update: {
+          active?: boolean | null
+          checkout_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_bumps_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

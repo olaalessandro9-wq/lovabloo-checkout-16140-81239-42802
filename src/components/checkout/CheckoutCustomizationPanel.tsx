@@ -226,6 +226,36 @@ export const CheckoutCustomizationPanel = ({
                           placeholder="https://exemplo.com/imagem.jpg"
                         />
                       </div>
+                      
+                      <div className="relative">
+                        <Separator className="my-4" />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="bg-card px-2 text-xs text-muted-foreground">OU</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label>Upload de Imagem</Label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                const imageUrl = event.target?.result as string;
+                                onUpdateComponent(selectedComponent.id, {
+                                  content: { ...selectedComponent.content, imageUrl }
+                                });
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 file:cursor-pointer"
+                        />
+                      </div>
+
                       {selectedComponent.content?.imageUrl && (
                         <div className="border border-border rounded p-2">
                           <img 

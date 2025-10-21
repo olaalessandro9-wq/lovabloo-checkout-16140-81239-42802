@@ -52,24 +52,39 @@ const ComponentRenderer = ({
         </div>
       );
     case "advantage":
+      const advantageIcon = component.content?.icon || "check";
+      const advantageIcons: Record<string, string> = {
+        check: "✓",
+        star: "★",
+        heart: "♥",
+        shield: "🛡️"
+      };
       return (
         <div 
           className={`p-4 bg-white/5 rounded-lg border border-white/10 flex items-center gap-3 ${baseClasses}`}
           onClick={onClick}
         >
           <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-            <span className="text-white text-xs">✓</span>
+            <span className="text-white text-xs">{advantageIcons[advantageIcon]}</span>
           </div>
           <p className="text-sm">{component.content?.title || "Vantagem - Clique para editar"}</p>
         </div>
       );
     case "seal":
+      const sealIcon = component.content?.icon || "star";
+      const sealIcons: Record<string, string> = {
+        star: "★",
+        badge: "🏆",
+        certificate: "📜",
+        medal: "🥇"
+      };
       return (
         <div 
           className={`p-4 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center ${baseClasses}`}
           onClick={onClick}
         >
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex flex-col items-center justify-center">
+            <span className="text-2xl mb-1">{sealIcons[sealIcon]}</span>
             <span className="text-white text-xs font-bold">
               {component.content?.sealText || "SELO"}
             </span>

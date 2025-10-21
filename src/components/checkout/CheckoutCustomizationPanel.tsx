@@ -1,7 +1,10 @@
+import { CheckoutCustomization } from "@/pages/CheckoutCustomizer";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { CheckoutCustomization } from "@/pages/CheckoutCustomizer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Type, Image, CheckCircle, Award, Clock, MessageSquare } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 interface CheckoutCustomizationPanelProps {
   customization: CheckoutCustomization;
@@ -18,7 +21,6 @@ const ColorPicker = ({
   onChange: (value: string) => void;
 }) => {
   const handleHslChange = (newValue: string) => {
-    // Garante que o valor esteja no formato hsl()
     if (!newValue.startsWith("hsl(")) {
       onChange(`hsl(${newValue})`);
     } else {
@@ -48,7 +50,6 @@ const ColorPicker = ({
   );
 };
 
-// Funções auxiliares para converter entre HSL e HEX
 const hslToHex = (hsl: string): string => {
   const match = hsl.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
   if (!match) return "#000000";
@@ -102,90 +103,161 @@ const hexToHsl = (hex: string): string => {
   return `${Math.round(h * 360)}, ${Math.round(s * 100)}%, ${Math.round(l * 100)}%`;
 };
 
+const componentItems = [
+  { id: "text", label: "Texto", icon: Type },
+  { id: "image", label: "Imagem", icon: Image },
+  { id: "advantage", label: "Vantagem", icon: CheckCircle },
+  { id: "seal", label: "Selo", icon: Award },
+  { id: "timer", label: "Cronômetro", icon: Clock },
+  { id: "testimonial", label: "Depoimento", icon: MessageSquare },
+];
+
 export const CheckoutCustomizationPanel = ({
   customization,
   onChange,
 }: CheckoutCustomizationPanelProps) => {
-  const updateCustomization = (key: keyof CheckoutCustomization, value: string) => {
-    onChange({ ...customization, [key]: value });
+  const updateCustomization = (
+    key: keyof CheckoutCustomization,
+    value: string
+  ) => {
+    onChange({
+      ...customization,
+      [key]: value,
+    });
   };
 
   return (
-    <div className="w-96 border-l border-border bg-card">
-      <div className="p-4 border-b border-border">
-        <h3 className="font-semibold text-foreground">Configurações</h3>
-        <p className="text-sm text-muted-foreground">
-          Personalize as cores do checkout
-        </p>
-      </div>
+    <div className="w-96 border-l border-border bg-card flex flex-col h-full">
+      <Tabs defaultValue="components" className="flex-1 flex flex-col h-full">
+        <TabsList className="w-full grid grid-cols-3 rounded-none border-b">
+          <TabsTrigger value="components">Componentes</TabsTrigger>
+          <TabsTrigger value="lines">Linhas</TabsTrigger>
+          <TabsTrigger value="settings">Configurações</TabsTrigger>
+        </TabsList>
 
-      <ScrollArea className="h-[calc(100vh-12rem)]">
-        <div className="p-4 space-y-6">
-          {/* Font Selection */}
-          <div className="space-y-2">
-            <Label className="text-sm text-foreground">Fonte</Label>
-            <select
-              value={customization.font}
-              onChange={(e) => updateCustomization("font", e.target.value)}
-              className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-            >
-              <option value="Inter">Inter</option>
-              <option value="Roboto">Roboto</option>
-              <option value="Poppins">Poppins</option>
-              <option value="Montserrat">Montserrat</option>
-            </select>
-          </div>
+        {/* Componentes Tab */}
+        <TabsContent value="components" className="flex-1 mt-0">
+          <ScrollArea className="h-full">
+            <div className="p-6">
+              <h2 className="text-lg font-semibold mb-2 text-foreground">
+                Componentes
+              </h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Arraste componentes para personalizar seu checkout
+              </p>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {componentItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Card
+                      key={item.id}
+                      className="p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-accent transition-colors h-24"
+                    >
+                      <Icon className="w-6 h-6 text-muted-foreground" />
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </ScrollArea>
+        </TabsContent>
 
-          <Separator />
+        {/* Linhas Tab */}
+        <TabsContent value="lines" className="flex-1 mt-0">
+          <ScrollArea className="h-full">
+            <div className="p-6">
+              <h2 className="text-lg font-semibold mb-2 text-foreground">
+                Linhas
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Esta seção será implementada em breve
+              </p>
+            </div>
+          </ScrollArea>
+        </TabsContent>
 
-          {/* Colors */}
-          <div className="space-y-4">
-            <h4 className="font-medium text-foreground">Cores Principais</h4>
-            
-            <ColorPicker
-              label="Cor de Fundo"
-              value={customization.backgroundColor}
-              onChange={(value) => updateCustomization("backgroundColor", value)}
-            />
+        {/* Configurações Tab */}
+        <TabsContent value="settings" className="flex-1 mt-0">
+          <ScrollArea className="h-full">
+            <div className="p-6 space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold mb-2 text-foreground">
+                  Configurações
+                </h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Personalize as cores e fonte do checkout
+                </p>
+              </div>
 
-            <ColorPicker
-              label="Cor do Texto"
-              value={customization.textColor}
-              onChange={(value) => updateCustomization("textColor", value)}
-            />
+              {/* Font Selection */}
+              <div className="space-y-2">
+                <Label className="text-sm text-foreground">Fonte</Label>
+                <select
+                  value={customization.font}
+                  onChange={(e) => updateCustomization("font", e.target.value)}
+                  className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
+                >
+                  <option value="Inter">Inter</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Montserrat">Montserrat</option>
+                </select>
+              </div>
 
-            <ColorPicker
-              label="Cor dos Campos"
-              value={customization.formBackgroundColor}
-              onChange={(value) => updateCustomization("formBackgroundColor", value)}
-            />
-          </div>
+              <Separator />
 
-          <Separator />
+              {/* Colors */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-foreground">Cores Principais</h4>
+                
+                <ColorPicker
+                  label="Cor de Fundo"
+                  value={customization.backgroundColor}
+                  onChange={(value) => updateCustomization("backgroundColor", value)}
+                />
 
-          <div className="space-y-4">
-            <h4 className="font-medium text-foreground">Botões</h4>
+                <ColorPicker
+                  label="Cor do Texto"
+                  value={customization.textColor}
+                  onChange={(value) => updateCustomization("textColor", value)}
+                />
 
-            <ColorPicker
-              label="Cor do Botão Principal"
-              value={customization.buttonColor}
-              onChange={(value) => updateCustomization("buttonColor", value)}
-            />
+                <ColorPicker
+                  label="Cor dos Campos"
+                  value={customization.formBackgroundColor}
+                  onChange={(value) => updateCustomization("formBackgroundColor", value)}
+                />
+              </div>
 
-            <ColorPicker
-              label="Cor do Texto do Botão"
-              value={customization.buttonTextColor}
-              onChange={(value) => updateCustomization("buttonTextColor", value)}
-            />
+              <Separator />
 
-            <ColorPicker
-              label="Cor do Pagamento Selecionado"
-              value={customization.selectedPaymentColor}
-              onChange={(value) => updateCustomization("selectedPaymentColor", value)}
-            />
-          </div>
-        </div>
-      </ScrollArea>
+              <div className="space-y-4">
+                <h4 className="font-medium text-foreground">Botões</h4>
+
+                <ColorPicker
+                  label="Cor do Botão Principal"
+                  value={customization.buttonColor}
+                  onChange={(value) => updateCustomization("buttonColor", value)}
+                />
+
+                <ColorPicker
+                  label="Cor do Texto do Botão"
+                  value={customization.buttonTextColor}
+                  onChange={(value) => updateCustomization("buttonTextColor", value)}
+                />
+
+                <ColorPicker
+                  label="Cor do Pagamento Selecionado"
+                  value={customization.selectedPaymentColor}
+                  onChange={(value) => updateCustomization("selectedPaymentColor", value)}
+                />
+              </div>
+            </div>
+          </ScrollArea>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -48,7 +48,7 @@ const CheckoutCustomizer = () => {
       {/* Header */}
       <div className="border-b border-border bg-card p-4 flex-shrink-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6">
             <Button
               variant="ghost"
               size="icon"
@@ -56,18 +56,8 @@ const CheckoutCustomizer = () => {
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-xl font-semibold text-foreground">
-                Personalizar Checkout
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Configure as cores e aparência do seu checkout
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            {/* View Mode Toggle */}
+            
+            {/* View Mode Toggle - Moved to left */}
             <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
               <Button
                 variant={viewMode === "desktop" ? "default" : "ghost"}
@@ -89,6 +79,17 @@ const CheckoutCustomizer = () => {
               </Button>
             </div>
             
+            <div>
+              <h1 className="text-xl font-semibold text-foreground">
+                Personalizar Checkout
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Configure as cores e aparência do seu checkout
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
             <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
               Salvar Alterações
             </Button>

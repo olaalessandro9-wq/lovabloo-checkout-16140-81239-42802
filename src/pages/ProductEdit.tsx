@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, CreditCard, Link2, Sparkles } from "lucide-react";
+import { ArrowLeft, Upload, CreditCard, Link2, Sparkles, X } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,8 @@ const ProductEdit = () => {
   const { toast } = useToast();
   const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, productId } = useProduct();
   
-  const [formData, setFormData] = useState({
+  // Estado para a seção Geral
+  const [generalData, setGeneralData] = useState({
     name: "",
     description: "",
     price: "",
@@ -35,15 +36,23 @@ const ProductEdit = () => {
     support_email: "",
   });
 
+  const [generalModified, setGeneralModified] = useState(false);
+  const [imageModified, setImageModified] = useState(false);
+  const [pendingImageRemoval, setPendingImageRemoval] = useState(false);
+
+  // Carregar dados do produto quando disponível
   useEffect(() => {
     if (product) {
-      setFormData({
+      setGeneralData({
         name: product.name,
         description: product.description,
         price: product.price,
         support_name: product.support_name,
         support_email: product.support_email,
       });
+      setGeneralModified(false);
+      setImageModified(false);
+      setPendingImageRemoval(false);
     }
   }, [product]);
 
@@ -53,12 +62,16 @@ const ProductEdit = () => {
     defaultPaymentMethod: "credit_card",
   });
 
+  const [paymentSettingsModified, setPaymentSettingsModified] = useState(false);
+
   const [checkoutFields, setCheckoutFields] = useState({
     fullName: true,
     phone: true,
     email: true,
     cpf: false,
   });
+
+  const [checkoutFieldsModified, setCheckoutFieldsModified] = useState(false);
 
   const [orderBumps, setOrderBumps] = useState<OrderBump[]>([]);
   const [orderBumpDialogOpen, setOrderBumpDialogOpen] = useState(false);
@@ -69,6 +82,8 @@ const ProductEdit = () => {
     customPageUrl: "",
     redirectIgnoringOrderBumpFailures: false,
   });
+
+  const [upsellModified, setUpsellModified] = useState(false);
 
   const [paymentLinks, setPaymentLinks] = useState<CheckoutLink[]>([]);
 
@@ -202,6 +217,8 @@ const ProductEdit = () => {
     cookieDuration: "30",
   });
 
+  const [affiliateModified, setAffiliateModified] = useState(false);
+
   const [checkoutLinks, setCheckoutLinks] = useState<CheckoutLink[]>([
     {
       id: "link-1",
@@ -220,11 +237,24 @@ const ProductEdit = () => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
+      setImageModified(true);
+      setPendingImageRemoval(false);
     }
   };
 
-  const handleSave = async () => {
-    if (!formData.support_name || !formData.support_email) {
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImageModified(true);
+    setPendingImageRemoval(true);
+    toast({
+      title: "Imagem marcada para remoção",
+      description: "Clique em 'Salvar Alterações' para confirmar a remoção",
+    });
+  };
+
+  // Salvar apenas a seção Geral
+  const handleSaveGeneral = async () => {
+    if (!generalData.support_name || !generalData.support_email) {
       toast({
         title: "Campos obrigatórios",
         description: "Preencha o nome de exibição e email de suporte",
@@ -233,15 +263,277 @@ const ProductEdit = () => {
       return;
     }
 
-    await saveProduct({
-      name: formData.name,
-      description: formData.description,
-      price: formData.price,
-      support_name: formData.support_name,
-      support_email: formData.support_email,
-      status: "active",
-      image_url: product?.image_url || null,
-    });
+    try {
+      let imageUrl = product?.image_url;
+
+      // Se há imagem para remover
+      if (pendingImageRemoval) {
+        imageUrl = null;
+      }
+      // Se há nova imagem para fazer upload
+      else if (imageFile) {
+        const fileExt = imageFile.name.split(".").pop();
+        const fileName = `${productId || Date.now()}.${fileExt}`;
+
+        try {
+          const { error: uploadError } = await supabase.storage
+            .from("product-images")
+            .upload(fileName, imageFile, { upsert: true });
+
+          if (uploadError) throw uploadError;
+
+          const { data } = supabase.storage
+            .from("product-images")
+            .getPublicUrl(fileName);
+
+          imageUrl = data.publicUrl;
+        } catch (error) {
+          console.error("Erro ao fazer upload da imagem:", error);
+          toast({
+            title: "Erro ao fazer upload",
+            description: "Não foi possível fazer upload da imagem. Tente novamente.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      await saveProduct({
+        name: generalData.name,
+        description: generalData.description,
+        price: generalData.price,
+        support_name: generalData.support_name,
+        support_email: generalData.support_email,
+        status: "active",
+        image_url: imageUrl,
+      });
+
+      setGeneralModified(false);
+      setImageModified(false);
+      setPendingImageRemoval(false);
+      setImageFile(null);
+
+      toast({
+        title: "Sucesso!",
+        description: "Seção geral salva com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Salvar apenas a seção de Configurações (Pagamento)
+  const handleSavePaymentSettings = async () => {
+    if (!productId) {
+      toast({
+        title: "Erro",
+        description: "Produto não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("products")
+        .update({
+          payment_settings: paymentSettings,
+          checkout_fields: checkoutFields,
+        })
+        .eq("id", productId);
+
+      if (error) throw error;
+
+      setPaymentSettingsModified(false);
+      setCheckoutFieldsModified(false);
+
+      toast({
+        title: "Sucesso!",
+        description: "Configurações de pagamento salvas com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao salvar configurações:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as configurações",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Salvar apenas a seção de Upsell
+  const handleSaveUpsell = async () => {
+    if (!productId) {
+      toast({
+        title: "Erro",
+        description: "Produto não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("products")
+        .update({
+          upsell_settings: upsellSettings,
+        })
+        .eq("id", productId);
+
+      if (error) throw error;
+
+      setUpsellModified(false);
+
+      toast({
+        title: "Sucesso!",
+        description: "Configurações de upsell salvas com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao salvar upsell:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as configurações",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Salvar apenas a seção de Afiliados
+  const handleSaveAffiliate = async () => {
+    if (!productId) {
+      toast({
+        title: "Erro",
+        description: "Produto não encontrado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("products")
+        .update({
+          affiliate_settings: affiliateSettings,
+        })
+        .eq("id", productId);
+
+      if (error) throw error;
+
+      setAffiliateModified(false);
+
+      toast({
+        title: "Sucesso!",
+        description: "Configurações de afiliados salvas com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao salvar afiliados:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as configurações",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Salvar TUDO (Salvar Produto)
+  const handleSaveAll = async () => {
+    if (!generalData.support_name || !generalData.support_email) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha o nome de exibição e email de suporte",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      let imageUrl = product?.image_url;
+
+      // Se há imagem para remover
+      if (pendingImageRemoval) {
+        imageUrl = null;
+      }
+      // Se há nova imagem para fazer upload
+      else if (imageFile) {
+        const fileExt = imageFile.name.split(".").pop();
+        const fileName = `${productId || Date.now()}.${fileExt}`;
+
+        try {
+          const { error: uploadError } = await supabase.storage
+            .from("product-images")
+            .upload(fileName, imageFile, { upsert: true });
+
+          if (uploadError) throw uploadError;
+
+          const { data } = supabase.storage
+            .from("product-images")
+            .getPublicUrl(fileName);
+
+          imageUrl = data.publicUrl;
+        } catch (error) {
+          console.error("Erro ao fazer upload da imagem:", error);
+          toast({
+            title: "Erro ao fazer upload",
+            description: "Não foi possível fazer upload da imagem. Tente novamente.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      // Salvar dados gerais
+      await saveProduct({
+        name: generalData.name,
+        description: generalData.description,
+        price: generalData.price,
+        support_name: generalData.support_name,
+        support_email: generalData.support_email,
+        status: "active",
+        image_url: imageUrl,
+      });
+
+      // Salvar configurações de pagamento
+      if (productId) {
+        const { error } = await supabase
+          .from("products")
+          .update({
+            payment_settings: paymentSettings,
+            checkout_fields: checkoutFields,
+            upsell_settings: upsellSettings,
+            affiliate_settings: affiliateSettings,
+          })
+          .eq("id", productId);
+
+        if (error) throw error;
+      }
+
+      // Resetar flags de modificação
+      setGeneralModified(false);
+      setImageModified(false);
+      setPendingImageRemoval(false);
+      setPaymentSettingsModified(false);
+      setCheckoutFieldsModified(false);
+      setUpsellModified(false);
+      setAffiliateModified(false);
+      setImageFile(null);
+
+      toast({
+        title: "Sucesso!",
+        description: "Produto salvo completamente com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o produto",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDelete = async () => {
@@ -556,8 +848,8 @@ const ProductEdit = () => {
             Voltar
           </Button>
           <Button 
-            onClick={handleSave}
-            disabled={loading}
+            onClick={handleSaveAll}
+            disabled={loading || (!generalModified && !imageModified && !paymentSettingsModified && !checkoutFieldsModified && !upsellModified && !affiliateModified)}
             className="bg-primary hover:bg-primary/90"
           >
             {loading ? "Salvando..." : "Salvar Produto"}
@@ -589,8 +881,11 @@ const ProductEdit = () => {
                     <Label htmlFor="product-name" className="text-foreground">Nome do Produto</Label>
                     <Input
                       id="product-name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      value={generalData.name}
+                      onChange={(e) => {
+                        setGeneralData({ ...generalData, name: e.target.value });
+                        setGeneralModified(true);
+                      }}
                       className="bg-background border-border text-foreground"
                     />
                   </div>
@@ -599,8 +894,11 @@ const ProductEdit = () => {
                     <Label htmlFor="product-description" className="text-foreground">Descrição</Label>
                     <Textarea
                       id="product-description"
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      value={generalData.description}
+                      onChange={(e) => {
+                        setGeneralData({ ...generalData, description: e.target.value });
+                        setGeneralModified(true);
+                      }}
                       className="bg-background border-border text-foreground min-h-[100px]"
                     />
                   </div>
@@ -610,13 +908,22 @@ const ProductEdit = () => {
               <div className="border-t border-border pt-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Imagem do Produto</h3>
                 <div className="space-y-4">
-                  {product?.image_url && !imageFile && (
+                  {product?.image_url && !imageFile && !pendingImageRemoval && (
                     <div className="mb-4">
                       <img 
                         src={product.image_url} 
                         alt="Imagem do produto" 
                         className="max-w-xs rounded-lg border border-border"
                       />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleRemoveImage}
+                        className="mt-2 gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Remover Imagem
+                      </Button>
                     </div>
                   )}
                   {imageFile && (
@@ -626,26 +933,48 @@ const ProductEdit = () => {
                         alt="Preview" 
                         className="max-w-xs rounded-lg border border-border"
                       />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          setImageFile(null);
+                          setImageModified(true);
+                          setPendingImageRemoval(false);
+                        }}
+                        className="mt-2 gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Remover Imagem
+                      </Button>
                     </div>
                   )}
-                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-                    <input
-                      type="file"
-                      id="product-image"
-                      accept="image/jpeg,image/jpg,image/png"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                    <label htmlFor="product-image" className="cursor-pointer">
-                      <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Formatos aceitos: JPG ou PNG. Tamanho máximo: 10MB
+                  {pendingImageRemoval && (
+                    <div className="mb-4 p-4 bg-destructive/10 border border-destructive rounded-lg">
+                      <p className="text-sm text-destructive font-medium">
+                        Imagem marcada para remoção. Clique em "Salvar Alterações" para confirmar.
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        Tamanho recomendado: 300x250 pixels
-                      </p>
-                    </label>
-                  </div>
+                    </div>
+                  )}
+                  {!product?.image_url && !imageFile && !pendingImageRemoval && (
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                      <input
+                        type="file"
+                        id="product-image"
+                        accept="image/jpeg,image/jpg,image/png"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      <label htmlFor="product-image" className="cursor-pointer">
+                        <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Formatos aceitos: JPG ou PNG. Tamanho máximo: 10MB
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Tamanho recomendado: 300x250 pixels
+                        </p>
+                      </label>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -657,8 +986,11 @@ const ProductEdit = () => {
                     id="price"
                     type="number"
                     step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    value={generalData.price}
+                    onChange={(e) => {
+                      setGeneralData({ ...generalData, price: e.target.value });
+                      setGeneralModified(true);
+                    }}
                     className="bg-background border-border text-foreground"
                     placeholder="R$ 0,00"
                   />
@@ -678,8 +1010,11 @@ const ProductEdit = () => {
                     </Label>
                     <Input
                       id="support-name"
-                      value={formData.support_name}
-                      onChange={(e) => setFormData({ ...formData, support_name: e.target.value })}
+                      value={generalData.support_name}
+                      onChange={(e) => {
+                        setGeneralData({ ...generalData, support_name: e.target.value });
+                        setGeneralModified(true);
+                      }}
                       className="bg-background border-border text-foreground"
                       placeholder="Digite o nome de exibição"
                     />
@@ -692,8 +1027,11 @@ const ProductEdit = () => {
                     <Input
                       id="support-email"
                       type="email"
-                      value={formData.support_email}
-                      onChange={(e) => setFormData({ ...formData, support_email: e.target.value })}
+                      value={generalData.support_email}
+                      onChange={(e) => {
+                        setGeneralData({ ...generalData, support_email: e.target.value });
+                        setGeneralModified(true);
+                      }}
                       className="bg-background border-border text-foreground"
                       placeholder="Digite o e-mail de suporte"
                     />
@@ -709,8 +1047,8 @@ const ProductEdit = () => {
                   Excluir Produto
                 </Button>
                 <Button 
-                  onClick={handleSave}
-                  disabled={loading}
+                  onClick={handleSaveGeneral}
+                  disabled={loading || !generalModified && !imageModified}
                   className="bg-primary hover:bg-primary/90"
                 >
                   {loading ? "Salvando..." : "Salvar Alterações"}
@@ -749,7 +1087,10 @@ const ProductEdit = () => {
                         <Button 
                           size="sm" 
                           variant={paymentSettings.defaultPaymentMethod === "pix" ? "default" : "outline"}
-                          onClick={() => setPaymentSettings({ ...paymentSettings, defaultPaymentMethod: "pix" })}
+                          onClick={() => {
+                            setPaymentSettings({ ...paymentSettings, defaultPaymentMethod: "pix" });
+                            setPaymentSettingsModified(true);
+                          }}
                           className="w-full"
                         >
                           {paymentSettings.defaultPaymentMethod === "pix" ? "Método padrão" : "Definir como padrão"}
@@ -767,7 +1108,10 @@ const ProductEdit = () => {
                         <Button 
                           size="sm" 
                           variant={paymentSettings.defaultPaymentMethod === "credit_card" ? "default" : "outline"}
-                          onClick={() => setPaymentSettings({ ...paymentSettings, defaultPaymentMethod: "credit_card" })}
+                          onClick={() => {
+                            setPaymentSettings({ ...paymentSettings, defaultPaymentMethod: "credit_card" });
+                            setPaymentSettingsModified(true);
+                          }}
                           className="w-full"
                         >
                           {paymentSettings.defaultPaymentMethod === "credit_card" ? "Método padrão" : "Definir como padrão"}
@@ -781,7 +1125,10 @@ const ProductEdit = () => {
                       </Label>
                       <Select
                         value={paymentSettings.defaultPaymentMethod}
-                        onValueChange={(value) => setPaymentSettings({ ...paymentSettings, defaultPaymentMethod: value })}
+                        onValueChange={(value) => {
+                          setPaymentSettings({ ...paymentSettings, defaultPaymentMethod: value });
+                          setPaymentSettingsModified(true);
+                        }}
                       >
                         <SelectTrigger className="bg-background border-border text-foreground">
                           <SelectValue />
@@ -804,7 +1151,10 @@ const ProductEdit = () => {
                         <Checkbox 
                           id="fullName" 
                           checked={checkoutFields.fullName}
-                          onCheckedChange={(checked) => setCheckoutFields({ ...checkoutFields, fullName: checked as boolean })}
+                          onCheckedChange={(checked) => {
+                            setCheckoutFields({ ...checkoutFields, fullName: checked as boolean });
+                            setCheckoutFieldsModified(true);
+                          }}
                         />
                         <Label htmlFor="fullName" className="text-foreground cursor-pointer">
                           Nome Completo <span className="text-destructive">*</span>
@@ -814,7 +1164,10 @@ const ProductEdit = () => {
                         <Checkbox 
                           id="phone" 
                           checked={checkoutFields.phone}
-                          onCheckedChange={(checked) => setCheckoutFields({ ...checkoutFields, phone: checked as boolean })}
+                          onCheckedChange={(checked) => {
+                            setCheckoutFields({ ...checkoutFields, phone: checked as boolean });
+                            setCheckoutFieldsModified(true);
+                          }}
                         />
                         <Label htmlFor="phone" className="text-foreground cursor-pointer">
                           Telefone <span className="text-destructive">*</span>
@@ -824,7 +1177,10 @@ const ProductEdit = () => {
                         <Checkbox 
                           id="email" 
                           checked={checkoutFields.email}
-                          onCheckedChange={(checked) => setCheckoutFields({ ...checkoutFields, email: checked as boolean })}
+                          onCheckedChange={(checked) => {
+                            setCheckoutFields({ ...checkoutFields, email: checked as boolean });
+                            setCheckoutFieldsModified(true);
+                          }}
                         />
                         <Label htmlFor="email" className="text-foreground cursor-pointer">
                           Email <span className="text-destructive">*</span>
@@ -834,7 +1190,10 @@ const ProductEdit = () => {
                         <Checkbox 
                           id="cpf" 
                           checked={checkoutFields.cpf}
-                          onCheckedChange={(checked) => setCheckoutFields({ ...checkoutFields, cpf: checked as boolean })}
+                          onCheckedChange={(checked) => {
+                            setCheckoutFields({ ...checkoutFields, cpf: checked as boolean });
+                            setCheckoutFieldsModified(true);
+                          }}
                         />
                         <Label htmlFor="cpf" className="text-foreground cursor-pointer">
                           CPF (Opcional)
@@ -846,420 +1205,362 @@ const ProductEdit = () => {
               </div>
 
               <div className="flex justify-between items-center pt-6 border-t border-border">
+                <div />
                 <Button 
-                  variant="destructive"
-                  onClick={handleDelete}
-                >
-                  Excluir Produto
-                </Button>
-                <Button 
-                  onClick={handleSave}
+                  onClick={handleSavePaymentSettings}
+                  disabled={loading || !paymentSettingsModified && !checkoutFieldsModified}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  Salvar Alterações
+                  {loading ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="order-bump">
-            <div className="bg-card border border-border rounded-lg p-6">
-              <OrderBumpList
+          <TabsContent value="order-bump" className="space-y-6">
+            <div className="bg-card border border-border rounded-lg p-6 space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Order Bump</h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Adicione produtos complementares que aparecem após a compra principal
+                  </p>
+                </div>
+                <Button onClick={handleAddOrderBump} className="gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Adicionar Order Bump
+                </Button>
+              </div>
+              <OrderBumpList 
                 orderBumps={orderBumps}
-                onAdd={handleAddOrderBump}
+                onEdit={(ob) => {
+                  setEditingOrderBump(ob);
+                  setOrderBumpDialogOpen(true);
+                }}
                 onRemove={handleRemoveOrderBump}
-                maxOrderBumps={5}
               />
-              
-              <div className="flex justify-between items-center pt-6 border-t border-border mt-6">
-                <Button 
-                  variant="destructive"
-                  onClick={handleDelete}
-                >
-                  Excluir Produto
-                </Button>
-                <Button 
-                  onClick={handleSave}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Salvar Alterações
-                </Button>
-              </div>
             </div>
           </TabsContent>
 
-          <OrderBumpDialog
-            open={orderBumpDialogOpen}
-            onOpenChange={setOrderBumpDialogOpen}
-            onSave={handleSaveOrderBump}
-            orderBump={editingOrderBump}
-          />
-
-          <TabsContent value="upsell">
+          <TabsContent value="upsell" className="space-y-6">
             <div className="bg-card border border-border rounded-lg p-6 space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Upsell / Downsell</h3>
-                <p className="text-sm text-muted-foreground">
-                  Aprenda sobre as páginas de obrigado personalizadas e também sobre o upsell de 1 clique
+                <p className="text-sm text-muted-foreground mb-6">
+                  Configure as opções de upsell e downsell para seus clientes
                 </p>
-              </div>
 
-              <div className="space-y-6">
-                {/* Página de Obrigado Personalizada ou Upsell */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                    <div className="flex-1">
-                      <Label htmlFor="customThankYouPage" className="text-foreground font-medium cursor-pointer">
-                        Esse produto tem uma página de obrigado personalizada ou upsell
-                      </Label>
-                    </div>
-                    <Switch
-                      id="customThankYouPage"
-                      checked={upsellSettings.hasCustomThankYouPage}
-                      onCheckedChange={(checked) => 
-                        setUpsellSettings({ ...upsellSettings, hasCustomThankYouPage: checked })
-                      }
-                    />
-                  </div>
-
-                  {upsellSettings.hasCustomThankYouPage && (
-                    <div className="space-y-2 pl-4 border-l-2 border-primary/30">
-                      <Label htmlFor="customPageUrl" className="text-foreground flex items-center gap-2">
-                        <Link2 className="w-4 h-4" />
-                        Cadastre PÓS aprovado
-                      </Label>
-                      <Input
-                        id="customPageUrl"
-                        type="url"
-                        value={upsellSettings.customPageUrl}
-                        onChange={(e) => 
-                          setUpsellSettings({ ...upsellSettings, customPageUrl: e.target.value })
-                        }
-                        className="bg-background border-border text-foreground"
-                        placeholder="https://"
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="customThankYou"
+                        checked={upsellSettings.hasCustomThankYouPage}
+                        onCheckedChange={(checked) => {
+                          setUpsellSettings({ ...upsellSettings, hasCustomThankYouPage: checked });
+                          setUpsellModified(true);
+                        }}
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Insira a URL completa da página para onde o cliente será redirecionado após o pagamento aprovado
-                      </p>
+                      <Label htmlFor="customThankYou" className="text-foreground cursor-pointer">
+                        Usar página de obrigado customizada
+                      </Label>
                     </div>
-                  )}
-                </div>
 
-                {/* Redirecionar ignorando falhas */}
-                <div className="flex items-center justify-between p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                  <div className="flex-1">
-                    <Label htmlFor="redirectIgnoringFailures" className="text-foreground font-medium cursor-pointer">
-                      Redirecionar upsell ignorando falhas nos pagamentos de order bumps (Cartão de crédito)
-                    </Label>
+                    {upsellSettings.hasCustomThankYouPage && (
+                      <div className="space-y-2 ml-6">
+                        <Label htmlFor="customPageUrl" className="text-foreground">
+                          URL da página de obrigado
+                        </Label>
+                        <Input
+                          id="customPageUrl"
+                          value={upsellSettings.customPageUrl}
+                          onChange={(e) => {
+                            setUpsellSettings({ ...upsellSettings, customPageUrl: e.target.value });
+                            setUpsellModified(true);
+                          }}
+                          className="bg-background border-border text-foreground"
+                          placeholder="https://exemplo.com/obrigado"
+                        />
+                      </div>
+                    )}
                   </div>
-                  <Switch
-                    id="redirectIgnoringFailures"
-                    checked={upsellSettings.redirectIgnoringOrderBumpFailures}
-                    onCheckedChange={(checked) => 
-                      setUpsellSettings({ ...upsellSettings, redirectIgnoringOrderBumpFailures: checked })
-                    }
-                  />
+
+                  <div className="border-t border-border pt-6">
+                    <div className="flex items-center space-x-2">
+                      <Switch 
+                        id="redirectIgnore"
+                        checked={upsellSettings.redirectIgnoringOrderBumpFailures}
+                        onCheckedChange={(checked) => {
+                          setUpsellSettings({ ...upsellSettings, redirectIgnoringOrderBumpFailures: checked });
+                          setUpsellModified(true);
+                        }}
+                      />
+                      <Label htmlFor="redirectIgnore" className="text-foreground cursor-pointer">
+                        Redirecionar ignorando falhas de order bump
+                      </Label>
+                    </div>
+                  </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-between items-center pt-6 border-t border-border">
+                <div />
                 <Button 
-                  variant="destructive"
-                  onClick={handleDelete}
-                >
-                  Excluir Produto
-                </Button>
-                <Button 
-                  onClick={handleSave}
+                  onClick={handleSaveUpsell}
+                  disabled={loading || !upsellModified}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  Salvar Alterações
+                  {loading ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="checkout">
-            <div className="bg-card border border-border rounded-lg p-6">
+          <TabsContent value="checkout" className="space-y-6">
+            <div className="bg-card border border-border rounded-lg p-6 space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Checkouts</h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Crie e personalize diferentes checkouts para seus produtos
+                  </p>
+                </div>
+                <Button onClick={handleAddCheckout} className="gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Novo Checkout
+                </Button>
+              </div>
               <CheckoutTable
                 checkouts={checkouts}
-                onAdd={handleAddCheckout}
-                onDuplicate={handleDuplicateCheckout}
+                onEdit={handleConfigureCheckout}
                 onDelete={handleDeleteCheckout}
-                onConfigure={handleConfigureCheckout}
+                onDuplicate={handleDuplicateCheckout}
                 onCustomize={handleCustomizeCheckout}
               />
-              
-              <div className="flex justify-between items-center pt-6 border-t border-border mt-6">
-                <Button 
-                  variant="destructive"
-                  onClick={handleDelete}
-                >
-                  Excluir Produto
-                </Button>
-                <Button 
-                  onClick={handleSave}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Salvar Alterações
-                </Button>
-              </div>
             </div>
           </TabsContent>
 
-          <CheckoutConfigDialog
-            open={checkoutConfigDialogOpen}
-            onOpenChange={setCheckoutConfigDialogOpen}
-            onSave={handleSaveCheckout}
-            checkout={editingCheckout}
-            availableLinks={paymentLinks}
-          />
-
-          <TabsContent value="cupons">
-            <div className="bg-card border border-border rounded-lg p-6">
+          <TabsContent value="cupons" className="space-y-6">
+            <div className="bg-card border border-border rounded-lg p-6 space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Cupons</h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Crie cupons de desconto para seus produtos
+                  </p>
+                </div>
+                <Button onClick={handleAddCoupon} className="gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Novo Cupom
+                </Button>
+              </div>
               <CouponsTable
                 coupons={coupons}
-                onAdd={handleAddCoupon}
                 onEdit={handleEditCoupon}
                 onDelete={handleDeleteCoupon}
               />
-              
-              <div className="flex justify-between items-center pt-6 border-t border-border mt-6">
-                <Button 
-                  variant="destructive"
-                  onClick={handleDelete}
-                >
-                  Excluir Produto
-                </Button>
-                <Button 
-                  onClick={handleSave}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Salvar Alterações
-                </Button>
-              </div>
             </div>
           </TabsContent>
 
-          <CouponDialog
-            open={couponDialogOpen}
-            onOpenChange={setCouponDialogOpen}
-            onSave={handleSaveCoupon}
-            coupon={editingCoupon}
-          />
+          <TabsContent value="afiliados" className="space-y-6">
+            <div className="bg-card border border-border rounded-lg p-6 space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Programa de Afiliados</h3>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Configure as opções do seu programa de afiliados
+                </p>
 
-          <TabsContent value="afiliados">
-            <div className="bg-card border border-border rounded-lg p-6">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Configurações</h3>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Aprenda mais sobre os afiliados
-                  </p>
-
-                  <div className="flex items-center justify-between p-4 bg-background rounded-lg border border-border">
-                    <span className="text-sm font-medium text-foreground">Habilitar programa de afiliados</span>
-                    <Switch
+                <div className="space-y-6">
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="affiliateEnabled"
                       checked={affiliateSettings.enabled}
-                      onCheckedChange={(checked) => 
-                        setAffiliateSettings({ ...affiliateSettings, enabled: checked })
-                      }
+                      onCheckedChange={(checked) => {
+                        setAffiliateSettings({ ...affiliateSettings, enabled: checked });
+                        setAffiliateModified(true);
+                      }}
                     />
+                    <Label htmlFor="affiliateEnabled" className="text-foreground cursor-pointer">
+                      Ativar programa de afiliados
+                    </Label>
                   </div>
-                </div>
 
-                {affiliateSettings.enabled && (
-                  <div className="space-y-6 pt-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between p-4 bg-background rounded-lg border border-border">
-                        <span className="text-sm text-foreground">Aprovar cada solicitação de afiliação manualmente</span>
-                        <Switch
-                          checked={affiliateSettings.requireApproval}
-                          onCheckedChange={(checked) => 
-                            setAffiliateSettings({ ...affiliateSettings, requireApproval: checked })
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-background rounded-lg border border-border">
-                        <span className="text-sm text-foreground">Libera acesso aos dados de contato dos compradores</span>
-                        <Switch
-                          checked={affiliateSettings.allowContactData}
-                          onCheckedChange={(checked) => 
-                            setAffiliateSettings({ ...affiliateSettings, allowContactData: checked })
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-background rounded-lg border border-border">
-                        <span className="text-sm text-foreground">Recebe comissão de Upsell</span>
-                        <Switch
-                          checked={affiliateSettings.receiveUpsellCommission}
-                          onCheckedChange={(checked) => 
-                            setAffiliateSettings({ ...affiliateSettings, receiveUpsellCommission: checked })
-                          }
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 bg-background rounded-lg border border-border">
-                        <span className="text-sm text-foreground">Mostrar meu produto no marketplace público</span>
-                        <Switch
-                          checked={affiliateSettings.showInMarketplace}
-                          onCheckedChange={(checked) => 
-                            setAffiliateSettings({ ...affiliateSettings, showInMarketplace: checked })
-                          }
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="affiliate-support-email" className="text-foreground">
-                        E-mail de suporte para afiliados
-                      </Label>
-                      <Input
-                        id="affiliate-support-email"
-                        type="email"
-                        value={affiliateSettings.supportEmail}
-                        onChange={(e) => 
-                          setAffiliateSettings({ ...affiliateSettings, supportEmail: e.target.value })
-                        }
-                        placeholder="Digite o e-mail de suporte"
-                        className="bg-background border-border text-foreground"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="affiliate-description" className="text-foreground">
-                        Descrição para afiliados
-                      </Label>
-                      <Textarea
-                        id="affiliate-description"
-                        value={affiliateSettings.description}
-                        onChange={(e) => 
-                          setAffiliateSettings({ ...affiliateSettings, description: e.target.value })
-                        }
-                        placeholder="k"
-                        className="bg-background border-border text-foreground min-h-[100px]"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="commission" className="text-foreground">
-                        Comissão
-                      </Label>
-                      <div className="flex items-center gap-2">
+                  {affiliateSettings.enabled && (
+                    <div className="space-y-4 ml-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="commission" className="text-foreground">
+                          Comissão (%)
+                        </Label>
                         <Input
                           id="commission"
                           type="number"
                           step="0.01"
-                          min="0"
-                          max="100"
                           value={affiliateSettings.commission}
-                          onChange={(e) => 
-                            setAffiliateSettings({ ...affiliateSettings, commission: e.target.value })
-                          }
+                          onChange={(e) => {
+                            setAffiliateSettings({ ...affiliateSettings, commission: e.target.value });
+                            setAffiliateModified(true);
+                          }}
                           className="bg-background border-border text-foreground"
+                          placeholder="50.00"
                         />
-                        <span className="text-foreground">%</span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="requireApproval"
+                          checked={affiliateSettings.requireApproval}
+                          onCheckedChange={(checked) => {
+                            setAffiliateSettings({ ...affiliateSettings, requireApproval: checked });
+                            setAffiliateModified(true);
+                          }}
+                        />
+                        <Label htmlFor="requireApproval" className="text-foreground cursor-pointer">
+                          Exigir aprovação para novos afiliados
+                        </Label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="allowContact"
+                          checked={affiliateSettings.allowContactData}
+                          onCheckedChange={(checked) => {
+                            setAffiliateSettings({ ...affiliateSettings, allowContactData: checked });
+                            setAffiliateModified(true);
+                          }}
+                        />
+                        <Label htmlFor="allowContact" className="text-foreground cursor-pointer">
+                          Permitir contato dos afiliados
+                        </Label>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="upsellCommission"
+                          checked={affiliateSettings.receiveUpsellCommission}
+                          onCheckedChange={(checked) => {
+                            setAffiliateSettings({ ...affiliateSettings, receiveUpsellCommission: checked });
+                            setAffiliateModified(true);
+                          }}
+                        />
+                        <Label htmlFor="upsellCommission" className="text-foreground cursor-pointer">
+                          Comissão também em upsells
+                        </Label>
+                      </div>
+
+                      <div className="space-y-2 border-t border-border pt-4">
+                        <Label htmlFor="attribution" className="text-foreground">
+                          Modelo de atribuição
+                        </Label>
+                        <Select
+                          value={affiliateSettings.attribution}
+                          onValueChange={(value) => {
+                            setAffiliateSettings({ ...affiliateSettings, attribution: value });
+                            setAffiliateModified(true);
+                          }}
+                        >
+                          <SelectTrigger className="bg-background border-border text-foreground">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="first_click">Primeiro clique</SelectItem>
+                            <SelectItem value="last_click">Último clique</SelectItem>
+                            <SelectItem value="linear">Linear</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="cookieDuration" className="text-foreground">
+                          Duração do cookie (dias)
+                        </Label>
+                        <Input
+                          id="cookieDuration"
+                          type="number"
+                          value={affiliateSettings.cookieDuration}
+                          onChange={(e) => {
+                            setAffiliateSettings({ ...affiliateSettings, cookieDuration: e.target.value });
+                            setAffiliateModified(true);
+                          }}
+                          className="bg-background border-border text-foreground"
+                          placeholder="30"
+                        />
                       </div>
                     </div>
-
-                    <div className="space-y-3">
-                      <Label className="text-foreground">Atribuição</Label>
-                      <RadioGroup
-                        value={affiliateSettings.attribution}
-                        onValueChange={(value) => 
-                          setAffiliateSettings({ ...affiliateSettings, attribution: value })
-                        }
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="last_click" id="last_click" />
-                          <Label htmlFor="last_click" className="font-normal cursor-pointer">
-                            Último clique (recomendado)
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="first_click" id="first_click" />
-                          <Label htmlFor="first_click" className="font-normal cursor-pointer">
-                            Primeiro clique
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="cookie-duration" className="text-foreground">
-                        Duração dos cookies
-                      </Label>
-                      <Select
-                        value={affiliateSettings.cookieDuration}
-                        onValueChange={(value) => 
-                          setAffiliateSettings({ ...affiliateSettings, cookieDuration: value })
-                        }
-                      >
-                        <SelectTrigger className="bg-background border-border text-foreground">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="7">7 dias</SelectItem>
-                          <SelectItem value="15">15 dias</SelectItem>
-                          <SelectItem value="30">30 dias</SelectItem>
-                          <SelectItem value="60">60 dias</SelectItem>
-                          <SelectItem value="90">90 dias</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-              
-              <div className="flex justify-between items-center pt-6 border-t border-border mt-6">
+
+              <div className="flex justify-between items-center pt-6 border-t border-border">
+                <div />
                 <Button 
-                  variant="destructive"
-                  onClick={handleDelete}
-                >
-                  Excluir Produto
-                </Button>
-                <Button 
-                  onClick={handleSave}
+                  onClick={handleSaveAffiliate}
+                  disabled={loading || !affiliateModified}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  Salvar Alterações
+                  {loading ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>
             </div>
           </TabsContent>
 
-          <TabsContent value="links">
-            <div className="bg-card border border-border rounded-lg p-6">
+          <TabsContent value="links" className="space-y-6">
+            <div className="bg-card border border-border rounded-lg p-6 space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Links de Checkout</h3>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Gerencie os links de checkout para seus produtos
+                  </p>
+                </div>
+                <Button onClick={handleAddLink} className="gap-2">
+                  <Link2 className="w-4 h-4" />
+                  Novo Link
+                </Button>
+              </div>
               <LinksTable
                 links={checkoutLinks}
-                onAdd={handleAddLink}
-                onToggleAffiliateVisibility={handleToggleAffiliateVisibility}
+                onToggleVisibility={handleToggleAffiliateVisibility}
                 onToggleStatus={handleToggleLinkStatus}
                 onDelete={handleDeleteLink}
               />
-              
-              <div className="flex justify-between items-center pt-6 border-t border-border mt-6">
-                <Button 
-                  variant="destructive"
-                  onClick={handleDelete}
-                >
-                  Excluir Produto
-                </Button>
-                <Button 
-                  onClick={handleSave}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Salvar Alterações
-                </Button>
-              </div>
             </div>
           </TabsContent>
         </Tabs>
+
+        <OrderBumpDialog
+          isOpen={orderBumpDialogOpen}
+          onClose={() => {
+            setOrderBumpDialogOpen(false);
+            setEditingOrderBump(null);
+          }}
+          onSave={handleSaveOrderBump}
+          initialData={editingOrderBump || undefined}
+        />
+
+        <CheckoutConfigDialog
+          isOpen={checkoutConfigDialogOpen}
+          onClose={() => {
+            setCheckoutConfigDialogOpen(false);
+            setEditingCheckout(null);
+          }}
+          onSave={handleSaveCheckout}
+          initialData={editingCheckout || undefined}
+          paymentLinks={paymentLinks}
+        />
+
+        <CouponDialog
+          isOpen={couponDialogOpen}
+          onClose={() => {
+            setCouponDialogOpen(false);
+            setEditingCoupon(null);
+          }}
+          onSave={handleSaveCoupon}
+          initialData={editingCoupon || undefined}
+        />
       </div>
     </MainLayout>
   );
 };
 
 export default ProductEdit;
+

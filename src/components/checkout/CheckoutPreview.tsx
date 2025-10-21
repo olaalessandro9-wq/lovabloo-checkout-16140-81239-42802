@@ -57,9 +57,10 @@ const ComponentRenderer = ({ component }: { component: CheckoutComponent }) => {
 interface CheckoutPreviewProps {
   customization: CheckoutCustomization;
   viewMode: ViewMode;
+  onAddComponent: (type: CheckoutComponent["type"]) => void;
 }
 
-export const CheckoutPreview = ({ customization, viewMode }: CheckoutPreviewProps) => {
+export const CheckoutPreview = ({ customization, viewMode, onAddComponent }: CheckoutPreviewProps) => {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -74,6 +75,11 @@ export const CheckoutPreview = ({ customization, viewMode }: CheckoutPreviewProp
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+    
+    const componentType = e.dataTransfer.getData("componentType");
+    if (componentType) {
+      onAddComponent(componentType as CheckoutComponent["type"]);
+    }
   };
   if (viewMode === "mobile") {
     return (

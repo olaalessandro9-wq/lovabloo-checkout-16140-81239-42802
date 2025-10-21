@@ -121,7 +121,11 @@ const CheckoutCustomizer = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* Preview */}
         <div className="flex-1 overflow-auto">
-          <CheckoutPreview customization={customization} viewMode={viewMode} />
+          <CheckoutPreview 
+            customization={customization} 
+            viewMode={viewMode}
+            onAddComponent={handleAddComponent}
+          />
         </div>
 
         {/* Customization Panel */}

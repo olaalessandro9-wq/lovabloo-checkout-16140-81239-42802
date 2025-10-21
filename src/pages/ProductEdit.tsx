@@ -209,10 +209,7 @@ const ProductEdit = () => {
   };
 
   const handleCustomizeCheckout = (checkout: Checkout) => {
-    toast({
-      title: "Personalização",
-      description: "Funcionalidade de personalização em desenvolvimento",
-    });
+    navigate(`/produtos/checkout/personalizar?id=${checkout.id}`);
   };
 
   const handleSaveCheckout = (checkout: Checkout) => {

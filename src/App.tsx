@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import Produtos from "./pages/Produtos";
 import ProductEdit from "./pages/ProductEdit";
 import Afiliados from "./pages/Afiliados";
+import CheckoutCustomizer from "./pages/CheckoutCustomizer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/produtos" element={<Produtos />} />
           <Route path="/produtos/editar" element={<ProductEdit />} />
+          <Route path="/produtos/checkout/personalizar" element={<CheckoutCustomizer />} />
           <Route path="/afiliados" element={<Afiliados />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

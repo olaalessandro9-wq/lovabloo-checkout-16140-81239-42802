@@ -1,4 +1,4 @@
-import { CheckoutCustomization } from "@/pages/CheckoutCustomizer";
+import { CheckoutCustomization, CheckoutComponent } from "@/pages/CheckoutCustomizer";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 interface CheckoutCustomizationPanelProps {
   customization: CheckoutCustomization;
   onChange: (customization: CheckoutCustomization) => void;
+  onAddComponent: (type: CheckoutComponent["type"]) => void;
 }
 
 const ColorPicker = ({
@@ -115,6 +116,7 @@ const componentItems = [
 export const CheckoutCustomizationPanel = ({
   customization,
   onChange,
+  onAddComponent,
 }: CheckoutCustomizationPanelProps) => {
   const updateCustomization = (
     key: keyof CheckoutCustomization,
@@ -152,7 +154,12 @@ export const CheckoutCustomizationPanel = ({
                   return (
                     <Card
                       key={item.id}
-                      className="p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-accent transition-colors h-24"
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData("componentType", item.id);
+                      }}
+                      onClick={() => onAddComponent(item.id as CheckoutComponent["type"])}
+                      className="p-4 flex flex-col items-center justify-center gap-2 cursor-move hover:bg-accent transition-colors h-24 active:opacity-50"
                     >
                       <Icon className="w-6 h-6 text-muted-foreground" />
                       <span className="text-sm font-medium">{item.label}</span>

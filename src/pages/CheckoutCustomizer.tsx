@@ -7,6 +7,12 @@ import { CheckoutCustomizationPanel } from "@/components/checkout/CheckoutCustom
 
 export type ViewMode = "desktop" | "mobile";
 
+export interface CheckoutComponent {
+  id: string;
+  type: "text" | "image" | "advantage" | "seal" | "timer" | "testimonial";
+  content?: any;
+}
+
 export interface CheckoutCustomization {
   primaryColor: string;
   secondaryColor: string;
@@ -17,6 +23,7 @@ export interface CheckoutCustomization {
   formBackgroundColor: string;
   selectedPaymentColor: string;
   font: string;
+  components: CheckoutComponent[];
 }
 
 const CheckoutCustomizer = () => {
@@ -35,7 +42,20 @@ const CheckoutCustomizer = () => {
     formBackgroundColor: "hsl(216, 15%, 18%)",
     selectedPaymentColor: "hsl(142, 76%, 36%)",
     font: "Inter",
+    components: [],
   });
+
+  const handleAddComponent = (type: CheckoutComponent["type"]) => {
+    const newComponent: CheckoutComponent = {
+      id: `${type}-${Date.now()}`,
+      type,
+      content: {},
+    };
+    setCustomization({
+      ...customization,
+      components: [...customization.components, newComponent],
+    });
+  };
 
   const handleSave = () => {
     // Salvar customização (será implementado com banco de dados depois)
@@ -108,6 +128,7 @@ const CheckoutCustomizer = () => {
         <CheckoutCustomizationPanel
           customization={customization}
           onChange={setCustomization}
+          onAddComponent={handleAddComponent}
         />
       </div>
     </div>

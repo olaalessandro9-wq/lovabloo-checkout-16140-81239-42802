@@ -1,5 +1,58 @@
+import { useState } from "react";
 import { CreditCard, User, CreditCard as CardIcon } from "lucide-react";
-import { CheckoutCustomization, ViewMode } from "@/pages/CheckoutCustomizer";
+import { CheckoutCustomization, ViewMode, CheckoutComponent } from "@/pages/CheckoutCustomizer";
+
+const ComponentRenderer = ({ component }: { component: CheckoutComponent }) => {
+  switch (component.type) {
+    case "text":
+      return (
+        <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+          <p className="text-sm">Texto editável - Clique para editar</p>
+        </div>
+      );
+    case "image":
+      return (
+        <div className="p-4 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center h-32">
+          <p className="text-sm text-muted-foreground">Imagem - Clique para adicionar</p>
+        </div>
+      );
+    case "advantage":
+      return (
+        <div className="p-4 bg-white/5 rounded-lg border border-white/10 flex items-center gap-3">
+          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+            <span className="text-white text-xs">✓</span>
+          </div>
+          <p className="text-sm">Vantagem - Clique para editar</p>
+        </div>
+      );
+    case "seal":
+      return (
+        <div className="p-4 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+            <span className="text-white text-xs font-bold">SELO</span>
+          </div>
+        </div>
+      );
+    case "timer":
+      return (
+        <div className="p-4 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-lg border border-red-500/30">
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-lg font-bold">00:15:30</span>
+          </div>
+          <p className="text-xs text-center mt-1 text-muted-foreground">Oferta expira em</p>
+        </div>
+      );
+    case "testimonial":
+      return (
+        <div className="p-4 bg-white/5 rounded-lg border border-white/10">
+          <p className="text-sm italic">"Depoimento do cliente aqui"</p>
+          <p className="text-xs text-muted-foreground mt-2">- Nome do Cliente</p>
+        </div>
+      );
+    default:
+      return null;
+  }
+};
 
 interface CheckoutPreviewProps {
   customization: CheckoutCustomization;
@@ -7,6 +60,21 @@ interface CheckoutPreviewProps {
 }
 
 export const CheckoutPreview = ({ customization, viewMode }: CheckoutPreviewProps) => {
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
   if (viewMode === "mobile") {
     return (
       <div 
@@ -17,8 +85,36 @@ export const CheckoutPreview = ({ customization, viewMode }: CheckoutPreviewProp
         }}
       >
         <div className="w-full max-w-md space-y-4">
+          {/* Drop Zone for Components */}
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`rounded-lg border-2 border-dashed transition-all ${
+              isDragOver
+                ? "border-primary bg-primary/5"
+                : customization.components.length === 0
+                ? "border-white/20 bg-white/5 min-h-[120px]"
+                : "border-transparent"
+            }`}
+          >
+            {customization.components.length === 0 ? (
+              <div className="flex items-center justify-center h-[120px]">
+                <p className="text-sm text-muted-foreground">
+                  Arraste componentes aqui
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 p-4">
+                {customization.components.map((component) => (
+                  <ComponentRenderer key={component.id} component={component} />
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Product Header */}
-          <div 
+          <div
             className="p-5 rounded-2xl"
             style={{ 
               backgroundColor: customization.formBackgroundColor,
@@ -224,8 +320,36 @@ export const CheckoutPreview = ({ customization, viewMode }: CheckoutPreviewProp
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column - Form */}
         <div className="space-y-6">
+          {/* Drop Zone for Components */}
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`rounded-lg border-2 border-dashed transition-all ${
+              isDragOver
+                ? "border-primary bg-primary/5"
+                : customization.components.length === 0
+                ? "border-white/20 bg-white/5 min-h-[120px]"
+                : "border-transparent"
+            }`}
+          >
+            {customization.components.length === 0 ? (
+              <div className="flex items-center justify-center h-[120px]">
+                <p className="text-sm text-muted-foreground">
+                  Arraste componentes aqui
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 p-4">
+                {customization.components.map((component) => (
+                  <ComponentRenderer key={component.id} component={component} />
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Product Info */}
-          <div 
+          <div
             className="p-6 rounded-2xl"
             style={{ 
               backgroundColor: customization.formBackgroundColor,

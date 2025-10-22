@@ -257,12 +257,9 @@ const ProductEdit = () => {
 
   const handleRemoveImage = () => {
     setImageFile(null);
+    setImageUrl("");
     setImageModified(true);
     setPendingImageRemoval(true);
-    toast({
-      title: "Imagem marcada para remoção",
-      description: "Clique em 'Salvar Alterações' para confirmar a remoção",
-    });
   };
 
   // Salvar apenas a seção Geral
@@ -319,8 +316,8 @@ const ProductEdit = () => {
       if (pendingImageRemoval) {
         finalImageUrl = null;
       }
-      // Se há URL de imagem fornecida
-      else if (imageMode === "url" && imageUrl.trim()) {
+      // Se há URL de imagem fornecida (prioridade)
+      else if (imageUrl && imageUrl.trim()) {
         finalImageUrl = imageUrl.trim();
       }
       // Se há nova imagem para fazer upload
@@ -365,6 +362,7 @@ const ProductEdit = () => {
       setImageModified(false);
       setPendingImageRemoval(false);
       setImageFile(null);
+      setImageUrl("");
       
       // Mensagem de sucesso já é mostrada pelo hook useProduct
     } catch (error) {

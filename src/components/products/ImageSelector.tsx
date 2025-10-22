@@ -39,8 +39,8 @@ export function ImageSelector({
     }
   };
 
-  // Se já tem imagem (URL ou arquivo)
-  if ((imageUrl && !pendingRemoval) || imageFile) {
+  // Se já tem imagem (URL ou arquivo) e não está marcada para remoção
+  if (!pendingRemoval && (imageUrl || imageFile)) {
     const displayUrl = imageFile ? URL.createObjectURL(imageFile) : imageUrl;
     
     return (
@@ -63,16 +63,8 @@ export function ImageSelector({
     );
   }
 
-  // Se marcado para remoção
-  if (pendingRemoval) {
-    return (
-      <div className="mb-4 p-4 bg-destructive/10 border border-destructive rounded-lg">
-        <p className="text-sm text-destructive font-medium">
-          Imagem marcada para remoção. Clique em "Salvar Alterações" para confirmar.
-        </p>
-      </div>
-    );
-  }
+  // Se marcado para remoção, mostrar opções de adicionar nova
+  // (mas não mostrar a mensagem de remoção)
 
   // Seletor de modo (upload ou URL)
   return (

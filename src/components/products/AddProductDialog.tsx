@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -34,11 +35,14 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    price: "",
+    price: "0.00",
   });
 
   const handleContinue = async () => {
-    if (!formData.name || !formData.description || !formData.price || !user) {
+    if (!formData.name || !formData.description || parseFloat(formData.price) <= 0 || !user) {
+      if (parseFloat(formData.price) <= 0) {
+        toast.error("O preço deve ser maior que R$ 0,00");
+      }
       return;
     }
     
@@ -74,7 +78,7 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
 
       toast.success("Produto criado com sucesso!");
       onOpenChange(false);
-      setFormData({ name: "", description: "", price: "" });
+      setFormData({ name: "", description: "", price: "0.00" });
       
       if (onProductAdded) onProductAdded();
       
@@ -89,7 +93,7 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
 
   const handleCancel = () => {
     onOpenChange(false);
-    setFormData({ name: "", description: "", price: "" });
+    setFormData({ name: "", description: "", price: "0.00" });
   };
 
   return (
@@ -128,14 +132,11 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
 
           <div className="space-y-2">
             <Label htmlFor="price" className="text-foreground">Preço</Label>
-            <Input
+            <CurrencyInput
               id="price"
-              type="number"
-              step="0.01"
               value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              onChange={(newValue) => setFormData({ ...formData, price: newValue })}
               className="bg-background border-border text-foreground"
-              placeholder="R$ 0,00"
             />
           </div>
         </div>
@@ -151,7 +152,7 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
           <Button 
             onClick={handleContinue}
             className="bg-primary hover:bg-primary/90"
-            disabled={!formData.name || !formData.description || !formData.price || loading}
+            disabled={!formData.name || !formData.description || parseFloat(formData.price) <= 0 || loading}
           >
             {loading ? "Criando..." : "Continuar"}
           </Button>

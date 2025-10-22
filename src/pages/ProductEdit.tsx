@@ -4,6 +4,7 @@ import { ArrowLeft, Upload, CreditCard, Link2, Sparkles, X } from "lucide-react"
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,6 +45,7 @@ const ProductEdit = () => {
   const [errors, setErrors] = useState({
     name: "",
     description: "",
+    price: "",
     support_name: "",
     support_email: "",
   });
@@ -266,6 +268,7 @@ const ProductEdit = () => {
     const newErrors = {
       name: "",
       description: "",
+      price: "",
       support_name: "",
       support_email: "",
     };
@@ -275,6 +278,11 @@ const ProductEdit = () => {
     // Validações de campos obrigatórios
     if (!generalData.name || generalData.name.trim() === "") {
       newErrors.name = "Nome do produto é obrigatório";
+      hasError = true;
+    }
+    
+    if (!generalData.price || parseFloat(generalData.price) <= 0) {
+      newErrors.price = "O preço deve ser maior que R$ 0,00";
       hasError = true;
     }
 
@@ -995,18 +1003,24 @@ const ProductEdit = () => {
                 <h3 className="text-lg font-semibold text-foreground mb-4">Preço</h3>
                 <div className="space-y-2">
                   <Label htmlFor="price" className="text-foreground">Preço</Label>
-                  <Input
+                  <CurrencyInput
                     id="price"
-                    type="number"
-                    step="0.01"
                     value={generalData.price}
-                    onChange={(e) => {
-                      setGeneralData({ ...generalData, price: e.target.value });
+                    onChange={(newValue) => {
+                      setGeneralData({ ...generalData, price: newValue });
                       setGeneralModified(true);
+                      if (errors.price) {
+                        setErrors({ ...errors, price: "" });
+                      }
                     }}
-                    className="bg-background border-border text-foreground"
-                    placeholder="R$ 0,00"
+                    className={`bg-background text-foreground ${
+                      errors.price ? "border-red-500 focus:border-red-500" : "border-border"
+                    }`}
+                    error={errors.price}
                   />
+                  {errors.price && (
+                    <p className="text-sm text-red-500">{errors.price}</p>
+                  )}
                 </div>
               </div>
 

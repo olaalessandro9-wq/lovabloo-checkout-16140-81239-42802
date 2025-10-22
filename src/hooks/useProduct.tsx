@@ -25,10 +25,10 @@ export const useProduct = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
-    if (productId) {
+    if (productId && user) {
       loadProduct();
     }
-  }, [productId]);
+  }, [productId, user]);
 
   const loadProduct = async () => {
     if (!productId || !user) return;

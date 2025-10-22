@@ -26,7 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ProductEdit = () => {
   const navigate = useNavigate();
-  const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, productId } = useProduct();
+  const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, loadProduct, productId } = useProduct();
   
   // Estado para a seção Geral
   const [generalData, setGeneralData] = useState({
@@ -362,7 +362,7 @@ const ProductEdit = () => {
       // Recarregar produto para atualizar a interface (em try-catch separado)
       if (productId) {
         try {
-          await loadProduct();
+          await loadProduct(false);
         } catch (reloadError) {
           console.error("Erro ao recarregar produto:", reloadError);
           // Não mostra erro ao usuário, pois o salvamento foi bem-sucedido

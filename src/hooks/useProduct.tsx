@@ -30,10 +30,12 @@ export const useProduct = () => {
     }
   }, [productId, user]);
 
-  const loadProduct = async () => {
+  const loadProduct = async (showLoading = true) => {
     if (!productId || !user) return;
 
-    setLoading(true);
+    if (showLoading) {
+      setLoading(true);
+    }
     try {
       const { data, error } = await supabase
         .from("products")
@@ -58,7 +60,9 @@ export const useProduct = () => {
       toast.error("Erro ao carregar produto");
       console.error("Error loading product:", error);
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+      }
     }
   };
 
@@ -181,7 +185,7 @@ export const useProduct = () => {
       }
 
       if (productId) {
-        await loadProduct();
+        await loadProduct(false);
       }
     } catch (error: any) {
       // Melhorar mensagens de erro
@@ -227,6 +231,7 @@ export const useProduct = () => {
     setImageFile,
     saveProduct,
     deleteProduct,
+    loadProduct,
     productId,
   };
 };

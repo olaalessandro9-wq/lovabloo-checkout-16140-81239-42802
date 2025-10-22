@@ -254,7 +254,44 @@ const ProductEdit = () => {
 
   // Salvar apenas a seção Geral
   const handleSaveGeneral = async () => {
-    // Validação removida - campos de suporte são opcionais
+    // Validações de campos obrigatórios
+    if (!generalData.name || generalData.name.trim() === "") {
+      toast({
+        title: "Nome do produto é obrigatório",
+        description: "Preencha o nome do produto para continuar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!generalData.description || generalData.description.trim().length < 50) {
+      toast({
+        title: "Descrição inválida",
+        description: "A descrição precisa ter no mínimo 50 caracteres",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!generalData.support_name || generalData.support_name.trim() === "") {
+      toast({
+        title: "Nome de exibição é obrigatório",
+        description: "Preencha o nome de exibição do produtor",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validação de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!generalData.support_email || !emailRegex.test(generalData.support_email.trim())) {
+      toast({
+        title: "E-mail inválido",
+        description: "Digite um e-mail válido (exemplo: suporte@email.com)",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       let imageUrl = product?.image_url;
@@ -305,11 +342,8 @@ const ProductEdit = () => {
       setImageModified(false);
       setPendingImageRemoval(false);
       setImageFile(null);
-
-      toast({
-        title: "Sucesso!",
-        description: "Seção geral salva com sucesso",
-      });
+      
+      // Mensagem de sucesso já é mostrada pelo hook useProduct
     } catch (error) {
       console.error("Erro ao salvar:", error);
       toast({

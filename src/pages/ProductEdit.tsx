@@ -22,6 +22,7 @@ import { CheckoutConfigDialog } from "@/components/products/CheckoutConfigDialog
 import { CouponsTable, type Coupon } from "@/components/products/CouponsTable";
 import { CouponDialog } from "@/components/products/CouponDialog";
 import { LinksTable, type CheckoutLink } from "@/components/products/LinksTable";
+import { OffersManager, type Offer } from "@/components/products/OffersManager";
 import { supabase } from "@/integrations/supabase/client";
 
 const ProductEdit = () => {
@@ -115,6 +116,7 @@ const ProductEdit = () => {
       loadCheckouts();
       loadCoupons();
       loadOrderBumps();
+      loadOffers();
     }
   }, [productId]);
 
@@ -242,6 +244,31 @@ const ProductEdit = () => {
     }
   };
 
+  const loadOffers = async () => {
+    if (!productId) return;
+    try {
+      const { data, error } = await supabase
+        .from("offers")
+        .select("*")
+        .eq("product_id", productId)
+        .order("created_at", { ascending: true });
+      
+      if (error) throw error;
+      
+      const mappedOffers = (data || []).map(offer => ({
+        id: offer.id,
+        name: offer.name,
+        price: offer.price.toString(),
+        is_default: offer.is_default,
+      }));
+      
+      setOffers(mappedOffers);
+      setOffersModified(false);
+    } catch (error) {
+      console.error("Error loading offers:", error);
+    }
+  };
+
   const [affiliateSettings, setAffiliateSettings] = useState({
     enabled: false,
     requireApproval: false,
@@ -258,6 +285,10 @@ const ProductEdit = () => {
   const [affiliateModified, setAffiliateModified] = useState(false);
 
   const [checkoutLinks, setCheckoutLinks] = useState<CheckoutLink[]>([]);
+
+  // Estado para ofertas
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [offersModified, setOffersModified] = useState(false);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -369,18 +400,68 @@ const ProductEdit = () => {
         image_url: finalImageUrl,
       });
 
+      // Salvar ofertas se foram modificadas
+      if (offersModified && productId) {
+        try {
+          // Remover ofertas antigas (exceto as que ainda existem)
+          const existingOfferIds = offers.filter(o => !o.id.startsWith('temp-')).map(o => o.id);
+          
+          // Deletar ofertas que não estão mais na lista
+          const { data: currentOffers } = await supabase
+            .from("offers")
+            .select("id")
+            .eq("product_id", productId);
+          
+          const offersToDelete = (currentOffers || []).filter(
+            (co: any) => !existingOfferIds.includes(co.id)
+          );
+          
+          for (const offer of offersToDelete) {
+            await supabase.from("offers").delete().eq("id", offer.id);
+          }
+          
+          // Inserir ou atualizar ofertas
+          for (const offer of offers) {
+            if (offer.id.startsWith('temp-')) {
+              // Nova oferta
+              await supabase.from("offers").insert({
+                product_id: productId,
+                name: offer.name,
+                price: parseFloat(offer.price),
+                is_default: offer.is_default,
+              });
+            } else {
+              // Atualizar oferta existente
+              await supabase.from("offers").update({
+                name: offer.name,
+                price: parseFloat(offer.price),
+                is_default: offer.is_default,
+              }).eq("id", offer.id);
+            }
+          }
+          
+          setOffersModified(false);
+          toast.success("Ofertas salvas! Links de pagamento gerados automaticamente.");
+        } catch (error) {
+          console.error("Erro ao salvar ofertas:", error);
+          toast.error("Erro ao salvar ofertas");
+        }
+      }
+
       setGeneralModified(false);
       setImageModified(false);
       setPendingImageRemoval(false);
       setImageFile(null);
       setImageUrl("");
       
-      // Recarregar produto para atualizar a interface (em try-catch separado)
+      // Recarregar produto e ofertas para atualizar a interface
       if (productId) {
         try {
           await loadProduct(false);
+          await loadOffers();
+          await loadPaymentLinks(); // Atualizar links também
         } catch (reloadError) {
-          console.error("Erro ao recarregar produto:", reloadError);
+          console.error("Erro ao recarregar dados:", reloadError);
           // Não mostra erro ao usuário, pois o salvamento foi bem-sucedido
         }
       }
@@ -960,6 +1041,16 @@ const ProductEdit = () => {
                 </div>
               </div>
 
+              {/* Seção de Ofertas */}
+              <OffersManager
+                productId={productId}
+                productName={generalData.name}
+                defaultPrice={generalData.price}
+                offers={offers}
+                onOffersChange={setOffers}
+                onModifiedChange={setOffersModified}
+              />
+
               <div className="border-t border-border pt-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Suporte ao Cliente</h3>
                 <p className="text-sm text-muted-foreground mb-6">
@@ -1027,7 +1118,7 @@ const ProductEdit = () => {
                 </Button>
                 <Button 
                   onClick={handleSaveGeneral}
-                  disabled={isSaving || !generalModified && !imageModified}
+                  disabled={isSaving || (!generalModified && !imageModified && !offersModified)}
                   className="bg-primary hover:bg-primary/90"
                 >
                   {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

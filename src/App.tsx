@@ -12,6 +12,7 @@ import Afiliados from "./pages/Afiliados";
 import CheckoutCustomizer from "./pages/CheckoutCustomizer";
 import Auth from "./pages/Auth";
 import PublicCheckout from "./pages/PublicCheckout";
+import PaymentLinkRedirect from "./pages/PaymentLinkRedirect";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
         <Sonner />
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/c/:slug" element={<PaymentLinkRedirect />} />
           <Route path="/pay/:slug" element={<PublicCheckout />} />
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/produtos" element={<ProtectedRoute><Produtos /></ProtectedRoute>} />

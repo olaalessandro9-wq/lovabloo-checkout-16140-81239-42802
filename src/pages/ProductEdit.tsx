@@ -599,26 +599,26 @@ const ProductEdit = () => {
           .from("checkouts")
           .update({
             name: checkout.name,
-            link_id: checkout.linkId,
+            is_default: checkout.isDefault,
           })
           .eq("id", checkout.id);
 
         if (error) throw error;
         
         setCheckouts(checkouts.map(c => c.id === checkout.id ? checkout : c));
-        toast.error("O checkout foi atualizado com sucesso");
+        toast.success("O checkout foi atualizado com sucesso");
       } else {
         const { error } = await supabase
           .from("checkouts")
           .insert({
             name: checkout.name,
             product_id: productId,
-            link_id: checkout.linkId,
+            is_default: checkout.isDefault,
           });
 
         if (error) throw error;
         
-        toast.error("O checkout foi adicionado com sucesso");
+        toast.success("O checkout foi adicionado com sucesso");
       }
       loadCheckouts();
     } catch (error) {

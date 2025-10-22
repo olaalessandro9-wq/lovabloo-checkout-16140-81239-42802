@@ -36,32 +36,27 @@ export const CheckoutConfigDialog = ({
 }: CheckoutConfigDialogProps) => {
   const [name, setName] = useState("");
   const [isDefault, setIsDefault] = useState(false);
-  const [selectedLinkId, setSelectedLinkId] = useState("");
 
   useEffect(() => {
     if (checkout) {
       setName(checkout.name);
       setIsDefault(checkout.isDefault);
-      setSelectedLinkId(checkout.linkId);
     } else {
       setName("");
       setIsDefault(false);
-      setSelectedLinkId("");
     }
   }, [checkout, open]);
 
   const handleSave = () => {
-    const selectedLink = availableLinks.find((link) => link.id === selectedLinkId);
-    
-    if (!name || !selectedLink) return;
+    if (!name) return;
 
     const updatedCheckout: Checkout = {
       id: checkout?.id || `checkout-${Date.now()}`,
       name,
       isDefault,
-      linkId: selectedLinkId,
-      price: selectedLink.price,
-      offer: selectedLink.name,
+      linkId: "",
+      price: checkout?.price || 0,
+      offer: checkout?.offer || "",
       visits: checkout?.visits || 0,
     };
 
@@ -115,41 +110,11 @@ export const CheckoutConfigDialog = ({
             />
           </div>
 
-          {/* Link */}
-          <div className="space-y-3">
-            <Label className="text-foreground font-medium">Link</Label>
-            {availableLinks.length === 0 ? (
-              <div className="p-4 border border-dashed border-border rounded-lg text-center">
-                <p className="text-sm text-muted-foreground">
-                  Nenhum link disponível. Configure os links na aba "Links".
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {availableLinks.map((link) => (
-                  <div
-                    key={link.id}
-                    className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
-                      selectedLinkId === link.id
-                        ? "border-primary bg-primary/10"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                    onClick={() => setSelectedLinkId(link.id)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={selectedLinkId === link.id}
-                        onCheckedChange={() => setSelectedLinkId(link.id)}
-                      />
-                      <span className="text-foreground">{link.name}</span>
-                    </div>
-                    <span className="text-primary font-semibold">
-                      R$ {link.price.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* Informação sobre o link */}
+          <div className="p-4 bg-muted/50 border border-border rounded-lg">
+            <p className="text-sm text-muted-foreground">
+              O link público será gerado automaticamente após salvar. Você poderá visualizá-lo na aba "Links".
+            </p>
           </div>
         </div>
 
@@ -164,7 +129,7 @@ export const CheckoutConfigDialog = ({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!name || !selectedLinkId}
+            disabled={!name}
             className="flex-1 bg-primary hover:bg-primary/90"
           >
             Salvar

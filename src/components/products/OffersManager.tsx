@@ -41,18 +41,11 @@ export const OffersManager = ({
   const handleToggleMultipleOffers = (enabled: boolean) => {
     setHasMultipleOffers(enabled);
     
-    if (enabled && offers.length === 0) {
-      // Criar oferta padrão baseada no produto
-      const defaultOffer: Offer = {
-        id: `temp-${Date.now()}`,
-        name: `${productName} - Oferta Padrão`,
-        price: defaultPrice,
-        is_default: true,
-      };
-      onOffersChange([defaultOffer]);
-      onModifiedChange(true);
-    } else if (!enabled && offers.length > 1) {
-      // Manter apenas a oferta padrão
+    // Não criar oferta automaticamente ao ativar
+    // Usuário deve clicar em "Adicionar Nova Oferta"
+    
+    if (!enabled && offers.length > 1) {
+      // Ao desativar, manter apenas a oferta padrão
       const defaultOffer = offers.find(o => o.is_default) || offers[0];
       onOffersChange([defaultOffer]);
       onModifiedChange(true);

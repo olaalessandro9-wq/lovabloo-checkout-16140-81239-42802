@@ -203,9 +203,82 @@ export const useProduct = () => {
   };
 
   const deleteProduct = async () => {
-    if (!productId || !user) return;
+    if (!productId || !user) return false;
 
     try {
+      // 1. Buscar ofertas do produto
+      const { data: offers } = await supabase
+        .from("offers")
+        .select("id")
+        .eq("product_id", productId);
+
+      if (offers && offers.length > 0) {
+        const offerIds = offers.map(o => o.id);
+
+        // 2. Buscar links das ofertas
+        const { data: links } = await supabase
+          .from("payment_links")
+          .select("id")
+          .in("offer_id", offerIds);
+
+        if (links && links.length > 0) {
+          const linkIds = links.map(l => l.id);
+
+          // 3. Excluir associações checkout_links
+          await supabase
+            .from("checkout_links")
+            .delete()
+            .in("link_id", linkIds);
+
+          // 4. Excluir payment_links
+          await supabase
+            .from("payment_links")
+            .delete()
+            .in("id", linkIds);
+        }
+
+        // 5. Excluir ofertas
+        await supabase
+          .from("offers")
+          .delete()
+          .in("id", offerIds);
+      }
+
+      // 6. Buscar e excluir checkouts do produto
+      const { data: checkouts } = await supabase
+        .from("checkouts")
+        .select("id")
+        .eq("product_id", productId);
+
+      if (checkouts && checkouts.length > 0) {
+        const checkoutIds = checkouts.map(c => c.id);
+
+        // Excluir associações checkout_links restantes
+        await supabase
+          .from("checkout_links")
+          .delete()
+          .in("checkout_id", checkoutIds);
+
+        // Excluir checkouts
+        await supabase
+          .from("checkouts")
+          .delete()
+          .in("id", checkoutIds);
+      }
+
+      // 7. Excluir order bumps
+      await supabase
+        .from("order_bumps")
+        .delete()
+        .eq("product_id", productId);
+
+      // 8. Excluir cupons
+      await supabase
+        .from("coupons")
+        .delete()
+        .eq("product_id", productId);
+
+      // 9. Finalmente, excluir o produto
       const { error } = await supabase
         .from("products")
         .delete()
@@ -213,11 +286,12 @@ export const useProduct = () => {
         .eq("user_id", user.id);
 
       if (error) throw error;
+      
       toast.success("Produto excluído com sucesso");
       return true;
     } catch (error: any) {
-      toast.error("Erro ao excluir produto");
       console.error("Error deleting product:", error);
+      toast.error(`Erro ao excluir produto: ${error.message || "Erro desconhecido"}`);
       return false;
     }
   };

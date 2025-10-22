@@ -110,7 +110,6 @@ export const useProduct = () => {
       return;
     }
 
-    setLoading(true);
     try {
       // Usar image_url do productData se fornecido (permite null para remover)
       let imageUrl = productData.image_url !== undefined ? productData.image_url : product?.image_url;
@@ -199,8 +198,7 @@ export const useProduct = () => {
         toast.error(`Erro ao salvar produto: ${error.message || "Erro desconhecido"}`);
       }
       console.error("Error saving product:", error);
-    } finally {
-      setLoading(false);
+      throw error; // Re-throw para o componente tratar
     }
   };
 

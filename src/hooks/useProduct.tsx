@@ -56,7 +56,7 @@ export const useProduct = () => {
       });
     } catch (error: any) {
       toast.error("Erro ao carregar produto");
-      console.error(error);
+      console.error("Error loading product:", error);
     } finally {
       setLoading(false);
     }
@@ -82,13 +82,29 @@ export const useProduct = () => {
       return data.publicUrl;
     } catch (error: any) {
       toast.error("Erro ao fazer upload da imagem");
-      console.error(error);
+      console.error("Error uploading image:", error);
       return null;
     }
   };
 
   const saveProduct = async (productData: Partial<ProductData>) => {
-    if (!user) return;
+    // Validar se o usuário está autenticado
+    if (!user) {
+      toast.error("Você precisa estar autenticado para criar produtos");
+      console.error("User not authenticated");
+      return;
+    }
+
+    // Validar campos obrigatórios
+    if (!productData.name || productData.name.trim() === "") {
+      toast.error("O nome do produto é obrigatório");
+      return;
+    }
+
+    if (!productData.price || parseFloat(productData.price) <= 0) {
+      toast.error("O preço do produto deve ser maior que zero");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -100,32 +116,50 @@ export const useProduct = () => {
       }
 
       const dataToSave = {
-        name: productData.name || "",
-        description: productData.description,
-        support_name: productData.support_name,
-        support_email: productData.support_email,
-        status: productData.status,
+        name: productData.name.trim(),
+        description: productData.description?.trim() || "",
+        support_name: productData.support_name?.trim() || "",
+        support_email: productData.support_email?.trim() || "",
+        status: productData.status || "active",
         image_url: imageUrl,
-        price: productData.price ? parseFloat(productData.price) : 0,
+        price: parseFloat(productData.price),
         user_id: user.id,
       };
 
+      console.log("Saving product with data:", dataToSave);
+
       if (productId) {
+        // Atualizar produto existente
         const { error } = await supabase
           .from("products")
           .update(dataToSave)
-          .eq("id", productId);
+          .eq("id", productId)
+          .eq("user_id", user.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating product:", error);
+          throw error;
+        }
         toast.success("Produto atualizado com sucesso");
       } else {
+        // Criar novo produto
         const { data, error } = await supabase
           .from("products")
           .insert([dataToSave])
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error creating product:", error);
+          console.error("Error details:", {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+          });
+          throw error;
+        }
+        
         toast.success("Produto criado com sucesso");
         
         if (data) {
@@ -139,33 +173,48 @@ export const useProduct = () => {
             support_email: data.support_email || "",
             status: data.status as "active" | "blocked",
           });
+          
+          // Redirecionar para a página de edição do produto criado
+          window.location.href = `/product/edit?id=${data.id}`;
         }
       }
 
-      await loadProduct();
+      if (productId) {
+        await loadProduct();
+      }
     } catch (error: any) {
-      toast.error("Erro ao salvar produto");
-      console.error(error);
+      // Melhorar mensagens de erro
+      if (error.code === "PGRST301") {
+        toast.error("Você não tem permissão para criar produtos. Verifique sua autenticação.");
+      } else if (error.code === "23502") {
+        toast.error("Campos obrigatórios não foram preenchidos");
+      } else if (error.message?.includes("JWT")) {
+        toast.error("Sessão expirada. Faça login novamente.");
+      } else {
+        toast.error(`Erro ao salvar produto: ${error.message || "Erro desconhecido"}`);
+      }
+      console.error("Error saving product:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const deleteProduct = async () => {
-    if (!productId) return;
+    if (!productId || !user) return;
 
     try {
       const { error } = await supabase
         .from("products")
         .delete()
-        .eq("id", productId);
+        .eq("id", productId)
+        .eq("user_id", user.id);
 
       if (error) throw error;
       toast.success("Produto excluído com sucesso");
       return true;
     } catch (error: any) {
       toast.error("Erro ao excluir produto");
-      console.error(error);
+      console.error("Error deleting product:", error);
       return false;
     }
   };
@@ -180,3 +229,4 @@ export const useProduct = () => {
     productId,
   };
 };
+

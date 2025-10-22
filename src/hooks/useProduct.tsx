@@ -206,91 +206,173 @@ export const useProduct = () => {
     if (!productId || !user) return false;
 
     try {
+      console.log("[deleteProduct] Iniciando exclusão do produto:", productId);
+      
       // 1. Buscar ofertas do produto
-      const { data: offers } = await supabase
+      console.log("[deleteProduct] Buscando ofertas...");
+      const { data: offers, error: offersError } = await supabase
         .from("offers")
         .select("id")
         .eq("product_id", productId);
+      
+      if (offersError) {
+        console.error("[deleteProduct] Erro ao buscar ofertas:", offersError);
+        throw offersError;
+      }
+      
+      console.log("[deleteProduct] Ofertas encontradas:", offers?.length || 0);
 
       if (offers && offers.length > 0) {
         const offerIds = offers.map(o => o.id);
+        console.log("[deleteProduct] IDs das ofertas:", offerIds);
 
         // 2. Buscar links das ofertas
-        const { data: links } = await supabase
+        console.log("[deleteProduct] Buscando links de pagamento...");
+        const { data: links, error: linksError } = await supabase
           .from("payment_links")
           .select("id")
           .in("offer_id", offerIds);
+        
+        if (linksError) {
+          console.error("[deleteProduct] Erro ao buscar links:", linksError);
+          throw linksError;
+        }
+        
+        console.log("[deleteProduct] Links encontrados:", links?.length || 0);
 
         if (links && links.length > 0) {
           const linkIds = links.map(l => l.id);
+          console.log("[deleteProduct] IDs dos links:", linkIds);
 
           // 3. Excluir associações checkout_links
-          await supabase
+          console.log("[deleteProduct] Excluindo checkout_links...");
+          const { error: checkoutLinksError } = await supabase
             .from("checkout_links")
             .delete()
             .in("link_id", linkIds);
+          
+          if (checkoutLinksError) {
+            console.error("[deleteProduct] Erro ao excluir checkout_links:", checkoutLinksError);
+            throw checkoutLinksError;
+          }
 
           // 4. Excluir payment_links
-          await supabase
+          console.log("[deleteProduct] Excluindo payment_links...");
+          const { error: paymentLinksError } = await supabase
             .from("payment_links")
             .delete()
             .in("id", linkIds);
+          
+          if (paymentLinksError) {
+            console.error("[deleteProduct] Erro ao excluir payment_links:", paymentLinksError);
+            throw paymentLinksError;
+          }
         }
 
         // 5. Excluir ofertas
-        await supabase
+        console.log("[deleteProduct] Excluindo ofertas...");
+        const { error: offersDeleteError } = await supabase
           .from("offers")
           .delete()
           .in("id", offerIds);
+        
+        if (offersDeleteError) {
+          console.error("[deleteProduct] Erro ao excluir ofertas:", offersDeleteError);
+          throw offersDeleteError;
+        }
       }
 
       // 6. Buscar e excluir checkouts do produto
-      const { data: checkouts } = await supabase
+      console.log("[deleteProduct] Buscando checkouts...");
+      const { data: checkouts, error: checkoutsError } = await supabase
         .from("checkouts")
         .select("id")
         .eq("product_id", productId);
+      
+      if (checkoutsError) {
+        console.error("[deleteProduct] Erro ao buscar checkouts:", checkoutsError);
+        throw checkoutsError;
+      }
+      
+      console.log("[deleteProduct] Checkouts encontrados:", checkouts?.length || 0);
 
       if (checkouts && checkouts.length > 0) {
         const checkoutIds = checkouts.map(c => c.id);
+        console.log("[deleteProduct] IDs dos checkouts:", checkoutIds);
 
         // Excluir associações checkout_links restantes
-        await supabase
+        console.log("[deleteProduct] Excluindo checkout_links restantes...");
+        const { error: checkoutLinksError2 } = await supabase
           .from("checkout_links")
           .delete()
           .in("checkout_id", checkoutIds);
+        
+        if (checkoutLinksError2) {
+          console.error("[deleteProduct] Erro ao excluir checkout_links:", checkoutLinksError2);
+          throw checkoutLinksError2;
+        }
 
         // Excluir checkouts
-        await supabase
+        console.log("[deleteProduct] Excluindo checkouts...");
+        const { error: checkoutsDeleteError } = await supabase
           .from("checkouts")
           .delete()
           .in("id", checkoutIds);
+        
+        if (checkoutsDeleteError) {
+          console.error("[deleteProduct] Erro ao excluir checkouts:", checkoutsDeleteError);
+          throw checkoutsDeleteError;
+        }
       }
 
       // 7. Excluir order bumps
-      await supabase
+      console.log("[deleteProduct] Excluindo order bumps...");
+      const { error: orderBumpsError } = await supabase
         .from("order_bumps")
         .delete()
         .eq("product_id", productId);
+      
+      if (orderBumpsError) {
+        console.error("[deleteProduct] Erro ao excluir order bumps:", orderBumpsError);
+        // Não lançar erro se a tabela não existir
+        if (!orderBumpsError.message?.includes("does not exist")) {
+          throw orderBumpsError;
+        }
+      }
 
       // 8. Excluir cupons
-      await supabase
+      console.log("[deleteProduct] Excluindo cupons...");
+      const { error: couponsError } = await supabase
         .from("coupons")
         .delete()
         .eq("product_id", productId);
+      
+      if (couponsError) {
+        console.error("[deleteProduct] Erro ao excluir cupons:", couponsError);
+        // Não lançar erro se a tabela não existir
+        if (!couponsError.message?.includes("does not exist")) {
+          throw couponsError;
+        }
+      }
 
       // 9. Finalmente, excluir o produto
+      console.log("[deleteProduct] Excluindo produto...");
       const { error } = await supabase
         .from("products")
         .delete()
         .eq("id", productId)
         .eq("user_id", user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("[deleteProduct] Erro ao excluir produto:", error);
+        throw error;
+      }
       
+      console.log("[deleteProduct] Produto excluído com sucesso!");
       toast.success("Produto excluído com sucesso");
       return true;
     } catch (error: any) {
-      console.error("Error deleting product:", error);
+      console.error("[deleteProduct] Erro geral:", error);
       toast.error(`Erro ao excluir produto: ${error.message || "Erro desconhecido"}`);
       return false;
     }

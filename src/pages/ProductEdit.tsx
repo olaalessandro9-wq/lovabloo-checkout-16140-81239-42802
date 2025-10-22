@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, CreditCard, Link2, Sparkles, X } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ImageSelector } from "@/components/products/ImageSelector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -40,6 +41,8 @@ const ProductEdit = () => {
   const [generalModified, setGeneralModified] = useState(false);
   const [imageModified, setImageModified] = useState(false);
   const [pendingImageRemoval, setPendingImageRemoval] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageMode, setImageMode] = useState<"upload" | "url">("upload");
   
   // Estados de erro para validação inline
   const [errors, setErrors] = useState({
@@ -309,12 +312,16 @@ const ProductEdit = () => {
       return;
     }
 
-    try {
-      let imageUrl = product?.image_url;
+    try:
+      let finalImageUrl = product?.image_url;
 
       // Se há imagem para remover
       if (pendingImageRemoval) {
-        imageUrl = null;
+        finalImageUrl = null;
+      }
+      // Se há URL de imagem fornecida
+      else if (imageMode === "url" && imageUrl.trim()) {
+        finalImageUrl = imageUrl.trim();
       }
       // Se há nova imagem para fazer upload
       else if (imageFile) {
@@ -332,7 +339,7 @@ const ProductEdit = () => {
             .from("product-images")
             .getPublicUrl(fileName);
 
-          imageUrl = data.publicUrl;
+          finalImageUrl = data.publicUrl;
         } catch (error) {
           console.error("Erro ao fazer upload da imagem:", error);
           toast({
@@ -351,7 +358,7 @@ const ProductEdit = () => {
         support_name: generalData.support_name,
         support_email: generalData.support_email,
         status: "active",
-        image_url: imageUrl,
+        image_url: finalImageUrl,
       });
 
       setGeneralModified(false);
@@ -512,7 +519,7 @@ const ProductEdit = () => {
         support_name: generalData.support_name,
         support_email: generalData.support_email,
         status: "active",
-        image_url: imageUrl,
+        image_url: finalImageUrl,
       });
 
       // Configurações de pagamento agora são gerenciadas via payment_links, checkouts, etc.
@@ -928,7 +935,23 @@ const ProductEdit = () => {
 
               <div className="border-t border-border pt-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Imagem do Produto</h3>
-                <div className="space-y-4">
+                <ImageSelector
+                  imageUrl={product?.image_url}
+                  imageFile={imageFile}
+                  onImageFileChange={(file) => {
+                    setImageFile(file);
+                    setImageModified(true);
+                    setPendingImageRemoval(false);
+                  }}
+                  onImageUrlChange={(url) => {
+                    setImageUrl(url);
+                    setImageModified(true);
+                    setPendingImageRemoval(false);
+                  }}
+                  onRemoveImage={handleRemoveImage}
+                  pendingRemoval={pendingImageRemoval}
+                />
+                <div className="space-y-4 hidden">
                   {product?.image_url && !imageFile && !pendingImageRemoval && (
                     <div className="mb-4">
                       <img 
@@ -997,6 +1020,7 @@ const ProductEdit = () => {
                     </div>
                   )}
                 </div>
+                {/* Fim do código antigo de imagem - mantido oculto para compatibilidade */}
               </div>
 
               <div className="border-t border-border pt-6">

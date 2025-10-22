@@ -48,10 +48,13 @@ const PaymentLinkRedirect = () => {
           return;
         }
 
+        console.log("[PaymentLinkRedirect] Link encontrado:", linkData);
+
         // 2. Buscar checkouts associados a este link
         const { data: checkoutLinksData, error: checkoutLinksError } = await supabase
           .from("checkout_links")
           .select(`
+            checkout_id,
             checkouts (
               id,
               slug,
@@ -61,24 +64,30 @@ const PaymentLinkRedirect = () => {
           `)
           .eq("link_id", linkData.id);
 
+        console.log("[PaymentLinkRedirect] Checkout links:", checkoutLinksData);
+
         if (checkoutLinksError || !checkoutLinksData || checkoutLinksData.length === 0) {
           console.error("Nenhum checkout associado:", checkoutLinksError);
           setError("Este link não está associado a nenhum checkout. Entre em contato com o suporte.");
           return;
         }
 
-        // 3. Buscar dados dos checkouts
-        const checkoutIds = checkoutLinksData.map((cl: any) => cl.checkout_id);
-        const { data: checkoutsData, error: checkoutsError } = await supabase
-          .from("checkouts")
-          .select("*")
-          .in("id", checkoutIds);
+        // 3. Extrair checkouts dos dados
+        const checkouts = checkoutLinksData
+          .map((cl: any) => cl.checkouts)
+          .filter((c: any) => c !== null);
 
-        if (checkoutsError || !checkoutsData || checkoutsData.length === 0) {
-          console.error("Checkouts não encontrados:", checkoutsError);
+        console.log("[PaymentLinkRedirect] Checkouts extraídos:", checkouts);
+
+        if (checkouts.length === 0) {
+          console.error("Nenhum checkout encontrado");
           setError("Nenhum checkout válido encontrado");
           return;
         }
+
+        const checkoutsData = checkouts;
+
+
 
         // Buscar offer para pegar product_id
         const { data: offerData } = await supabase

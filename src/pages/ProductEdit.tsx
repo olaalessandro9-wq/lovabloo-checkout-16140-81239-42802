@@ -464,7 +464,6 @@ const ProductEdit = () => {
           }
           
           setOffersModified(false);
-          toast.success("Ofertas salvas! Links de pagamento gerados automaticamente.");
         } catch (error) {
           console.error("Erro ao salvar ofertas:", error);
           toast.error("Erro ao salvar ofertas");

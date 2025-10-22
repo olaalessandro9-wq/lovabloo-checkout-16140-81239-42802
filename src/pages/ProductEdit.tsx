@@ -21,7 +21,7 @@ import { CheckoutTable, type Checkout } from "@/components/products/CheckoutTabl
 import { CheckoutConfigDialog } from "@/components/products/CheckoutConfigDialog";
 import { CouponsTable, type Coupon } from "@/components/products/CouponsTable";
 import { CouponDialog } from "@/components/products/CouponDialog";
-import { LinksTable, type CheckoutLink } from "@/components/products/LinksTable";
+import { LinksTable, type PaymentLink } from "@/components/products/LinksTable";
 import { OffersManager, type Offer } from "@/components/products/OffersManager";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -99,7 +99,7 @@ const ProductEdit = () => {
 
   const [upsellModified, setUpsellModified] = useState(false);
 
-  const [paymentLinks, setPaymentLinks] = useState<CheckoutLink[]>([]);
+  const [paymentLinks, setPaymentLinks] = useState<PaymentLink[]>([]);
 
   const [checkouts, setCheckouts] = useState<Checkout[]>([]);
   const [checkoutConfigDialogOpen, setCheckoutConfigDialogOpen] = useState(false);
@@ -129,44 +129,60 @@ const ProductEdit = () => {
     console.log("[loadPaymentLinks] Loading links for product:", productId);
     
     try {
-      const { data, error } = await supabase
-        .from("checkouts")
+      // Buscar payment_links com ofertas e checkouts associados
+      const { data: linksData, error: linksError } = await supabase
+        .from("payment_links")
         .select(`
-          *,
-          products (
+          id,
+          slug,
+          url,
+          offers (
+            id,
             name,
-            price
+            price,
+            is_default,
+            product_id
           )
         `)
-        .eq("product_id", productId)
-        .order("created_at", { ascending: false });
+        .eq("offers.product_id", productId);
       
-      console.log("[loadPaymentLinks] Query result:", { data, error });
+      if (linksError) throw linksError;
       
-      if (error) throw error;
+      console.log("[loadPaymentLinks] Links data:", linksData);
       
-      const baseUrl = window.location.origin;
-      console.log("[loadPaymentLinks] Base URL:", baseUrl);
+      // Para cada link, buscar os checkouts associados
+      const linksWithCheckouts = await Promise.all(
+        (linksData || []).map(async (link: any) => {
+          const { data: checkoutsData, error: checkoutsError } = await supabase
+            .from("checkout_links")
+            .select(`
+              checkouts (
+                id,
+                name
+              )
+            `)
+            .eq("link_id", link.id);
+          
+          if (checkoutsError) {
+            console.error("Error loading checkouts for link:", link.id, checkoutsError);
+          }
+          
+          const checkouts = (checkoutsData || []).map((cl: any) => cl.checkouts).filter(Boolean);
+          
+          return {
+            id: link.id,
+            slug: link.slug,
+            url: link.url,
+            offer_name: link.offers?.name || "",
+            offer_price: Number(link.offers?.price || 0),
+            is_default: link.offers?.is_default || false,
+            checkouts: checkouts,
+          };
+        })
+      );
       
-      const mappedLinks = (data || []).map(checkout => {
-        const link = {
-          id: checkout.id,
-          name: checkout.name,
-          price: Number(checkout.products?.price || 0),
-          url: `${baseUrl}/pay/${checkout.slug}`,
-          offer: checkout.products?.name || "",
-          type: "Checkout" as const,
-          status: "active" as const,
-          hiddenFromAffiliates: false,
-          isDefault: checkout.is_default || false,
-          visits: checkout.visits_count || 0,
-        };
-        console.log("[loadPaymentLinks] Mapped link:", link);
-        return link;
-      });
-      
-      console.log("[loadPaymentLinks] Setting payment links:", mappedLinks);
-      setPaymentLinks(mappedLinks);
+      console.log("[loadPaymentLinks] Links with checkouts:", linksWithCheckouts);
+      setPaymentLinks(linksWithCheckouts);
     } catch (error) {
       console.error("[loadPaymentLinks] Error:", error);
     }
@@ -1572,19 +1588,14 @@ const ProductEdit = () => {
 
           <TabsContent value="links" className="space-y-6">
             <div className="bg-card border border-border rounded-lg p-6 space-y-6">
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-foreground">Links de Checkout</h3>
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-foreground">Links de Pagamento</h3>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Links públicos para seus checkouts. Cada checkout tem um link único que pode ser compartilhado.
+                  Links gerados automaticamente para cada oferta. Cada link pode ser associado a múltiplos checkouts.
                 </p>
               </div>
               <LinksTable
-                key={JSON.stringify(checkoutLinks)}
-                links={checkoutLinks}
-                onAdd={handleAddLink}
-                onToggleAffiliateVisibility={handleToggleAffiliateVisibility}
-                onToggleStatus={handleToggleLinkStatus}
-                onDelete={handleDeleteLink}
+                links={paymentLinks}
               />
             </div>
           </TabsContent>

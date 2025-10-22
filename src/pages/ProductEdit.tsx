@@ -306,6 +306,9 @@ const ProductEdit = () => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [offersModified, setOffersModified] = useState(false);
 
+  // Estado para links associados ao checkout em edição
+  const [currentCheckoutLinkIds, setCurrentCheckoutLinkIds] = useState<string[]>([]);
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -682,8 +685,25 @@ const ProductEdit = () => {
     }
   };
 
-  const handleConfigureCheckout = (checkout: Checkout) => {
+  const handleConfigureCheckout = async (checkout: Checkout) => {
     setEditingCheckout(checkout);
+    
+    // Carregar links associados a este checkout
+    try {
+      const { data, error } = await supabase
+        .from("checkout_links")
+        .select("link_id")
+        .eq("checkout_id", checkout.id);
+      
+      if (error) throw error;
+      
+      const linkIds = (data || []).map(cl => cl.link_id);
+      setCurrentCheckoutLinkIds(linkIds);
+    } catch (error) {
+      console.error("Error loading checkout links:", error);
+      setCurrentCheckoutLinkIds([]);
+    }
+    
     setCheckoutConfigDialogOpen(true);
   };
 
@@ -691,11 +711,14 @@ const ProductEdit = () => {
     navigate(`/produtos/checkout/personalizar?id=${checkout.id}`);
   };
 
-  const handleSaveCheckout = async (checkout: Checkout) => {
+  const handleSaveCheckout = async (checkout: Checkout, selectedLinkIds: string[]) => {
     if (!productId) return;
 
     try {
+      let checkoutId = checkout.id;
+
       if (editingCheckout) {
+        // Atualizar checkout existente
         const { error } = await supabase
           .from("checkouts")
           .update({
@@ -705,22 +728,62 @@ const ProductEdit = () => {
           .eq("id", checkout.id);
 
         if (error) throw error;
+
+        // Atualizar associações de links
+        // Primeiro, remover associações antigas
+        const { error: deleteError } = await supabase
+          .from("checkout_links")
+          .delete()
+          .eq("checkout_id", checkout.id);
+
+        if (deleteError) throw deleteError;
+
+        // Depois, criar novas associações
+        const checkoutLinks = selectedLinkIds.map(linkId => ({
+          checkout_id: checkout.id,
+          link_id: linkId,
+        }));
+
+        const { error: insertError } = await supabase
+          .from("checkout_links")
+          .insert(checkoutLinks);
+
+        if (insertError) throw insertError;
         
         setCheckouts(checkouts.map(c => c.id === checkout.id ? checkout : c));
         toast.success("O checkout foi atualizado com sucesso");
       } else {
-        const { error } = await supabase
+        // Criar novo checkout
+        const { data: newCheckout, error } = await supabase
           .from("checkouts")
           .insert({
             name: checkout.name,
             product_id: productId,
             is_default: checkout.isDefault,
-          });
+          })
+          .select()
+          .single();
 
         if (error) throw error;
+        if (!newCheckout) throw new Error("Checkout não foi criado");
+
+        checkoutId = newCheckout.id;
+
+        // Criar associações de links
+        const checkoutLinks = selectedLinkIds.map(linkId => ({
+          checkout_id: checkoutId,
+          link_id: linkId,
+        }));
+
+        const { error: insertError } = await supabase
+          .from("checkout_links")
+          .insert(checkoutLinks);
+
+        if (insertError) throw insertError;
         
         toast.success("O checkout foi adicionado com sucesso");
       }
+      
       loadCheckouts();
       loadPaymentLinks(); // Atualiza a aba Links também
     } catch (error) {
@@ -1615,11 +1678,15 @@ const ProductEdit = () => {
           open={checkoutConfigDialogOpen}
           onOpenChange={(open) => {
             setCheckoutConfigDialogOpen(open);
-            if (!open) setEditingCheckout(null);
+            if (!open) {
+              setEditingCheckout(null);
+              setCurrentCheckoutLinkIds([]);
+            }
           }}
           onSave={handleSaveCheckout}
           checkout={editingCheckout || undefined}
           availableLinks={paymentLinks}
+          currentLinkIds={currentCheckoutLinkIds}
         />
 
         <CouponDialog

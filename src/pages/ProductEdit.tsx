@@ -122,22 +122,32 @@ const ProductEdit = () => {
     if (!productId) return;
     try {
       const { data, error } = await supabase
-        .from("payment_links")
-        .select("*")
+        .from("checkouts")
+        .select(`
+          *,
+          products (
+            name,
+            price
+          )
+        `)
         .eq("product_id", productId)
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      setPaymentLinks((data || []).map(link => ({
-        id: link.id,
-        name: link.name,
-        price: Number(link.price),
-        url: link.url || "",
-        offer: link.name,
+      
+      const baseUrl = window.location.origin;
+      
+      setPaymentLinks((data || []).map(checkout => ({
+        id: checkout.id,
+        name: checkout.name,
+        price: Number(checkout.products?.price || 0),
+        url: `${baseUrl}/pay/${checkout.slug}`,
+        offer: checkout.products?.name || "",
         type: "Checkout" as const,
-        status: link.active ? "active" as const : "inactive" as const,
+        status: "active" as const,
         hiddenFromAffiliates: false,
-        isDefault: false,
+        isDefault: checkout.is_default || false,
+        visits: checkout.visits_count || 0,
       })));
     } catch (error) {
       console.error("Error loading payment links:", error);
@@ -1466,17 +1476,11 @@ const ProductEdit = () => {
 
           <TabsContent value="links" className="space-y-6">
             <div className="bg-card border border-border rounded-lg p-6 space-y-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">Links de Checkout</h3>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Gerencie os links de checkout para seus produtos
-                  </p>
-                </div>
-                <Button onClick={handleAddLink} className="gap-2">
-                  <Link2 className="w-4 h-4" />
-                  Novo Link
-                </Button>
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-foreground">Links de Checkout</h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Links públicos para seus checkouts. Cada checkout tem um link único que pode ser compartilhado.
+                </p>
               </div>
               <LinksTable
                 links={checkoutLinks}

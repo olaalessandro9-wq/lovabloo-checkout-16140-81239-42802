@@ -29,6 +29,7 @@ export interface CheckoutLink {
   status: "active" | "inactive";
   hiddenFromAffiliates: boolean;
   isDefault: boolean;
+  visits?: number;
 }
 
 interface LinksTableProps {
@@ -75,10 +76,6 @@ export function LinksTable({
             className="pl-9 bg-background border-border text-foreground"
           />
         </div>
-        <Button onClick={onAdd} className="gap-2 bg-primary hover:bg-primary/90">
-          <Plus className="w-4 h-4" />
-          Adicionar Link
-        </Button>
       </div>
 
       <div className="border border-border rounded-lg overflow-hidden">
@@ -91,8 +88,8 @@ export function LinksTable({
               <TableHead className="text-foreground">Nome</TableHead>
               <TableHead className="text-foreground">URL</TableHead>
               <TableHead className="text-foreground">Oferta</TableHead>
-              <TableHead className="text-foreground">Tipo</TableHead>
               <TableHead className="text-foreground">Preço</TableHead>
+              <TableHead className="text-foreground">Visitas</TableHead>
               <TableHead className="text-foreground">Status</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
@@ -101,7 +98,7 @@ export function LinksTable({
             {filteredLinks.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                  Nenhum link encontrado
+                  Nenhum link de checkout criado ainda
                 </TableCell>
               </TableRow>
             ) : (
@@ -111,7 +108,14 @@ export function LinksTable({
                     <input type="checkbox" className="rounded border-border" />
                   </TableCell>
                   <TableCell className="font-medium text-foreground">
-                    {link.name}
+                    <div className="flex items-center gap-2">
+                      {link.name}
+                      {link.isDefault && (
+                        <Badge variant="secondary" className="text-xs">
+                          Padrão
+                        </Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -129,13 +133,11 @@ export function LinksTable({
                     </div>
                   </TableCell>
                   <TableCell className="text-foreground">{link.offer}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
-                      {link.type}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="text-foreground">
                     R$ {link.price.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {link.visits || 0}
                   </TableCell>
                   <TableCell>
                     <Badge

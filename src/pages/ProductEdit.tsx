@@ -119,7 +119,13 @@ const ProductEdit = () => {
   }, [productId]);
 
   const loadPaymentLinks = async () => {
-    if (!productId) return;
+    if (!productId) {
+      console.log("[loadPaymentLinks] productId is null, skipping");
+      return;
+    }
+    
+    console.log("[loadPaymentLinks] Loading links for product:", productId);
+    
     try {
       const { data, error } = await supabase
         .from("checkouts")
@@ -133,24 +139,34 @@ const ProductEdit = () => {
         .eq("product_id", productId)
         .order("created_at", { ascending: false });
       
+      console.log("[loadPaymentLinks] Query result:", { data, error });
+      
       if (error) throw error;
       
       const baseUrl = window.location.origin;
+      console.log("[loadPaymentLinks] Base URL:", baseUrl);
       
-      setPaymentLinks((data || []).map(checkout => ({
-        id: checkout.id,
-        name: checkout.name,
-        price: Number(checkout.products?.price || 0),
-        url: `${baseUrl}/pay/${checkout.slug}`,
-        offer: checkout.products?.name || "",
-        type: "Checkout" as const,
-        status: "active" as const,
-        hiddenFromAffiliates: false,
-        isDefault: checkout.is_default || false,
-        visits: checkout.visits_count || 0,
-      })));
+      const mappedLinks = (data || []).map(checkout => {
+        const link = {
+          id: checkout.id,
+          name: checkout.name,
+          price: Number(checkout.products?.price || 0),
+          url: `${baseUrl}/pay/${checkout.slug}`,
+          offer: checkout.products?.name || "",
+          type: "Checkout" as const,
+          status: "active" as const,
+          hiddenFromAffiliates: false,
+          isDefault: checkout.is_default || false,
+          visits: checkout.visits_count || 0,
+        };
+        console.log("[loadPaymentLinks] Mapped link:", link);
+        return link;
+      });
+      
+      console.log("[loadPaymentLinks] Setting payment links:", mappedLinks);
+      setPaymentLinks(mappedLinks);
     } catch (error) {
-      console.error("Error loading payment links:", error);
+      console.error("[loadPaymentLinks] Error:", error);
     }
   };
 
@@ -621,6 +637,7 @@ const ProductEdit = () => {
         toast.success("O checkout foi adicionado com sucesso");
       }
       loadCheckouts();
+      loadPaymentLinks(); // Atualiza a aba Links também
     } catch (error) {
       console.error("Error saving checkout:", error);
       toast.error("Não foi possível salvar o checkout");

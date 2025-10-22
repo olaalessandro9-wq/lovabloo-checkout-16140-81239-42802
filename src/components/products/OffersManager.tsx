@@ -63,8 +63,8 @@ export const OffersManager = ({
   const handleAddOffer = () => {
     const newOffer: Offer = {
       id: `temp-${Date.now()}`,
-      name: `${productName} - Nova Oferta`,
-      price: defaultPrice,
+      name: "", // Nome vazio para o usuário preencher
+      price: "0.00", // Preço zerado
       is_default: false,
     };
     onOffersChange([...offers, newOffer]);
@@ -157,9 +157,6 @@ export const OffersManager = ({
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Oferta {index + 1}
-                </span>
                 {offer.is_default && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                     <Star className="w-3 h-3" />

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Copy, Star, ExternalLink } from "lucide-react";
+import { Search, Copy, Star, ExternalLink, Power } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,6 +20,7 @@ export interface PaymentLink {
   offer_name: string;
   offer_price: number;
   is_default: boolean;
+  status: "active" | "inactive";
   checkouts: {
     id: string;
     name: string;
@@ -28,9 +29,10 @@ export interface PaymentLink {
 
 interface LinksTableProps {
   links: PaymentLink[];
+  onToggleStatus: (id: string) => void;
 }
 
-export function LinksTable({ links }: LinksTableProps) {
+export function LinksTable({ links, onToggleStatus }: LinksTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredLinks = links.filter((link) =>
@@ -84,6 +86,7 @@ export function LinksTable({ links }: LinksTableProps) {
                 <TableHead className="text-foreground">Preço</TableHead>
                 <TableHead className="text-foreground">Link</TableHead>
                 <TableHead className="text-foreground">Checkouts Associados</TableHead>
+                <TableHead className="text-foreground">Status</TableHead>
                 <TableHead className="w-24 text-center">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -131,6 +134,18 @@ export function LinksTable({ links }: LinksTableProps) {
                     )}
                   </TableCell>
                   <TableCell>
+                    <Badge
+                      variant={link.status === "active" ? "default" : "secondary"}
+                      className={
+                        link.status === "active"
+                          ? "bg-green-500/10 text-green-600 border-green-500/20"
+                          : "bg-muted text-muted-foreground"
+                      }
+                    >
+                      {link.status === "active" ? "Ativo" : "Desativado"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center justify-center gap-1">
                       <Button
                         variant="ghost"
@@ -149,6 +164,15 @@ export function LinksTable({ links }: LinksTableProps) {
                         title="Abrir link"
                       >
                         <ExternalLink className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => onToggleStatus(link.id)}
+                        title={link.status === "active" ? "Desativar" : "Ativar"}
+                      >
+                        <Power className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>

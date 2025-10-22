@@ -136,6 +136,7 @@ const ProductEdit = () => {
           id,
           slug,
           url,
+          status,
           offers (
             id,
             name,
@@ -176,6 +177,7 @@ const ProductEdit = () => {
             offer_name: link.offers?.name || "",
             offer_price: Number(link.offers?.price || 0),
             is_default: link.offers?.is_default || false,
+            status: link.status || "active",
             checkouts: checkouts,
           };
         })
@@ -709,6 +711,28 @@ const ProductEdit = () => {
 
   const handleCustomizeCheckout = (checkout: Checkout) => {
     navigate(`/produtos/checkout/personalizar?id=${checkout.id}`);
+  };
+
+  const handleToggleLinkStatus = async (linkId: string) => {
+    try {
+      const link = paymentLinks.find(l => l.id === linkId);
+      if (!link) return;
+
+      const newStatus = link.status === "active" ? "inactive" : "active";
+
+      const { error } = await supabase
+        .from("payment_links")
+        .update({ status: newStatus })
+        .eq("id", linkId);
+
+      if (error) throw error;
+
+      toast.success(`Link ${newStatus === "active" ? "ativado" : "desativado"} com sucesso`);
+      loadPaymentLinks();
+    } catch (error) {
+      console.error("Error toggling link status:", error);
+      toast.error("Não foi possível alterar o status do link");
+    }
   };
 
   const handleSaveCheckout = async (checkout: Checkout, selectedLinkIds: string[]) => {
@@ -1659,6 +1683,7 @@ const ProductEdit = () => {
               </div>
               <LinksTable
                 links={paymentLinks}
+                onToggleStatus={handleToggleLinkStatus}
               />
             </div>
           </TabsContent>

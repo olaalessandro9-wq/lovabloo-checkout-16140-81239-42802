@@ -56,13 +56,6 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
         return;
       }
 
-      // Buscar nome do perfil do usuário para usar como support_name padrão
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("name")
-        .eq("id", user.id)
-        .single();
-
       const { data, error } = await supabase
         .from("products")
         .insert({
@@ -71,8 +64,8 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
           price: parseFloat(validation.data.price),
           user_id: user.id,
           status: "active",
-          support_name: profileData?.name || user.email?.split('@')[0] || "Suporte",
-          support_email: user.email || "",
+          support_name: "",
+          support_email: "",
         })
         .select()
         .single();

@@ -254,14 +254,7 @@ const ProductEdit = () => {
 
   // Salvar apenas a seção Geral
   const handleSaveGeneral = async () => {
-    if (!generalData.support_name || !generalData.support_email) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Preencha o nome de exibição e email de suporte",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Validação removida - campos de suporte são opcionais
 
     try {
       let imageUrl = product?.image_url;

@@ -312,7 +312,7 @@ const ProductEdit = () => {
       return;
     }
 
-    try:
+    try {
       let finalImageUrl = product?.image_url;
 
       // Se há imagem para remover
@@ -477,11 +477,11 @@ const ProductEdit = () => {
     }
 
     try {
-      let imageUrl = product?.image_url;
+      let finalImageUrl = product?.image_url;
 
       // Se há imagem para remover
       if (pendingImageRemoval) {
-        imageUrl = null;
+        finalImageUrl = null;
       }
       // Se há nova imagem para fazer upload
       else if (imageFile) {
@@ -499,7 +499,7 @@ const ProductEdit = () => {
             .from("product-images")
             .getPublicUrl(fileName);
 
-          imageUrl = data.publicUrl;
+          finalImageUrl = data.publicUrl;
         } catch (error) {
           console.error("Erro ao fazer upload da imagem:", error);
           toast({

@@ -1500,6 +1500,7 @@ const ProductEdit = () => {
                 </p>
               </div>
               <LinksTable
+                key={JSON.stringify(checkoutLinks)}
                 links={checkoutLinks}
                 onAdd={handleAddLink}
                 onToggleAffiliateVisibility={handleToggleAffiliateVisibility}

@@ -222,67 +222,7 @@ export const useProduct = () => {
       
       console.log("[deleteProduct] Ofertas encontradas:", offers?.length || 0);
 
-      if (offers && offers.length > 0) {
-        const offerIds = offers.map(o => o.id);
-        console.log("[deleteProduct] IDs das ofertas:", offerIds);
-
-        // 2. Buscar links das ofertas
-        console.log("[deleteProduct] Buscando links de pagamento...");
-        const { data: links, error: linksError } = await supabase
-          .from("payment_links")
-          .select("id")
-          .in("offer_id", offerIds);
-        
-        if (linksError) {
-          console.error("[deleteProduct] Erro ao buscar links:", linksError);
-          throw linksError;
-        }
-        
-        console.log("[deleteProduct] Links encontrados:", links?.length || 0);
-
-        if (links && links.length > 0) {
-          const linkIds = links.map(l => l.id);
-          console.log("[deleteProduct] IDs dos links:", linkIds);
-
-          // 3. Excluir associações checkout_links
-          console.log("[deleteProduct] Excluindo checkout_links...");
-          const { error: checkoutLinksError } = await supabase
-            .from("checkout_links")
-            .delete()
-            .in("link_id", linkIds);
-          
-          if (checkoutLinksError) {
-            console.error("[deleteProduct] Erro ao excluir checkout_links:", checkoutLinksError);
-            throw checkoutLinksError;
-          }
-
-          // 4. Excluir payment_links
-          console.log("[deleteProduct] Excluindo payment_links...");
-          const { error: paymentLinksError } = await supabase
-            .from("payment_links")
-            .delete()
-            .in("id", linkIds);
-          
-          if (paymentLinksError) {
-            console.error("[deleteProduct] Erro ao excluir payment_links:", paymentLinksError);
-            throw paymentLinksError;
-          }
-        }
-
-        // 5. Excluir ofertas
-        console.log("[deleteProduct] Excluindo ofertas...");
-        const { error: offersDeleteError } = await supabase
-          .from("offers")
-          .delete()
-          .in("id", offerIds);
-        
-        if (offersDeleteError) {
-          console.error("[deleteProduct] Erro ao excluir ofertas:", offersDeleteError);
-          throw offersDeleteError;
-        }
-      }
-
-      // 6. Buscar e excluir checkouts do produto
+      // 2. Buscar checkouts do produto PRIMEIRO (para excluir antes dos links)
       console.log("[deleteProduct] Buscando checkouts...");
       const { data: checkouts, error: checkoutsError } = await supabase
         .from("checkouts")
@@ -296,20 +236,21 @@ export const useProduct = () => {
       
       console.log("[deleteProduct] Checkouts encontrados:", checkouts?.length || 0);
 
+      // 3. Excluir checkouts ANTES de excluir links (para evitar trigger)
       if (checkouts && checkouts.length > 0) {
         const checkoutIds = checkouts.map(c => c.id);
         console.log("[deleteProduct] IDs dos checkouts:", checkoutIds);
 
-        // Excluir associações checkout_links restantes
-        console.log("[deleteProduct] Excluindo checkout_links restantes...");
-        const { error: checkoutLinksError2 } = await supabase
+        // Excluir associações checkout_links
+        console.log("[deleteProduct] Excluindo checkout_links...");
+        const { error: checkoutLinksError } = await supabase
           .from("checkout_links")
           .delete()
           .in("checkout_id", checkoutIds);
         
-        if (checkoutLinksError2) {
-          console.error("[deleteProduct] Erro ao excluir checkout_links:", checkoutLinksError2);
-          throw checkoutLinksError2;
+        if (checkoutLinksError) {
+          console.error("[deleteProduct] Erro ao excluir checkout_links:", checkoutLinksError);
+          throw checkoutLinksError;
         }
 
         // Excluir checkouts
@@ -322,6 +263,55 @@ export const useProduct = () => {
         if (checkoutsDeleteError) {
           console.error("[deleteProduct] Erro ao excluir checkouts:", checkoutsDeleteError);
           throw checkoutsDeleteError;
+        }
+      }
+
+      // 4. Agora excluir links e ofertas (sem trigger porque checkouts já foram excluídos)
+      if (offers && offers.length > 0) {
+        const offerIds = offers.map(o => o.id);
+        console.log("[deleteProduct] IDs das ofertas:", offerIds);
+
+        // Buscar links das ofertas
+        console.log("[deleteProduct] Buscando links de pagamento...");
+        const { data: links, error: linksError } = await supabase
+          .from("payment_links")
+          .select("id")
+          .in("offer_id", offerIds);
+        
+        if (linksError) {
+          console.error("[deleteProduct] Erro ao buscar links:", linksError);
+          throw linksError;
+        }
+        
+        console.log("[deleteProduct] Links encontrados:", links?.length || 0);
+
+        // Excluir payment_links
+        if (links && links.length > 0) {
+          const linkIds = links.map(l => l.id);
+          console.log("[deleteProduct] IDs dos links:", linkIds);
+
+          console.log("[deleteProduct] Excluindo payment_links...");
+          const { error: paymentLinksError } = await supabase
+            .from("payment_links")
+            .delete()
+            .in("id", linkIds);
+          
+          if (paymentLinksError) {
+            console.error("[deleteProduct] Erro ao excluir payment_links:", paymentLinksError);
+            throw paymentLinksError;
+          }
+        }
+
+        // Excluir ofertas
+        console.log("[deleteProduct] Excluindo ofertas...");
+        const { error: offersDeleteError } = await supabase
+          .from("offers")
+          .delete()
+          .in("id", offerIds);
+        
+        if (offersDeleteError) {
+          console.error("[deleteProduct] Erro ao excluir ofertas:", offersDeleteError);
+          throw offersDeleteError;
         }
       }
 

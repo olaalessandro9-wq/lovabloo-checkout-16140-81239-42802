@@ -154,21 +154,23 @@ const ProductEdit = () => {
       // Para cada link, buscar os checkouts associados
       const linksWithCheckouts = await Promise.all(
         (linksData || []).map(async (link: any) => {
-          const { data: checkoutsData, error: checkoutsError } = await supabase
+          const { data: checkoutLinksData, error: checkoutLinksError } = await supabase
             .from("checkout_links")
-            .select(`
-              checkouts (
-                id,
-                name
-              )
-            `)
+            .select("checkout_id")
             .eq("link_id", link.id);
           
-          if (checkoutsError) {
-            console.error("Error loading checkouts for link:", link.id, checkoutsError);
+          if (checkoutLinksError) {
+            console.error("Error loading checkouts for link:", link.id, checkoutLinksError);
           }
           
-          const checkouts = (checkoutsData || []).map((cl: any) => cl.checkouts).filter(Boolean);
+          // Buscar dados dos checkouts
+          const checkoutIds = (checkoutLinksData || []).map((cl: any) => cl.checkout_id);
+          const { data: checkoutsData } = await supabase
+            .from("checkouts")
+            .select("id, name")
+            .in("id", checkoutIds);
+          
+          const checkouts = checkoutsData || [];
           
           return {
             id: link.id,
@@ -210,10 +212,10 @@ const ProductEdit = () => {
         id: checkout.id,
         name: checkout.name,
         price: checkout.products?.price || 0,
-        visits: checkout.visits_count || 0,
+        visits: (checkout as any).visits_count || 0,
         offer: checkout.products?.name || "",
-        isDefault: checkout.is_default || false,
-        linkId: checkout.link_id || "",
+        isDefault: (checkout as any).is_default || false,
+        linkId: "",
       })));
     } catch (error) {
       console.error("Error loading checkouts:", error);
@@ -302,7 +304,7 @@ const ProductEdit = () => {
 
   const [affiliateModified, setAffiliateModified] = useState(false);
 
-  const [checkoutLinks, setCheckoutLinks] = useState<CheckoutLink[]>([]);
+  const [checkoutLinks, setCheckoutLinks] = useState<any[]>([]);
 
   // Estado para ofertas
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -880,45 +882,6 @@ const ProductEdit = () => {
     }
   };
 
-  const handleAddLink = () => {
-    const newLink: CheckoutLink = {
-      id: `link-${Date.now()}`,
-      name: `Novo Link ${checkoutLinks.length + 1}`,
-      url: `https://pay.cakto.com.br/${Date.now()}`,
-      offer: "teste",
-      type: "Checkout",
-      price: 5.00,
-      status: "active",
-      hiddenFromAffiliates: false,
-      isDefault: false,
-    };
-    setCheckoutLinks([...checkoutLinks, newLink]);
-    toast.error("Um novo link foi criado com sucesso");
-  };
-
-  const handleToggleAffiliateVisibility = (id: string) => {
-    setCheckoutLinks(checkoutLinks.map(link => 
-      link.id === id 
-        ? { ...link, hiddenFromAffiliates: !link.hiddenFromAffiliates }
-        : link
-    ));
-    const link = checkoutLinks.find(l => l.id === id);
-    toast.success(link?.hiddenFromAffiliates 
-      ? "O link agora está visível para os afiliados"
-      : "O link foi escondido dos afiliados");
-  };
-
-  const handleToggleLinkStatus = (id: string) => {
-    setCheckoutLinks(checkoutLinks.map(link => 
-      link.id === id 
-        ? { ...link, status: link.status === "active" ? "inactive" : "active" }
-        : link
-    ));
-    const link = checkoutLinks.find(l => l.id === id);
-    toast.success(link?.status === "active" 
-      ? "O link foi desativado com sucesso"
-      : "O link foi ativado com sucesso");
-  };
 
   const handleDeleteLink = (id: string) => {
     const link = checkoutLinks.find(l => l.id === id);

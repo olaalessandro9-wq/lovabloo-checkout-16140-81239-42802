@@ -67,30 +67,40 @@ const PaymentLinkRedirect = () => {
           return;
         }
 
-        // 3. Encontrar o checkout padrão ou usar o primeiro disponível
-        const checkouts = checkoutLinksData
-          .map(cl => cl.checkouts)
-          .filter(Boolean);
+        // 3. Buscar dados dos checkouts
+        const checkoutIds = checkoutLinksData.map((cl: any) => cl.checkout_id);
+        const { data: checkoutsData, error: checkoutsError } = await supabase
+          .from("checkouts")
+          .select("*")
+          .in("id", checkoutIds);
 
-        if (checkouts.length === 0) {
+        if (checkoutsError || !checkoutsData || checkoutsData.length === 0) {
+          console.error("Checkouts não encontrados:", checkoutsError);
           setError("Nenhum checkout válido encontrado");
           return;
         }
 
+        // Buscar offer para pegar product_id
+        const { data: offerData } = await supabase
+          .from("offers")
+          .select("product_id")
+          .eq("id", (linkData as any).offer_id)
+          .maybeSingle();
+
         // Priorizar checkout padrão do produto
-        const productId = linkData.offers?.product_id;
-        let targetCheckout = checkouts.find(
-          c => c.is_default && c.product_id === productId
+        const productId = offerData?.product_id;
+        let targetCheckout = checkoutsData.find(
+          (c: any) => c.is_default && c.product_id === productId
         );
 
         // Se não encontrar checkout padrão do produto, usar qualquer checkout padrão
         if (!targetCheckout) {
-          targetCheckout = checkouts.find(c => c.is_default);
+          targetCheckout = checkoutsData.find((c: any) => c.is_default);
         }
 
         // Se não encontrar nenhum padrão, usar o primeiro disponível
         if (!targetCheckout) {
-          targetCheckout = checkouts[0];
+          targetCheckout = checkoutsData[0];
         }
 
         // 4. Redirecionar para o checkout

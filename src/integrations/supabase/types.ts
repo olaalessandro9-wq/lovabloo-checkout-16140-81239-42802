@@ -90,6 +90,42 @@ export type Database = {
           },
         ]
       }
+      checkout_links: {
+        Row: {
+          checkout_id: string
+          created_at: string | null
+          id: string
+          link_id: string
+        }
+        Insert: {
+          checkout_id: string
+          created_at?: string | null
+          id?: string
+          link_id: string
+        }
+        Update: {
+          checkout_id?: string
+          created_at?: string | null
+          id?: string
+          link_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_links_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkout_links_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "payment_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkout_rows: {
         Row: {
           checkout_id: string
@@ -122,6 +158,56 @@ export type Database = {
           },
         ]
       }
+      checkout_visits: {
+        Row: {
+          checkout_id: string
+          id: string
+          ip_address: string | null
+          referrer: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          visited_at: string
+        }
+        Insert: {
+          checkout_id: string
+          id?: string
+          ip_address?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          visited_at?: string
+        }
+        Update: {
+          checkout_id?: string
+          id?: string
+          ip_address?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          visited_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_visits_checkout_id_fkey"
+            columns: ["checkout_id"]
+            isOneToOne: false
+            referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkouts: {
         Row: {
           background_color: string | null
@@ -131,15 +217,17 @@ export type Database = {
           font: string | null
           form_background_color: string | null
           id: string
-          link_id: string | null
+          is_default: boolean
           name: string
           primary_color: string | null
           product_id: string | null
           secondary_color: string | null
           selected_payment_color: string | null
           seller_name: string | null
+          slug: string | null
           text_color: string | null
           updated_at: string | null
+          visits_count: number
         }
         Insert: {
           background_color?: string | null
@@ -149,15 +237,17 @@ export type Database = {
           font?: string | null
           form_background_color?: string | null
           id?: string
-          link_id?: string | null
+          is_default?: boolean
           name: string
           primary_color?: string | null
           product_id?: string | null
           secondary_color?: string | null
           selected_payment_color?: string | null
           seller_name?: string | null
+          slug?: string | null
           text_color?: string | null
           updated_at?: string | null
+          visits_count?: number
         }
         Update: {
           background_color?: string | null
@@ -167,24 +257,19 @@ export type Database = {
           font?: string | null
           form_background_color?: string | null
           id?: string
-          link_id?: string | null
+          is_default?: boolean
           name?: string
           primary_color?: string | null
           product_id?: string | null
           secondary_color?: string | null
           selected_payment_color?: string | null
           seller_name?: string | null
+          slug?: string | null
           text_color?: string | null
           updated_at?: string | null
+          visits_count?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "checkouts_link_id_fkey"
-            columns: ["link_id"]
-            isOneToOne: false
-            referencedRelation: "payment_links"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "checkouts_product_id_fkey"
             columns: ["product_id"]
@@ -304,6 +389,44 @@ export type Database = {
           },
         ]
       }
+      offers: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          price: number
+          product_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          price: number
+          product_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          price?: number
+          product_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_bumps: {
         Row: {
           active: boolean | null
@@ -344,41 +467,35 @@ export type Database = {
       }
       payment_links: {
         Row: {
-          active: boolean | null
           created_at: string | null
           id: string
-          name: string
-          price: number
-          product_id: string | null
-          updated_at: string | null
-          url: string | null
+          offer_id: string
+          slug: string
+          status: string | null
+          url: string
         }
         Insert: {
-          active?: boolean | null
           created_at?: string | null
           id?: string
-          name: string
-          price: number
-          product_id?: string | null
-          updated_at?: string | null
-          url?: string | null
+          offer_id: string
+          slug: string
+          status?: string | null
+          url: string
         }
         Update: {
-          active?: boolean | null
           created_at?: string | null
           id?: string
-          name?: string
-          price?: number
-          product_id?: string | null
-          updated_at?: string | null
-          url?: string | null
+          offer_id?: string
+          slug?: string
+          status?: string | null
+          url?: string
         }
         Relationships: [
           {
-            foreignKeyName: "payment_links_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
+            foreignKeyName: "payment_links_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: true
+            referencedRelation: "offers"
             referencedColumns: ["id"]
           },
         ]
@@ -516,12 +633,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_checkout_slug: { Args: never; Returns: string }
+      generate_link_slug: {
+        Args: { offer_name: string; offer_price: number }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_checkout_visits: {
+        Args: { checkout_id: string }
+        Returns: undefined
       }
     }
     Enums: {

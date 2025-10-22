@@ -364,6 +364,11 @@ const ProductEdit = () => {
       setImageFile(null);
       setImageUrl("");
       
+      // Recarregar produto para atualizar a interface
+      if (productId) {
+        await loadProduct();
+      }
+      
       // Mensagem de sucesso já é mostrada pelo hook useProduct
     } catch (error) {
       console.error("Erro ao salvar:", error);

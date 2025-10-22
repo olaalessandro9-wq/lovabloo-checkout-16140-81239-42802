@@ -108,7 +108,8 @@ export const useProduct = () => {
 
     setLoading(true);
     try {
-      let imageUrl = product?.image_url;
+      // Usar image_url do productData se fornecido (permite null para remover)
+      let imageUrl = productData.image_url !== undefined ? productData.image_url : product?.image_url;
       
       if (imageFile) {
         const uploadedUrl = await uploadImage();

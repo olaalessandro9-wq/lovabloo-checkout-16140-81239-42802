@@ -39,6 +39,14 @@ const ProductEdit = () => {
   const [generalModified, setGeneralModified] = useState(false);
   const [imageModified, setImageModified] = useState(false);
   const [pendingImageRemoval, setPendingImageRemoval] = useState(false);
+  
+  // Estados de erro para validação inline
+  const [errors, setErrors] = useState({
+    name: "",
+    description: "",
+    support_name: "",
+    support_email: "",
+  });
 
   // Carregar dados do produto quando disponível
   useEffect(() => {
@@ -254,42 +262,42 @@ const ProductEdit = () => {
 
   // Salvar apenas a seção Geral
   const handleSaveGeneral = async () => {
+    // Limpar erros anteriores
+    const newErrors = {
+      name: "",
+      description: "",
+      support_name: "",
+      support_email: "",
+    };
+    
+    let hasError = false;
+    
     // Validações de campos obrigatórios
     if (!generalData.name || generalData.name.trim() === "") {
-      toast({
-        title: "Nome do produto é obrigatório",
-        description: "Preencha o nome do produto para continuar",
-        variant: "destructive",
-      });
-      return;
+      newErrors.name = "Nome do produto é obrigatório";
+      hasError = true;
     }
 
     if (!generalData.description || generalData.description.trim().length < 50) {
-      toast({
-        title: "Descrição inválida",
-        description: "A descrição precisa ter no mínimo 50 caracteres",
-        variant: "destructive",
-      });
-      return;
+      newErrors.description = "A descrição precisa ter no mínimo 50 caracteres";
+      hasError = true;
     }
 
     if (!generalData.support_name || generalData.support_name.trim() === "") {
-      toast({
-        title: "Nome de exibição é obrigatório",
-        description: "Preencha o nome de exibição do produtor",
-        variant: "destructive",
-      });
-      return;
+      newErrors.support_name = "Nome de exibição é obrigatório";
+      hasError = true;
     }
 
     // Validação de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!generalData.support_email || !emailRegex.test(generalData.support_email.trim())) {
-      toast({
-        title: "E-mail inválido",
-        description: "Digite um e-mail válido (exemplo: suporte@email.com)",
-        variant: "destructive",
-      });
+      newErrors.support_email = "Digite um e-mail válido (exemplo: suporte@email.com)";
+      hasError = true;
+    }
+    
+    setErrors(newErrors);
+    
+    if (hasError) {
       return;
     }
 
@@ -874,9 +882,17 @@ const ProductEdit = () => {
                       onChange={(e) => {
                         setGeneralData({ ...generalData, name: e.target.value });
                         setGeneralModified(true);
+                        if (errors.name) {
+                          setErrors({ ...errors, name: "" });
+                        }
                       }}
-                      className="bg-background border-border text-foreground"
+                      className={`bg-background text-foreground ${
+                        errors.name ? "border-red-500 focus:border-red-500" : "border-border"
+                      }`}
                     />
+                    {errors.name && (
+                      <p className="text-sm text-red-500">{errors.name}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -887,9 +903,17 @@ const ProductEdit = () => {
                       onChange={(e) => {
                         setGeneralData({ ...generalData, description: e.target.value });
                         setGeneralModified(true);
+                        if (errors.description) {
+                          setErrors({ ...errors, description: "" });
+                        }
                       }}
-                      className="bg-background border-border text-foreground min-h-[100px]"
+                      className={`bg-background text-foreground min-h-[100px] ${
+                        errors.description ? "border-red-500 focus:border-red-500" : "border-border"
+                      }`}
                     />
+                    {errors.description && (
+                      <p className="text-sm text-red-500">{errors.description}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1003,10 +1027,18 @@ const ProductEdit = () => {
                       onChange={(e) => {
                         setGeneralData({ ...generalData, support_name: e.target.value });
                         setGeneralModified(true);
+                        if (errors.support_name) {
+                          setErrors({ ...errors, support_name: "" });
+                        }
                       }}
-                      className="bg-background border-border text-foreground"
+                      className={`bg-background text-foreground ${
+                        errors.support_name ? "border-red-500 focus:border-red-500" : "border-border"
+                      }`}
                       placeholder="Digite o nome de exibição"
                     />
+                    {errors.support_name && (
+                      <p className="text-sm text-red-500">{errors.support_name}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
@@ -1020,10 +1052,18 @@ const ProductEdit = () => {
                       onChange={(e) => {
                         setGeneralData({ ...generalData, support_email: e.target.value });
                         setGeneralModified(true);
+                        if (errors.support_email) {
+                          setErrors({ ...errors, support_email: "" });
+                        }
                       }}
-                      className="bg-background border-border text-foreground"
+                      className={`bg-background text-foreground ${
+                        errors.support_email ? "border-red-500 focus:border-red-500" : "border-border"
+                      }`}
                       placeholder="Digite o e-mail de suporte"
                     />
+                    {errors.support_email && (
+                      <p className="text-sm text-red-500">{errors.support_email}</p>
+                    )}
                   </div>
                 </div>
               </div>

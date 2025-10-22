@@ -257,19 +257,7 @@ const ProductEdit = () => {
 
   const [affiliateModified, setAffiliateModified] = useState(false);
 
-  const [checkoutLinks, setCheckoutLinks] = useState<CheckoutLink[]>([
-    {
-      id: "link-1",
-      name: "Oferta Principal",
-      url: "https://pay.cakto.com.br/",
-      offer: "teste",
-      type: "Checkout",
-      price: 5.00,
-      status: "active",
-      hiddenFromAffiliates: false,
-      isDefault: true,
-    },
-  ]);
+  const [checkoutLinks, setCheckoutLinks] = useState<CheckoutLink[]>([]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

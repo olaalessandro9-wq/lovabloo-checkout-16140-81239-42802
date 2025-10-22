@@ -71,13 +71,9 @@ export const CheckoutTable = ({
 
       {filteredCheckouts.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-border rounded-lg">
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground">
             Nenhum checkout configurado ainda
           </p>
-          <Button onClick={onAdd} variant="outline" className="gap-2">
-            <Plus className="w-4 h-4" />
-            Adicionar Primeiro Checkout
-          </Button>
         </div>
       ) : (
         <>

@@ -151,8 +151,7 @@ const ProductEdit = () => {
         .from("checkouts")
         .select(`
           *,
-          payment_links (
-            id,
+          products (
             name,
             price
           )
@@ -164,10 +163,10 @@ const ProductEdit = () => {
       setCheckouts((data || []).map(checkout => ({
         id: checkout.id,
         name: checkout.name,
-        price: checkout.payment_links?.price || 0,
-        visits: 0,
-        offer: checkout.payment_links?.name || "",
-        isDefault: false,
+        price: checkout.products?.price || 0,
+        visits: checkout.visits_count || 0,
+        offer: checkout.products?.name || "",
+        isDefault: checkout.is_default || false,
         linkId: checkout.link_id || "",
       })));
     } catch (error) {
@@ -1283,17 +1282,11 @@ const ProductEdit = () => {
 
           <TabsContent value="checkout" className="space-y-6">
             <div className="bg-card border border-border rounded-lg p-6 space-y-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">Checkouts</h3>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Crie e personalize diferentes checkouts para seus produtos
-                  </p>
-                </div>
-                <Button onClick={handleAddCheckout} className="gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Novo Checkout
-                </Button>
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-foreground">Checkouts</h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Crie e personalize diferentes checkouts para seus produtos
+                </p>
               </div>
               <CheckoutTable
                 checkouts={checkouts}

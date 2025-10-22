@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useProduct } from "@/hooks/useProduct";
 import { OrderBumpList } from "@/components/products/OrderBumpList";
 import { OrderBumpDialog, type OrderBump } from "@/components/products/OrderBumpDialog";
@@ -26,7 +26,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ProductEdit = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, productId } = useProduct();
   
   // Estado para a seção Geral
@@ -339,11 +338,7 @@ const ProductEdit = () => {
           finalImageUrl = data.publicUrl;
         } catch (error) {
           console.error("Erro ao fazer upload da imagem:", error);
-          toast({
-            title: "Erro ao fazer upload",
-            description: "Não foi possível fazer upload da imagem. Tente novamente.",
-            variant: "destructive",
-          });
+          toast.error("Não foi possível fazer upload da imagem. Tente novamente.");
           return;
         }
       }
@@ -372,22 +367,14 @@ const ProductEdit = () => {
       // Mensagem de sucesso já é mostrada pelo hook useProduct
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as alterações",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível salvar as alterações");
     }
   };
 
   // Salvar apenas a seção de Configurações (Pagamento)
   const handleSavePaymentSettings = async () => {
     if (!productId) {
-      toast({
-        title: "Erro",
-        description: "Produto não encontrado",
-        variant: "destructive",
-      });
+      toast.error("Produto não encontrado");
       return;
     }
 
@@ -396,28 +383,17 @@ const ProductEdit = () => {
       setPaymentSettingsModified(false);
       setCheckoutFieldsModified(false);
 
-      toast({
-        title: "Sucesso!",
-        description: "Configurações de pagamento salvas com sucesso",
-      });
+      toast.error("Configurações de pagamento salvas com sucesso");
     } catch (error) {
       console.error("Erro ao salvar configurações:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as configurações",
-        variant: "destructive",
-      });
+    toast.error("Não foi possível salvar as alterações");
     }
   };
 
   // Salvar apenas a seção de Upsell
   const handleSaveUpsell = async () => {
     if (!productId) {
-      toast({
-        title: "Erro",
-        description: "Produto não encontrado",
-        variant: "destructive",
-      });
+      toast.error("Produto não encontrado");
       return;
     }
 
@@ -425,28 +401,17 @@ const ProductEdit = () => {
       // Removed obsolete upsell_settings
       setUpsellModified(false);
 
-      toast({
-        title: "Sucesso!",
-        description: "Configurações de upsell salvas com sucesso",
-      });
+      toast.error("Configurações de upsell salvas com sucesso");
     } catch (error) {
       console.error("Erro ao salvar upsell:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as configurações",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível salvar as configurações");
     }
   };
 
   // Salvar apenas a seção de Afiliados
   const handleSaveAffiliate = async () => {
     if (!productId) {
-      toast({
-        title: "Erro",
-        description: "Produto não encontrado",
-        variant: "destructive",
-      });
+      toast.error("Produto não encontrado");
       return;
     }
 
@@ -454,28 +419,17 @@ const ProductEdit = () => {
       // Removed obsolete affiliate_settings
       setAffiliateModified(false);
 
-      toast({
-        title: "Sucesso!",
-        description: "Configurações de afiliados salvas com sucesso",
-      });
+      toast.error("Configurações de afiliados salvas com sucesso");
     } catch (error) {
       console.error("Erro ao salvar afiliados:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar as configurações",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível salvar as configurações");
     }
   };
 
   // Salvar TUDO (Salvar Produto)
   const handleSaveAll = async () => {
     if (!generalData.support_name || !generalData.support_email) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Preencha o nome de exibição e email de suporte",
-        variant: "destructive",
-      });
+      toast.error("Preencha o nome de exibição e email de suporte");
       return;
     }
 
@@ -505,11 +459,7 @@ const ProductEdit = () => {
           finalImageUrl = data.publicUrl;
         } catch (error) {
           console.error("Erro ao fazer upload da imagem:", error);
-          toast({
-            title: "Erro ao fazer upload",
-            description: "Não foi possível fazer upload da imagem. Tente novamente.",
-            variant: "destructive",
-          });
+          toast.error("Não foi possível fazer upload da imagem. Tente novamente.");
           return;
         }
       }
@@ -537,17 +487,10 @@ const ProductEdit = () => {
       setAffiliateModified(false);
       setImageFile(null);
 
-      toast({
-        title: "Sucesso!",
-        description: "Produto salvo completamente com sucesso",
-      });
+      toast.error("Produto salvo completamente com sucesso");
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar o produto",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível salvar o produto");
     }
   };
 
@@ -570,25 +513,16 @@ const ProductEdit = () => {
   const handleSaveOrderBump = (orderBump: OrderBump) => {
     if (editingOrderBump) {
       setOrderBumps(orderBumps.map(ob => ob.id === orderBump.id ? orderBump : ob));
-      toast({
-        title: "Order bump atualizado",
-        description: "O order bump foi atualizado com sucesso",
-      });
+      toast.error("O order bump foi atualizado com sucesso");
     } else {
       setOrderBumps([...orderBumps, orderBump]);
-      toast({
-        title: "Order bump adicionado",
-        description: "O order bump foi adicionado com sucesso",
-      });
+      toast.error("O order bump foi adicionado com sucesso");
     }
   };
 
   const handleRemoveOrderBump = (id: string) => {
     setOrderBumps(orderBumps.filter(ob => ob.id !== id));
-    toast({
-      title: "Order bump removido",
-      description: "O order bump foi removido",
-    });
+    toast.error("O order bump foi removido");
   };
 
   const handleAddCheckout = () => {
@@ -605,10 +539,7 @@ const ProductEdit = () => {
       visits: 0,
     };
     setCheckouts([...checkouts, duplicated]);
-    toast({
-      title: "Checkout duplicado",
-      description: "Uma cópia do checkout foi criada",
-    });
+    toast.error("Uma cópia do checkout foi criada");
   };
 
   const handleDeleteCheckout = async (id: string) => {
@@ -621,17 +552,10 @@ const ProductEdit = () => {
       if (error) throw error;
 
       setCheckouts(checkouts.filter(c => c.id !== id));
-      toast({
-        title: "Checkout excluído",
-        description: "O checkout foi removido",
-      });
+      toast.error("O checkout foi removido");
     } catch (error) {
       console.error("Error deleting checkout:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível excluir o checkout",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível excluir o checkout");
     }
   };
 
@@ -660,10 +584,7 @@ const ProductEdit = () => {
         if (error) throw error;
         
         setCheckouts(checkouts.map(c => c.id === checkout.id ? checkout : c));
-        toast({
-          title: "Checkout atualizado",
-          description: "O checkout foi atualizado com sucesso",
-        });
+        toast.error("O checkout foi atualizado com sucesso");
       } else {
         const { error } = await supabase
           .from("checkouts")
@@ -675,19 +596,12 @@ const ProductEdit = () => {
 
         if (error) throw error;
         
-        toast({
-          title: "Checkout adicionado",
-          description: "O checkout foi adicionado com sucesso",
-        });
+        toast.error("O checkout foi adicionado com sucesso");
       }
       loadCheckouts();
     } catch (error) {
       console.error("Error saving checkout:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar o checkout",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível salvar o checkout");
     }
   };
 
@@ -711,17 +625,10 @@ const ProductEdit = () => {
       if (error) throw error;
 
       setCoupons(coupons.filter(c => c.id !== id));
-      toast({
-        title: "Cupom excluído",
-        description: "O cupom foi removido",
-      });
+      toast.error("O cupom foi removido");
     } catch (error) {
       console.error("Error deleting coupon:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível excluir o cupom",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível excluir o cupom");
     }
   };
 
@@ -740,10 +647,7 @@ const ProductEdit = () => {
 
         if (error) throw error;
         
-        toast({
-          title: "Cupom atualizado",
-          description: "O cupom foi atualizado com sucesso",
-        });
+        toast.error("O cupom foi atualizado com sucesso");
       } else {
         const { error } = await supabase
           .from("coupons")
@@ -756,19 +660,12 @@ const ProductEdit = () => {
 
         if (error) throw error;
         
-        toast({
-          title: "Cupom adicionado",
-          description: "O cupom foi adicionado com sucesso",
-        });
+        toast.error("O cupom foi adicionado com sucesso");
       }
       loadCoupons();
     } catch (error) {
       console.error("Error saving coupon:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar o cupom",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível salvar o cupom");
     }
   };
 
@@ -785,10 +682,7 @@ const ProductEdit = () => {
       isDefault: false,
     };
     setCheckoutLinks([...checkoutLinks, newLink]);
-    toast({
-      title: "Link adicionado",
-      description: "Um novo link foi criado com sucesso",
-    });
+    toast.error("Um novo link foi criado com sucesso");
   };
 
   const handleToggleAffiliateVisibility = (id: string) => {
@@ -798,12 +692,9 @@ const ProductEdit = () => {
         : link
     ));
     const link = checkoutLinks.find(l => l.id === id);
-    toast({
-      title: link?.hiddenFromAffiliates ? "Link visível aos afiliados" : "Link escondido dos afiliados",
-      description: link?.hiddenFromAffiliates 
-        ? "O link agora está visível para os afiliados"
-        : "O link foi escondido dos afiliados",
-    });
+    toast.success(link?.hiddenFromAffiliates 
+      ? "O link agora está visível para os afiliados"
+      : "O link foi escondido dos afiliados");
   };
 
   const handleToggleLinkStatus = (id: string) => {
@@ -813,31 +704,21 @@ const ProductEdit = () => {
         : link
     ));
     const link = checkoutLinks.find(l => l.id === id);
-    toast({
-      title: link?.status === "active" ? "Link desativado" : "Link ativado",
-      description: link?.status === "active" 
-        ? "O link foi desativado com sucesso"
-        : "O link foi ativado com sucesso",
-    });
+    toast.success(link?.status === "active" 
+      ? "O link foi desativado com sucesso"
+      : "O link foi ativado com sucesso");
   };
 
   const handleDeleteLink = (id: string) => {
     const link = checkoutLinks.find(l => l.id === id);
     
     if (link?.isDefault) {
-      toast({
-        title: "Não é possível excluir",
-        description: "Não é possível excluir o link padrão do produto",
-        variant: "destructive",
-      });
+      toast.error("Não é possível excluir o link padrão do produto");
       return;
     }
 
     setCheckoutLinks(checkoutLinks.filter(l => l.id !== id));
-    toast({
-      title: "Link excluído",
-      description: "O link foi excluído com sucesso",
-    });
+    toast.error("O link foi excluído com sucesso");
   };
 
   if (loading) {

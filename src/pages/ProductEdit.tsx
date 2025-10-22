@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, CreditCard, Link2, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Upload, CreditCard, Link2, Sparkles, X, Loader2 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { ImageSelector } from "@/components/products/ImageSelector";
 import { Button } from "@/components/ui/button";
@@ -753,6 +753,7 @@ const ProductEdit = () => {
             disabled={loading || (!generalModified && !imageModified && !paymentSettingsModified && !checkoutFieldsModified && !upsellModified && !affiliateModified)}
             className="bg-primary hover:bg-primary/90"
           >
+            {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {loading ? "Salvando..." : "Salvar Produto"}
           </Button>
         </div>
@@ -1007,6 +1008,7 @@ const ProductEdit = () => {
                   disabled={loading || !generalModified && !imageModified}
                   className="bg-primary hover:bg-primary/90"
                 >
+                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {loading ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>
@@ -1167,6 +1169,7 @@ const ProductEdit = () => {
                   disabled={loading || !paymentSettingsModified && !checkoutFieldsModified}
                   className="bg-primary hover:bg-primary/90"
                 >
+                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {loading ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>
@@ -1263,6 +1266,7 @@ const ProductEdit = () => {
                   disabled={loading || !upsellModified}
                   className="bg-primary hover:bg-primary/90"
                 >
+                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {loading ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>
@@ -1452,6 +1456,7 @@ const ProductEdit = () => {
                   disabled={loading || !affiliateModified}
                   className="bg-primary hover:bg-primary/90"
                 >
+                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {loading ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>

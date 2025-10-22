@@ -359,9 +359,14 @@ const ProductEdit = () => {
       setImageFile(null);
       setImageUrl("");
       
-      // Recarregar produto para atualizar a interface
+      // Recarregar produto para atualizar a interface (em try-catch separado)
       if (productId) {
-        await loadProduct();
+        try {
+          await loadProduct();
+        } catch (reloadError) {
+          console.error("Erro ao recarregar produto:", reloadError);
+          // Não mostra erro ao usuário, pois o salvamento foi bem-sucedido
+        }
       }
       
       // Mensagem de sucesso já é mostrada pelo hook useProduct

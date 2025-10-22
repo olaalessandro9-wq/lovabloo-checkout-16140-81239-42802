@@ -42,6 +42,7 @@ const ProductEdit = () => {
   const [pendingImageRemoval, setPendingImageRemoval] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [imageMode, setImageMode] = useState<"upload" | "url">("upload");
+  const [isSaving, setIsSaving] = useState(false);
   
   // Estados de erro para validação inline
   const [errors, setErrors] = useState({
@@ -263,6 +264,7 @@ const ProductEdit = () => {
 
   // Salvar apenas a seção Geral
   const handleSaveGeneral = async () => {
+    setIsSaving(true);
     // Limpar erros anteriores
     const newErrors = {
       name: "",
@@ -305,6 +307,7 @@ const ProductEdit = () => {
     setErrors(newErrors);
     
     if (hasError) {
+      setIsSaving(false);
       return;
     }
 
@@ -373,6 +376,8 @@ const ProductEdit = () => {
     } catch (error) {
       console.error("Erro ao salvar:", error);
       toast.error("Não foi possível salvar as alterações");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -438,6 +443,7 @@ const ProductEdit = () => {
       return;
     }
 
+    setIsSaving(true);
     try {
       let finalImageUrl = product?.image_url;
 
@@ -492,10 +498,12 @@ const ProductEdit = () => {
       setAffiliateModified(false);
       setImageFile(null);
 
-      toast.error("Produto salvo completamente com sucesso");
+      // Toast de sucesso já é mostrado pelo hook useProduct
     } catch (error) {
       console.error("Erro ao salvar:", error);
       toast.error("Não foi possível salvar o produto");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -750,11 +758,11 @@ const ProductEdit = () => {
           </Button>
           <Button 
             onClick={handleSaveAll}
-            disabled={loading || (!generalModified && !imageModified && !paymentSettingsModified && !checkoutFieldsModified && !upsellModified && !affiliateModified)}
+            disabled={isSaving || (!generalModified && !imageModified && !paymentSettingsModified && !checkoutFieldsModified && !upsellModified && !affiliateModified)}
             className="bg-primary hover:bg-primary/90"
           >
-            {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {loading ? "Salvando..." : "Salvar Produto"}
+            {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {isSaving ? "Salvando..." : "Salvar Produto"}
           </Button>
         </div>
 
@@ -1005,11 +1013,11 @@ const ProductEdit = () => {
                 </Button>
                 <Button 
                   onClick={handleSaveGeneral}
-                  disabled={loading || !generalModified && !imageModified}
+                  disabled={isSaving || !generalModified && !imageModified}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {loading ? "Salvando..." : "Salvar Alterações"}
+                  {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  {isSaving ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>
             </div>
@@ -1166,11 +1174,11 @@ const ProductEdit = () => {
                 <div />
                 <Button 
                   onClick={handleSavePaymentSettings}
-                  disabled={loading || !paymentSettingsModified && !checkoutFieldsModified}
+                  disabled={isSaving || !paymentSettingsModified && !checkoutFieldsModified}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {loading ? "Salvando..." : "Salvar Alterações"}
+                  {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  {isSaving ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>
             </div>
@@ -1263,11 +1271,11 @@ const ProductEdit = () => {
                 <div />
                 <Button 
                   onClick={handleSaveUpsell}
-                  disabled={loading || !upsellModified}
+                  disabled={isSaving || !upsellModified}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {loading ? "Salvando..." : "Salvar Alterações"}
+                  {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  {isSaving ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>
             </div>
@@ -1453,11 +1461,11 @@ const ProductEdit = () => {
                 <div />
                 <Button 
                   onClick={handleSaveAffiliate}
-                  disabled={loading || !affiliateModified}
+                  disabled={isSaving || !affiliateModified}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {loading ? "Salvando..." : "Salvar Alterações"}
+                  {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  {isSaving ? "Salvando..." : "Salvar Alterações"}
                 </Button>
               </div>
             </div>

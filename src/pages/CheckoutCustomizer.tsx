@@ -107,6 +107,7 @@ const CheckoutCustomizer = () => {
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<number>(0);
   const [productData, setProductData] = useState<any>(null);
+  const [orderBumps, setOrderBumps] = useState<any[]>([]);
 
   // Load checkout data from Supabase
   useEffect(() => {
@@ -135,6 +136,19 @@ const CheckoutCustomizer = () => {
         };
         setCustomization(loadedCustomization);
         setProductData(checkout.products);
+      }
+
+      // Load order bumps
+      const { data: bumps, error: bumpsError } = await supabase
+        .from("order_bumps")
+        .select("*")
+        .eq("checkout_id", id)
+        .order("position");
+
+      if (bumpsError) {
+        console.error("Error loading order bumps:", bumpsError);
+      } else {
+        setOrderBumps(bumps || []);
       }
     } catch (error: any) {
       console.error("Error loading checkout:", error);
@@ -436,6 +450,7 @@ const CheckoutCustomizer = () => {
               onSelectColumn={setSelectedColumn}
               isPreviewMode={isPreviewMode}
               productData={productData}
+              orderBumps={orderBumps}
             />
           </div>
 

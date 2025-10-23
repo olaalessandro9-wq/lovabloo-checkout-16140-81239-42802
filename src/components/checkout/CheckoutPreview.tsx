@@ -14,6 +14,7 @@ interface CheckoutPreviewProps {
   onSelectColumn: (index: number) => void;
   isPreviewMode?: boolean;
   productData?: any;
+  orderBumps?: any[];
 }
 
 const DropZone = ({ id, children, isOver }: { id: string; children: React.ReactNode; isOver?: boolean }) => {
@@ -386,10 +387,31 @@ export const CheckoutPreview = ({
   onSelectColumn,
   isPreviewMode = false,
   productData,
+  orderBumps = [],
 }: CheckoutPreviewProps) => {
   const [selectedPayment, setSelectedPayment] = useState<"pix" | "card">("pix");
+  const [selectedBumps, setSelectedBumps] = useState<Set<string>>(new Set());
   const { setNodeRef: setTopRef, isOver: isTopOver } = useDroppable({ id: "top-drop-zone" });
   const { setNodeRef: setBottomRef, isOver: isBottomOver } = useDroppable({ id: "bottom-drop-zone" });
+
+  const productPrice = productData?.price ? Number(productData.price) : 0;
+  const bumpsTotal = Array.from(selectedBumps).reduce((total, bumpId) => {
+    const bump = orderBumps.find(b => b.id === bumpId);
+    return total + (bump ? Number(bump.price) : 0);
+  }, 0);
+  const totalPrice = productPrice + bumpsTotal;
+
+  const toggleBump = (bumpId: string) => {
+    setSelectedBumps(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(bumpId)) {
+        newSet.delete(bumpId);
+      } else {
+        newSet.add(bumpId);
+      }
+      return newSet;
+    });
+  };
 
   const maxWidth = viewMode === "mobile" ? "max-w-md" : "max-w-4xl";
 
@@ -655,6 +677,64 @@ export const CheckoutPreview = ({
           </div>
         </div>
 
+        {/* Order Bumps */}
+        {orderBumps.length > 0 && (
+          <div className="space-y-3">
+            {orderBumps.map((bump) => (
+              <div
+                key={bump.id}
+                className="p-4 rounded-2xl border-2 transition-all cursor-pointer"
+                style={{
+                  backgroundColor: customization.design.colors.form?.background || "#F9FAFB",
+                  borderColor: selectedBumps.has(bump.id)
+                    ? customization.design.colors.accent
+                    : customization.design.colors.secondaryText + "40",
+                }}
+                onClick={() => toggleBump(bump.id)}
+              >
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedBumps.has(bump.id)}
+                    onChange={() => toggleBump(bump.id)}
+                    className="mt-1"
+                    style={{ accentColor: customization.design.colors.accent }}
+                  />
+                  {bump.image_url && (
+                    <img
+                      src={bump.image_url}
+                      alt={bump.title}
+                      className="w-16 h-16 rounded-lg object-cover"
+                    />
+                  )}
+                  <div className="flex-1">
+                    <h5
+                      className="font-semibold mb-1"
+                      style={{ color: customization.design.colors.primaryText }}
+                    >
+                      {bump.title}
+                    </h5>
+                    {bump.description && (
+                      <p
+                        className="text-sm mb-2"
+                        style={{ color: customization.design.colors.secondaryText }}
+                      >
+                        {bump.description}
+                      </p>
+                    )}
+                    <p
+                      className="font-bold"
+                      style={{ color: customization.design.colors.accent }}
+                    >
+                      + R$ {Number(bump.price).toFixed(2).replace('.', ',')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Summary */}
         <div
           className="p-6 rounded-2xl"
@@ -673,7 +753,7 @@ export const CheckoutPreview = ({
               className="text-2xl font-bold"
               style={{ color: customization.design.colors.accent }}
             >
-              R$ 99,00
+              R$ {totalPrice.toFixed(2).replace('.', ',')}
             </span>
           </div>
 

@@ -20,7 +20,7 @@ export type LayoutType = "single" | "two-columns" | "two-columns-asymmetric" | "
 export interface CheckoutRow {
   id: string;
   layout: LayoutType;
-  components: CheckoutComponent[];
+  columns: CheckoutComponent[][];
 }
 
 export interface CheckoutDesign {
@@ -49,7 +49,7 @@ export interface CheckoutDesign {
 
 export interface CheckoutCustomization {
   design: CheckoutDesign;
-  components: CheckoutComponent[];
+  rows: CheckoutRow[];
 }
 
 const CheckoutCustomizer = () => {
@@ -80,10 +80,12 @@ const CheckoutCustomizer = () => {
         selectedPayment: "#10B981",
       },
     },
-    components: [],
+    rows: [],
   });
 
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
+  const [selectedRow, setSelectedRow] = useState<string | null>(null);
+  const [selectedColumn, setSelectedColumn] = useState<number>(0);
 
   // Load checkout data from Supabase
   useEffect(() => {
@@ -103,85 +105,24 @@ const CheckoutCustomizer = () => {
 
       if (checkoutError) throw checkoutError;
 
-      // Se o checkout tem dados de design e components, carrega eles
-      if (checkout.design && checkout.components) {
-        setCustomization({
-          design: checkout.design,
-          components: checkout.components,
-        });
+      if (checkout) {
+        // Load design and rows from database
+        const loadedCustomization: CheckoutCustomization = {
+          design: checkout.design || customization.design,
+          rows: checkout.components || [],
+        };
+        setCustomization(loadedCustomization);
       }
     } catch (error) {
       console.error("Error loading checkout:", error);
       toast({
-        title: "Erro ao carregar",
-        description: "Não foi possível carregar as configurações do checkout.",
+        title: "Erro ao carregar checkout",
+        description: "Não foi possível carregar os dados do checkout.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAddComponent = (type: CheckoutComponent["type"]) => {
-    const newComponent: CheckoutComponent = {
-      id: `${type}-${Date.now()}`,
-      type,
-      content: {
-        text: type === "text" ? "Digite seu texto aqui" : undefined,
-        fontSize: type === "text" ? "16" : undefined,
-        color: type === "text" ? customization.design.colors.primaryText : undefined,
-        imageUrl: type === "image" ? "" : undefined,
-        title: type === "advantage" ? "Vantagem" : undefined,
-        icon: type === "advantage" ? "check" : type === "seal" ? "star" : undefined,
-        minutes: type === "timer" ? 15 : undefined,
-        seconds: type === "timer" ? 0 : undefined,
-        timerColor: type === "timer" ? customization.design.colors.accent : undefined,
-        testimonialText: type === "testimonial" ? "Depoimento do cliente aqui" : undefined,
-        authorName: type === "testimonial" ? "Nome do Cliente" : undefined,
-        sealText: type === "seal" ? "GARANTIA" : undefined,
-        videoUrl: type === "video" ? "" : undefined,
-        videoType: type === "video" ? "youtube" : undefined,
-      },
-    };
-    
-    setCustomization({
-      ...customization,
-      components: [...customization.components, newComponent],
-    });
-    setSelectedComponent(newComponent.id);
-  };
-
-  const handleUpdateComponent = (componentId: string, updates: Partial<CheckoutComponent>) => {
-    setCustomization({
-      ...customization,
-      components: customization.components.map(comp =>
-        comp.id === componentId ? { ...comp, ...updates } : comp
-      ),
-    });
-  };
-
-  const handleDeleteComponent = (componentId: string) => {
-    setCustomization({
-      ...customization,
-      components: customization.components.filter(comp => comp.id !== componentId),
-    });
-    if (selectedComponent === componentId) {
-      setSelectedComponent(null);
-    }
-  };
-
-  const handleUpdateDesign = (updates: Partial<CheckoutDesign>) => {
-    setCustomization({
-      ...customization,
-      design: {
-        ...customization.design,
-        ...updates,
-        colors: {
-          ...customization.design.colors,
-          ...(updates.colors || {}),
-        },
-      },
-    });
   };
 
   const handleSave = async () => {
@@ -200,7 +141,8 @@ const CheckoutCustomizer = () => {
         .from("checkouts")
         .update({
           design: customization.design,
-          components: customization.components,
+          components: customization.rows,
+          updated_at: new Date().toISOString(),
         })
         .eq("id", checkoutId);
 
@@ -214,7 +156,7 @@ const CheckoutCustomizer = () => {
       console.error("Error saving checkout:", error);
       toast({
         title: "Erro ao salvar",
-        description: "Não foi possível salvar o checkout.",
+        description: "Não foi possível salvar as alterações.",
         variant: "destructive",
       });
     } finally {
@@ -222,73 +164,229 @@ const CheckoutCustomizer = () => {
     }
   };
 
-  return (
-    <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <div className="border-b border-border bg-card px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-xl font-semibold text-foreground">
-            Personalizar Checkout
-          </h1>
-        </div>
+  const handleAddRow = (layout: LayoutType) => {
+    const newRow: CheckoutRow = {
+      id: `row-${Date.now()}`,
+      layout,
+      columns: Array(getColumnCount(layout)).fill([]).map(() => []),
+    };
 
-        <div className="flex items-center gap-3">
-          {/* View Mode Toggle */}
-          <div className="flex gap-1 p-1 bg-muted rounded-lg">
+    setCustomization({
+      ...customization,
+      rows: [...customization.rows, newRow],
+    });
+
+    setSelectedRow(newRow.id);
+  };
+
+  const getColumnCount = (layout: LayoutType): number => {
+    switch (layout) {
+      case "single":
+        return 1;
+      case "two-columns":
+      case "two-columns-asymmetric":
+        return 2;
+      case "three-columns":
+        return 3;
+      default:
+        return 1;
+    }
+  };
+
+  const handleAddComponent = (type: CheckoutComponent["type"], rowId?: string, columnIndex?: number) => {
+    const newComponent: CheckoutComponent = {
+      id: `component-${Date.now()}`,
+      type,
+      content: getDefaultContent(type),
+    };
+
+    if (rowId && columnIndex !== undefined) {
+      // Add to specific row and column
+      setCustomization({
+        ...customization,
+        rows: customization.rows.map((row) => {
+          if (row.id === rowId) {
+            const newColumns = [...row.columns];
+            newColumns[columnIndex] = [...newColumns[columnIndex], newComponent];
+            return { ...row, columns: newColumns };
+          }
+          return row;
+        }),
+      });
+    } else {
+      // Add to selected row or create new single-column row
+      if (selectedRow) {
+        setCustomization({
+          ...customization,
+          rows: customization.rows.map((row) => {
+            if (row.id === selectedRow) {
+              const newColumns = [...row.columns];
+              newColumns[selectedColumn] = [...newColumns[selectedColumn], newComponent];
+              return { ...row, columns: newColumns };
+            }
+            return row;
+          }),
+        });
+      } else {
+        // Create new single-column row
+        const newRow: CheckoutRow = {
+          id: `row-${Date.now()}`,
+          layout: "single",
+          columns: [[newComponent]],
+        };
+        setCustomization({
+          ...customization,
+          rows: [...customization.rows, newRow],
+        });
+        setSelectedRow(newRow.id);
+      }
+    }
+
+    setSelectedComponent(newComponent.id);
+  };
+
+  const getDefaultContent = (type: CheckoutComponent["type"]) => {
+    switch (type) {
+      case "text":
+        return { text: "Texto editável", fontSize: 16, color: "#000000" };
+      case "timer":
+        return { minutes: 15, seconds: 0, timerColor: "#EF4444" };
+      case "advantage":
+        return { title: "Vantagem", description: "", icon: "check" };
+      case "seal":
+        return { sealText: "SELO", icon: "star" };
+      case "testimonial":
+        return { testimonialText: "Depoimento", authorName: "Nome", authorImage: "" };
+      case "video":
+        return { videoUrl: "", videoType: "youtube" };
+      case "image":
+        return { imageUrl: "" };
+      default:
+        return {};
+    }
+  };
+
+  const handleUpdateComponent = (componentId: string, content: any) => {
+    setCustomization({
+      ...customization,
+      rows: customization.rows.map((row) => ({
+        ...row,
+        columns: row.columns.map((column) =>
+          column.map((comp) =>
+            comp.id === componentId ? { ...comp, content } : comp
+          )
+        ),
+      })),
+    });
+  };
+
+  const handleDeleteComponent = (componentId: string) => {
+    setCustomization({
+      ...customization,
+      rows: customization.rows.map((row) => ({
+        ...row,
+        columns: row.columns.map((column) =>
+          column.filter((comp) => comp.id !== componentId)
+        ),
+      })),
+    });
+    setSelectedComponent(null);
+  };
+
+  const handleDeleteRow = (rowId: string) => {
+    setCustomization({
+      ...customization,
+      rows: customization.rows.filter((row) => row.id !== rowId),
+    });
+    if (selectedRow === rowId) {
+      setSelectedRow(null);
+    }
+  };
+
+  const handleUpdateDesign = (design: Partial<CheckoutDesign>) => {
+    setCustomization({
+      ...customization,
+      design: { ...customization.design, ...design },
+    });
+  };
+
+  const getSelectedComponent = () => {
+    if (!selectedComponent) return null;
+
+    for (const row of customization.rows) {
+      for (const column of row.columns) {
+        const component = column.find((c) => c.id === selectedComponent);
+        if (component) return component;
+      }
+    }
+    return null;
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Header */}
+      <div className="border-b bg-card">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-4">
             <Button
-              variant={viewMode === "desktop" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("desktop")}
-              className="gap-2"
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
             >
-              <Monitor className="h-4 w-4" />
-              Desktop
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <Button
-              variant={viewMode === "mobile" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("mobile")}
-              className="gap-2"
-            >
-              <Smartphone className="h-4 w-4" />
-              Mobile
-            </Button>
+            <h1 className="text-xl font-semibold">Personalizar Checkout</h1>
           </div>
 
-          {/* Preview Button */}
-          <Button
-            variant="outline"
-            onClick={() => setIsPreviewMode(!isPreviewMode)}
-            className="gap-2"
-          >
-            <Eye className="h-4 w-4" />
-            {isPreviewMode ? "Sair do Preview" : "Preview"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 border rounded-lg p-1">
+              <Button
+                variant={viewMode === "desktop" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("desktop")}
+              >
+                <Monitor className="h-4 w-4 mr-2" />
+                Desktop
+              </Button>
+              <Button
+                variant={viewMode === "mobile" ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("mobile")}
+              >
+                <Smartphone className="h-4 w-4 mr-2" />
+                Mobile
+              </Button>
+            </div>
 
-          {/* Save Button */}
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? "Salvando..." : "Salvar"}
-          </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsPreviewMode(!isPreviewMode)}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview
+            </Button>
+
+            <Button onClick={handleSave} disabled={loading}>
+              {loading ? "Salvando..." : "Salvar"}
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Preview Panel */}
-        <div className="flex-1 overflow-auto bg-muted/30">
+        {/* Preview Area */}
+        <div className="flex-1 overflow-auto bg-muted/20">
           <CheckoutPreview
             customization={customization}
             viewMode={viewMode}
-            isPreviewMode={isPreviewMode}
             selectedComponentId={selectedComponent}
             onSelectComponent={setSelectedComponent}
+            selectedRowId={selectedRow}
+            onSelectRow={setSelectedRow}
+            selectedColumn={selectedColumn}
+            onSelectColumn={setSelectedColumn}
+            isPreviewMode={isPreviewMode}
           />
         </div>
 
@@ -296,13 +394,16 @@ const CheckoutCustomizer = () => {
         {!isPreviewMode && (
           <CheckoutCustomizationPanel
             customization={customization}
+            selectedComponent={getSelectedComponent()}
             onAddComponent={handleAddComponent}
-            selectedComponentId={selectedComponent}
             onUpdateComponent={handleUpdateComponent}
             onDeleteComponent={handleDeleteComponent}
-            onDeselectComponent={() => setSelectedComponent(null)}
             onUpdateDesign={handleUpdateDesign}
-            viewMode={viewMode}
+            onAddRow={handleAddRow}
+            onDeleteRow={handleDeleteRow}
+            selectedRow={selectedRow}
+            onSelectRow={setSelectedRow}
+            rows={customization.rows}
           />
         )}
       </div>

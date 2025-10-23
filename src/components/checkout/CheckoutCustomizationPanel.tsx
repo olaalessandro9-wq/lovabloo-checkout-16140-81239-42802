@@ -1,21 +1,24 @@
-import { CheckoutCustomization, CheckoutComponent, CheckoutDesign, ViewMode } from "@/pages/CheckoutCustomizer";
+import { CheckoutCustomization, CheckoutComponent, CheckoutDesign, CheckoutRow, LayoutType } from "@/pages/CheckoutCustomizer";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Type, Image, CheckCircle, Award, Clock, MessageSquare, Video } from "lucide-react";
+import { Type, Image, CheckCircle, Award, Clock, MessageSquare, Video, Columns, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 interface CheckoutCustomizationPanelProps {
   customization: CheckoutCustomization;
-  onAddComponent: (type: CheckoutComponent["type"]) => void;
-  selectedComponentId: string | null;
-  onUpdateComponent: (componentId: string, updates: Partial<CheckoutComponent>) => void;
+  selectedComponent: CheckoutComponent | null;
+  onAddComponent: (type: CheckoutComponent["type"], rowId?: string, columnIndex?: number) => void;
+  onUpdateComponent: (componentId: string, content: any) => void;
   onDeleteComponent: (componentId: string) => void;
-  onDeselectComponent: () => void;
-  onUpdateDesign: (updates: Partial<CheckoutDesign>) => void;
-  viewMode: ViewMode;
+  onUpdateDesign: (design: Partial<CheckoutDesign>) => void;
+  onAddRow: (layout: LayoutType) => void;
+  onDeleteRow: (rowId: string) => void;
+  selectedRow: string | null;
+  onSelectRow: (rowId: string) => void;
+  rows: CheckoutRow[];
 }
 
 const ColorPicker = ({
@@ -59,18 +62,26 @@ const componentItems = [
   { id: "video", label: "Vídeo", icon: Video },
 ];
 
+const layoutItems = [
+  { id: "single", label: "1 Coluna", columns: 1 },
+  { id: "two-columns", label: "2 Colunas", columns: 2 },
+  { id: "two-columns-asymmetric", label: "2 Colunas (1/3 - 2/3)", columns: 2 },
+  { id: "three-columns", label: "3 Colunas", columns: 3 },
+];
+
 export const CheckoutCustomizationPanel = ({
   customization,
+  selectedComponent,
   onAddComponent,
-  selectedComponentId,
   onUpdateComponent,
   onDeleteComponent,
-  onDeselectComponent,
   onUpdateDesign,
-  viewMode,
+  onAddRow,
+  onDeleteRow,
+  selectedRow,
+  onSelectRow,
+  rows,
 }: CheckoutCustomizationPanelProps) => {
-  const selectedComponent = customization.components.find(comp => comp.id === selectedComponentId);
-
   return (
     <div className="w-96 border-l border-border bg-card flex flex-col h-full">
       <Tabs defaultValue="components" className="flex-1 flex flex-col h-full">
@@ -94,7 +105,7 @@ export const CheckoutCustomizationPanel = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={onDeselectComponent}
+                      onClick={() => onUpdateComponent(selectedComponent.id, null)}
                     >
                       Voltar
                     </Button>
@@ -108,10 +119,11 @@ export const CheckoutCustomizationPanel = ({
                         <textarea
                           value={selectedComponent.content?.text || ""}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, text: e.target.value }
+                            ...selectedComponent.content,
+                            text: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground min-h-[100px]"
-                          placeholder="Digite seu texto aqui"
+                          placeholder="Digite o texto"
                         />
                       </div>
                       <div>
@@ -120,18 +132,20 @@ export const CheckoutCustomizationPanel = ({
                           type="number"
                           value={selectedComponent.content?.fontSize || 16}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, fontSize: e.target.value }
+                            ...selectedComponent.content,
+                            fontSize: parseInt(e.target.value)
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          min="10"
-                          max="72"
+                          min="12"
+                          max="48"
                         />
                       </div>
                       <ColorPicker
                         label="Cor do Texto"
-                        value={selectedComponent.content?.color || customization.design.colors.primaryText}
+                        value={selectedComponent.content?.color || "#000000"}
                         onChange={(value) => onUpdateComponent(selectedComponent.id, {
-                          content: { ...selectedComponent.content, color: value }
+                          ...selectedComponent.content,
+                          color: value
                         })}
                       />
                       <Button
@@ -153,21 +167,13 @@ export const CheckoutCustomizationPanel = ({
                           type="text"
                           value={selectedComponent.content?.imageUrl || ""}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, imageUrl: e.target.value }
+                            ...selectedComponent.content,
+                            imageUrl: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
                           placeholder="https://exemplo.com/imagem.jpg"
                         />
                       </div>
-                      {selectedComponent.content?.imageUrl && (
-                        <div className="mt-2">
-                          <img 
-                            src={selectedComponent.content.imageUrl} 
-                            alt="Preview" 
-                            className="w-full rounded border border-border"
-                          />
-                        </div>
-                      )}
                       <Button
                         variant="destructive"
                         className="w-full"
@@ -182,15 +188,16 @@ export const CheckoutCustomizationPanel = ({
                   {selectedComponent.type === "advantage" && (
                     <div className="space-y-4">
                       <div>
-                        <Label>Título da Vantagem</Label>
+                        <Label>Título</Label>
                         <input
                           type="text"
                           value={selectedComponent.content?.title || ""}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, title: e.target.value }
+                            ...selectedComponent.content,
+                            title: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          placeholder="Ex: Entrega Rápida"
+                          placeholder="Título da vantagem"
                         />
                       </div>
                       <div>
@@ -198,7 +205,8 @@ export const CheckoutCustomizationPanel = ({
                         <textarea
                           value={selectedComponent.content?.description || ""}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, description: e.target.value }
+                            ...selectedComponent.content,
+                            description: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground min-h-[80px]"
                           placeholder="Descrição da vantagem"
@@ -209,7 +217,8 @@ export const CheckoutCustomizationPanel = ({
                         <select
                           value={selectedComponent.content?.icon || "check"}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, icon: e.target.value }
+                            ...selectedComponent.content,
+                            icon: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
                         >
@@ -238,7 +247,8 @@ export const CheckoutCustomizationPanel = ({
                           type="text"
                           value={selectedComponent.content?.sealText || ""}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, sealText: e.target.value }
+                            ...selectedComponent.content,
+                            sealText: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
                           placeholder="Ex: GARANTIA"
@@ -249,7 +259,8 @@ export const CheckoutCustomizationPanel = ({
                         <select
                           value={selectedComponent.content?.icon || "star"}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, icon: e.target.value }
+                            ...selectedComponent.content,
+                            icon: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
                         >
@@ -277,7 +288,8 @@ export const CheckoutCustomizationPanel = ({
                           type="number"
                           value={selectedComponent.content?.minutes || 15}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, minutes: parseInt(e.target.value) }
+                            ...selectedComponent.content,
+                            minutes: parseInt(e.target.value)
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
                           min="0"
@@ -290,7 +302,8 @@ export const CheckoutCustomizationPanel = ({
                           type="number"
                           value={selectedComponent.content?.seconds || 0}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, seconds: parseInt(e.target.value) }
+                            ...selectedComponent.content,
+                            seconds: parseInt(e.target.value)
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
                           min="0"
@@ -299,9 +312,10 @@ export const CheckoutCustomizationPanel = ({
                       </div>
                       <ColorPicker
                         label="Cor do Cronômetro"
-                        value={selectedComponent.content?.timerColor || customization.design.colors.accent}
+                        value={selectedComponent.content?.timerColor || "#EF4444"}
                         onChange={(value) => onUpdateComponent(selectedComponent.id, {
-                          content: { ...selectedComponent.content, timerColor: value }
+                          ...selectedComponent.content,
+                          timerColor: value
                         })}
                       />
                       <Button
@@ -322,31 +336,34 @@ export const CheckoutCustomizationPanel = ({
                         <textarea
                           value={selectedComponent.content?.testimonialText || ""}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, testimonialText: e.target.value }
+                            ...selectedComponent.content,
+                            testimonialText: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground min-h-[100px]"
-                          placeholder="Digite o depoimento aqui"
+                          placeholder="Texto do depoimento"
                         />
                       </div>
                       <div>
-                        <Label>Nome do Cliente</Label>
+                        <Label>Nome do Autor</Label>
                         <input
                           type="text"
                           value={selectedComponent.content?.authorName || ""}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, authorName: e.target.value }
+                            ...selectedComponent.content,
+                            authorName: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          placeholder="Nome do Cliente"
+                          placeholder="Nome do cliente"
                         />
                       </div>
                       <div>
-                        <Label>URL da Foto (opcional)</Label>
+                        <Label>URL da Foto do Autor</Label>
                         <input
                           type="text"
                           value={selectedComponent.content?.authorImage || ""}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, authorImage: e.target.value }
+                            ...selectedComponent.content,
+                            authorImage: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
                           placeholder="https://exemplo.com/foto.jpg"
@@ -370,7 +387,8 @@ export const CheckoutCustomizationPanel = ({
                         <select
                           value={selectedComponent.content?.videoType || "youtube"}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, videoType: e.target.value }
+                            ...selectedComponent.content,
+                            videoType: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
                         >
@@ -385,16 +403,11 @@ export const CheckoutCustomizationPanel = ({
                           type="text"
                           value={selectedComponent.content?.videoUrl || ""}
                           onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            content: { ...selectedComponent.content, videoUrl: e.target.value }
+                            ...selectedComponent.content,
+                            videoUrl: e.target.value
                           })}
                           className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          placeholder={
-                            selectedComponent.content?.videoType === "youtube" 
-                              ? "https://www.youtube.com/watch?v=..." 
-                              : selectedComponent.content?.videoType === "vimeo"
-                              ? "https://vimeo.com/..."
-                              : "https://exemplo.com/video.mp4"
-                          }
+                          placeholder="https://www.youtube.com/watch?v=..."
                         />
                       </div>
                       <Button
@@ -439,15 +452,64 @@ export const CheckoutCustomizationPanel = ({
         </TabsContent>
 
         {/* Linhas Tab */}
-        <TabsContent value="linhas" className="space-y-4 mt-4">
+        <TabsContent value="linhas" className="flex-1 mt-0">
           <ScrollArea className="h-full">
-            <div className="p-6 space-y-4">
-              <p className="text-sm text-muted-foreground">
-                A funcionalidade de linhas será implementada em breve.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Por enquanto, todos os componentes são exibidos em uma única coluna.
-              </p>
+            <div className="p-6 space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold mb-2 text-foreground">
+                  Layouts de Linhas
+                </h2>
+                <p className="text-sm text-muted-foreground mb-6">
+                  Adicione linhas com diferentes layouts de colunas
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {layoutItems.map((item) => (
+                  <Card
+                    key={item.id}
+                    onClick={() => onAddRow(item.id as LayoutType)}
+                    className="p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-accent transition-colors h-24"
+                  >
+                    <Columns className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-sm font-medium text-center">{item.label}</span>
+                  </Card>
+                ))}
+              </div>
+
+              {rows.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <h3 className="font-medium mb-4 text-foreground">Linhas Adicionadas</h3>
+                    <div className="space-y-2">
+                      {rows.map((row, index) => (
+                        <div
+                          key={row.id}
+                          className={`flex items-center justify-between p-3 rounded border ${
+                            selectedRow === row.id ? "border-primary bg-accent" : "border-border"
+                          }`}
+                          onClick={() => onSelectRow(row.id)}
+                        >
+                          <span className="text-sm">
+                            Linha {index + 1} - {layoutItems.find(l => l.id === row.layout)?.label}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteRow(row.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </ScrollArea>
         </TabsContent>

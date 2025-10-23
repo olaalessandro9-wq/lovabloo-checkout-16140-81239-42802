@@ -170,25 +170,15 @@ export const OffersManager = ({
     }
   };
 
-  // Expor função de validação para o componente pai
-  useEffect(() => {
-    if (hasMultipleOffers && onValidate) {
-      // Chamar callback com resultado da validação
-      const hasError = hasErrors();
-      // Não chamar onValidate aqui, apenas preparar para quando for solicitado
-    }
-  }, [offers, hasMultipleOffers]);
+  // Função pública para validar ofertas (pode ser chamada externamente)
+  const validateAllOffers = () => {
+    return !hasErrors(); // Retorna true se NÃO houver erros
+  };
 
-  // Expor função de validação via callback
+  // Expor função de validação globalmente (apenas se necessário)
   useEffect(() => {
-    if (onValidate) {
-      // Substituir onValidate por uma função que retorna se há erros
-      (window as any).__validateOffers = () => {
-        const hasError = hasErrors();
-        return !hasError; // Retorna true se NÃO houver erros
-      };
-    }
-  }, [offers, hasMultipleOffers, onValidate]);
+    (window as any).__validateOffers = validateAllOffers;
+  }, [offers]);
 
   if (!hasMultipleOffers) {
     return (

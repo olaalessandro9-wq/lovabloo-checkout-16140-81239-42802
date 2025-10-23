@@ -271,6 +271,7 @@ const ProductEdit = () => {
         .from("offers")
         .select("*")
         .eq("product_id", productId)
+        .eq("is_default", false) // Não carregar oferta padrão (produto = oferta principal)
         .order("created_at", { ascending: true });
       
       if (error) throw error;
@@ -475,14 +476,14 @@ const ProductEdit = () => {
           // Remover ofertas antigas (exceto as que ainda existem)
           const existingOfferIds = offers.filter(o => !o.id.startsWith('temp-')).map(o => o.id);
           
-          // Deletar ofertas que não estão mais na lista
+          // Deletar ofertas que não estão mais na lista (exceto oferta padrão)
           const { data: currentOffers } = await supabase
             .from("offers")
-            .select("id")
+            .select("id, is_default")
             .eq("product_id", productId);
           
           const offersToDelete = (currentOffers || []).filter(
-            (co: any) => !existingOfferIds.includes(co.id)
+            (co: any) => !existingOfferIds.includes(co.id) && !co.is_default // Não deletar oferta padrão
           );
           
           for (const offer of offersToDelete) {

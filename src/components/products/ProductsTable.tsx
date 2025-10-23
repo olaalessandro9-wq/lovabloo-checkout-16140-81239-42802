@@ -157,12 +157,57 @@ export function ProductsTable() {
 
   const handleDelete = async (productId: string) => {
     try {
-      const { error } = await supabase
+      // 1. Buscar dados do produto antes de deletar (para pegar a URL da imagem)
+      const { data: product, error: fetchError } = await supabase
+        .from("products")
+        .select("image_url, user_id")
+        .eq("id", productId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // 2. Deletar o produto (CASCADE vai deletar ofertas, links, checkouts, etc.)
+      const { error: deleteError } = await supabase
         .from("products")
         .delete()
         .eq("id", productId);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
+
+      // 3. Deletar a imagem do Storage (se existir)
+      if (product?.image_url) {
+        try {
+          // Extrair o caminho da imagem da URL
+          // Formato: https://xxx.supabase.co/storage/v1/object/public/product-images/user_id/filename.ext
+          let imagePath = product.image_url;
+          
+          // Se for URL completa, extrair apenas o caminho após 'product-images/'
+          if (imagePath.includes('product-images/')) {
+            imagePath = imagePath.split('product-images/')[1];
+          } else if (imagePath.includes('/')) {
+            // Se for caminho relativo, pegar apenas o nome do arquivo
+            const fileName = imagePath.split('/').pop();
+            imagePath = `${product.user_id}/${fileName}`;
+          } else {
+            // Se for apenas o nome do arquivo
+            imagePath = `${product.user_id}/${imagePath}`;
+          }
+
+          // Deletar do bucket
+          const { error: storageError } = await supabase.storage
+            .from('product-images')
+            .remove([imagePath]);
+
+          if (storageError) {
+            console.warn('Erro ao deletar imagem do Storage:', storageError);
+            // Não lançar erro, pois o produto já foi deletado
+          }
+        } catch (storageError) {
+          console.warn('Erro ao processar deleção de imagem:', storageError);
+          // Não lançar erro, pois o produto já foi deletado
+        }
+      }
+
       toast.success("Produto excluído com sucesso");
       loadProducts();
     } catch (error: any) {

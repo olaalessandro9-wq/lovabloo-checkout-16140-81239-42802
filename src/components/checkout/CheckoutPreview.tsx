@@ -2,7 +2,7 @@ import { CheckoutCustomization, CheckoutComponent, CheckoutRow, ViewMode } from 
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
-import { PixIcon, CreditCardIcon } from "@/components/icons";
+import { PixIcon, CreditCardIcon, LockIcon } from "@/components/icons";
 
 interface CheckoutPreviewProps {
   customization: CheckoutCustomization;
@@ -844,10 +844,11 @@ export const CheckoutPreview = ({
           </button>
 
           <p 
-            className="text-xs text-center mt-4"
+            className="text-xs text-center mt-4 flex items-center justify-center gap-1"
             style={{ color: customization.design.colors.secondaryText }}
           >
-            🔒 Pagamento 100% seguro
+            <LockIcon size={12} />
+            Pagamento 100% seguro
           </p>
         </div>
 

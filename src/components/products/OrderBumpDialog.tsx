@@ -129,11 +129,12 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
     try {
       setLoadingProducts(true);
       
-      // Load all products except the current one
+      // Load all active products except the current one
       const { data, error } = await supabase
         .from("products")
         .select("id, name, price, image_url")
         .neq("id", productId)
+        .eq("active", true)
         .order("name", { ascending: true });
 
       if (error) throw error;
@@ -220,11 +221,13 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
     try {
       setLoading(true);
 
-      // Get all checkouts for the current product
+      // Get the main checkout for the current product (offer_id is null)
       const { data: checkouts, error: checkoutsError } = await supabase
         .from("checkouts")
         .select("id")
-        .eq("product_id", productId);
+        .eq("product_id", productId)
+        .is("offer_id", null)
+        .limit(1);
 
       if (checkoutsError) throw checkoutsError;
 
@@ -233,9 +236,9 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
         return;
       }
 
-      // Add order bump to all checkouts of this product
-      const orderBumps = checkouts.map(checkout => ({
-        checkout_id: checkout.id,
+      // Add order bump only to the main checkout
+      const orderBump = {
+        checkout_id: checkouts[0].id,
         product_id: selectedProductId,
         offer_id: selectedOfferId,
         discount_enabled: discountEnabled,
@@ -245,11 +248,11 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
         custom_description: customDescription || null,
         show_image: showImage,
         active: true,
-      }));
+      };
 
       const { error: insertError } = await supabase
         .from("order_bumps")
-        .insert(orderBumps);
+        .insert([orderBump]);
 
       if (insertError) throw insertError;
 

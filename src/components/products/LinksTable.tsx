@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Copy, Star, ExternalLink, Power } from "lucide-react";
+import { Search, Copy, Star, ExternalLink, Power, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,6 +10,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
@@ -112,6 +118,15 @@ export function LinksTable({ links, onToggleStatus }: LinksTableProps) {
                       <code className="text-xs bg-muted px-2 py-1 rounded text-muted-foreground truncate flex-1">
                         {link.url}
                       </code>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 flex-shrink-0"
+                        onClick={() => copyToClipboard(link.url)}
+                        title="Copiar link"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -146,34 +161,34 @@ export function LinksTable({ links, onToggleStatus }: LinksTableProps) {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => copyToClipboard(link.url)}
-                        title="Copiar link"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => openLink(link.url)}
-                        title="Abrir link"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => onToggleStatus(link.id)}
-                        title={link.status === "active" ? "Desativar" : "Ativar"}
-                      >
-                        <Power className="w-4 h-4" />
-                      </Button>
+                    <div className="flex items-center justify-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem
+                            onClick={() => openLink(link.url)}
+                            className="cursor-pointer"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Abrir Link
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => onToggleStatus(link.id)}
+                            className="cursor-pointer"
+                          >
+                            <Power className="w-4 h-4 mr-2" />
+                            {link.status === "active" ? "Desativar" : "Ativar"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </TableCell>
                 </TableRow>

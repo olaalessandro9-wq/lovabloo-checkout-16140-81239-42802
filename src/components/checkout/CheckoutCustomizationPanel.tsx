@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckoutComponent, CheckoutDesign, CheckoutRow, LayoutType } from "@/pages/CheckoutCustomizer";
-import { ArrowLeft, Trash2, Columns, Columns2, Columns3, LayoutGrid } from "lucide-react";
+import { ArrowLeft, Trash2, Columns, Columns2, Columns3, LayoutGrid, Copy, MoveUp, MoveDown } from "lucide-react";
 import { useDraggable } from "@dnd-kit/core";
 
 interface CheckoutCustomizationPanelProps {
@@ -13,6 +13,9 @@ interface CheckoutCustomizationPanelProps {
   selectedComponent: CheckoutComponent | null;
   onUpdateComponent: (componentId: string, content: any) => void;
   onRemoveComponent: (componentId: string) => void;
+  onDuplicateComponent?: (componentId: string) => void;
+  onMoveComponentUp?: (componentId: string) => void;
+  onMoveComponentDown?: (componentId: string) => void;
   onUpdateDesign: (design: CheckoutDesign) => void;
   onAddRow: (layout: LayoutType) => void;
   onRemoveRow: (rowId: string) => void;
@@ -46,6 +49,9 @@ export const CheckoutCustomizationPanel = ({
   selectedComponent,
   onUpdateComponent,
   onRemoveComponent,
+  onDuplicateComponent,
+  onMoveComponentUp,
+  onMoveComponentDown,
   onUpdateDesign,
   onAddRow,
   onRemoveRow,
@@ -377,14 +383,48 @@ export const CheckoutCustomizationPanel = ({
             </>
           )}
 
-          <Button
-            variant="destructive"
-            className="w-full"
-            onClick={() => onRemoveComponent(selectedComponent.id)}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Excluir Componente
-          </Button>
+          <div className="space-y-2 pt-4 border-t">
+            <div className="grid grid-cols-3 gap-2">
+              {onDuplicateComponent && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDuplicateComponent(selectedComponent.id)}
+                  title="Duplicar componente"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              )}
+              {onMoveComponentUp && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onMoveComponentUp(selectedComponent.id)}
+                  title="Mover para cima"
+                >
+                  <MoveUp className="h-4 w-4" />
+                </Button>
+              )}
+              {onMoveComponentDown && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onMoveComponentDown(selectedComponent.id)}
+                  title="Mover para baixo"
+                >
+                  <MoveDown className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={() => onRemoveComponent(selectedComponent.id)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir Componente
+            </Button>
+          </div>
         </div>
       </div>
     );

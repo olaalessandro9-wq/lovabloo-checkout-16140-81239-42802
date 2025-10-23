@@ -212,45 +212,109 @@ const CheckoutCustomizer = () => {
 
     if (!over) return;
 
-    const componentType = active.id as string;
+    const activeId = active.id as string;
     const dropZone = over.id as string;
 
-    const newComponent: CheckoutComponent = {
-      id: `component-${Date.now()}`,
-      type: componentType as any,
-      content: {},
-    };
+    // Check if dragging an existing component or a new one
+    const isExistingComponent = activeId.startsWith("component-");
 
-    setCustomization((prev) => {
-      const newCustomization = { ...prev };
+    if (isExistingComponent) {
+      // Moving an existing component
+      setCustomization((prev) => {
+        // Find and remove the component from its current location
+        let movedComponent: CheckoutComponent | null = null;
+        const newCustomization = { ...prev };
 
-      if (dropZone === "top-drop-zone") {
-        // Add to top components
-        newCustomization.topComponents = [...prev.topComponents, newComponent];
-      } else if (dropZone === "bottom-drop-zone") {
-        // Add to bottom components
-        newCustomization.bottomComponents = [...prev.bottomComponents, newComponent];
-      } else if (dropZone.startsWith("row-")) {
-        // Add to row column
-        const [, rowId, columnIndex] = dropZone.split("-");
-        const rowIndex = prev.rows.findIndex((r) => r.id === `row-${rowId}`);
-        
-        if (rowIndex !== -1) {
-          const updatedRows = [...prev.rows];
-          const colIndex = parseInt(columnIndex);
-          updatedRows[rowIndex].columns[colIndex] = [
-            ...updatedRows[rowIndex].columns[colIndex],
-            newComponent,
-          ];
-          newCustomization.rows = updatedRows;
+        // Check top components
+        const topIndex = prev.topComponents.findIndex((c) => c.id === activeId);
+        if (topIndex !== -1) {
+          movedComponent = prev.topComponents[topIndex];
+          newCustomization.topComponents = prev.topComponents.filter((c) => c.id !== activeId);
         }
-      }
 
-      return newCustomization;
-    });
+        // Check bottom components
+        const bottomIndex = prev.bottomComponents.findIndex((c) => c.id === activeId);
+        if (bottomIndex !== -1) {
+          movedComponent = prev.bottomComponents[bottomIndex];
+          newCustomization.bottomComponents = prev.bottomComponents.filter((c) => c.id !== activeId);
+        }
 
-    // Auto-select the new component
-    setSelectedComponent(newComponent.id);
+        // Check rows
+        if (!movedComponent) {
+          newCustomization.rows = prev.rows.map((row) => {
+            const newColumns = row.columns.map((column) => {
+              const comp = column.find((c) => c.id === activeId);
+              if (comp && !movedComponent) {
+                movedComponent = comp;
+                return column.filter((c) => c.id !== activeId);
+              }
+              return column;
+            });
+            return { ...row, columns: newColumns };
+          });
+        }
+
+        if (!movedComponent) return prev;
+
+        // Add component to new location
+        if (dropZone === "top-drop-zone") {
+          newCustomization.topComponents = [...newCustomization.topComponents, movedComponent];
+        } else if (dropZone === "bottom-drop-zone") {
+          newCustomization.bottomComponents = [...newCustomization.bottomComponents, movedComponent];
+        } else if (dropZone.startsWith("row-")) {
+          const [, rowId, columnIndex] = dropZone.split("-");
+          const rowIndex = newCustomization.rows.findIndex((r) => r.id === `row-${rowId}`);
+          
+          if (rowIndex !== -1) {
+            const updatedRows = [...newCustomization.rows];
+            const colIndex = parseInt(columnIndex);
+            updatedRows[rowIndex].columns[colIndex] = [
+              ...updatedRows[rowIndex].columns[colIndex],
+              movedComponent,
+            ];
+            newCustomization.rows = updatedRows;
+          }
+        }
+
+        return newCustomization;
+      });
+    } else {
+      // Adding a new component
+      const componentType = activeId;
+      const newComponent: CheckoutComponent = {
+        id: `component-${Date.now()}`,
+        type: componentType as any,
+        content: {},
+      };
+
+      setCustomization((prev) => {
+        const newCustomization = { ...prev };
+
+        if (dropZone === "top-drop-zone") {
+          newCustomization.topComponents = [...prev.topComponents, newComponent];
+        } else if (dropZone === "bottom-drop-zone") {
+          newCustomization.bottomComponents = [...prev.bottomComponents, newComponent];
+        } else if (dropZone.startsWith("row-")) {
+          const [, rowId, columnIndex] = dropZone.split("-");
+          const rowIndex = prev.rows.findIndex((r) => r.id === `row-${rowId}`);
+          
+          if (rowIndex !== -1) {
+            const updatedRows = [...prev.rows];
+            const colIndex = parseInt(columnIndex);
+            updatedRows[rowIndex].columns[colIndex] = [
+              ...updatedRows[rowIndex].columns[colIndex],
+              newComponent,
+            ];
+            newCustomization.rows = updatedRows;
+          }
+        }
+
+        return newCustomization;
+      });
+
+      // Auto-select the new component
+      setSelectedComponent(newComponent.id);
+    }
   };
 
   const handleAddRow = (layout: LayoutType) => {
@@ -352,6 +416,142 @@ const CheckoutCustomizer = () => {
     if (selectedComponent === componentId) {
       setSelectedComponent(null);
     }
+  };
+
+  const handleDuplicateComponent = (componentId: string) => {
+    setCustomization((prev) => {
+      const newCustomization = { ...prev };
+      let componentToDuplicate: CheckoutComponent | null = null;
+
+      // Find component in top
+      const topIndex = prev.topComponents.findIndex((c) => c.id === componentId);
+      if (topIndex !== -1) {
+        componentToDuplicate = { ...prev.topComponents[topIndex], id: `component-${Date.now()}` };
+        newCustomization.topComponents = [
+          ...prev.topComponents.slice(0, topIndex + 1),
+          componentToDuplicate,
+          ...prev.topComponents.slice(topIndex + 1),
+        ];
+        return newCustomization;
+      }
+
+      // Find component in bottom
+      const bottomIndex = prev.bottomComponents.findIndex((c) => c.id === componentId);
+      if (bottomIndex !== -1) {
+        componentToDuplicate = { ...prev.bottomComponents[bottomIndex], id: `component-${Date.now()}` };
+        newCustomization.bottomComponents = [
+          ...prev.bottomComponents.slice(0, bottomIndex + 1),
+          componentToDuplicate,
+          ...prev.bottomComponents.slice(bottomIndex + 1),
+        ];
+        return newCustomization;
+      }
+
+      // Find component in rows
+      newCustomization.rows = prev.rows.map((row) => ({
+        ...row,
+        columns: row.columns.map((column) => {
+          const compIndex = column.findIndex((c) => c.id === componentId);
+          if (compIndex !== -1 && !componentToDuplicate) {
+            componentToDuplicate = { ...column[compIndex], id: `component-${Date.now()}` };
+            return [
+              ...column.slice(0, compIndex + 1),
+              componentToDuplicate,
+              ...column.slice(compIndex + 1),
+            ];
+          }
+          return column;
+        }),
+      }));
+
+      return newCustomization;
+    });
+  };
+
+  const handleMoveComponentUp = (componentId: string) => {
+    setCustomization((prev) => {
+      const newCustomization = { ...prev };
+
+      // Move in top components
+      const topIndex = prev.topComponents.findIndex((c) => c.id === componentId);
+      if (topIndex > 0) {
+        const newTopComponents = [...prev.topComponents];
+        [newTopComponents[topIndex - 1], newTopComponents[topIndex]] = 
+          [newTopComponents[topIndex], newTopComponents[topIndex - 1]];
+        newCustomization.topComponents = newTopComponents;
+        return newCustomization;
+      }
+
+      // Move in bottom components
+      const bottomIndex = prev.bottomComponents.findIndex((c) => c.id === componentId);
+      if (bottomIndex > 0) {
+        const newBottomComponents = [...prev.bottomComponents];
+        [newBottomComponents[bottomIndex - 1], newBottomComponents[bottomIndex]] = 
+          [newBottomComponents[bottomIndex], newBottomComponents[bottomIndex - 1]];
+        newCustomization.bottomComponents = newBottomComponents;
+        return newCustomization;
+      }
+
+      // Move in rows
+      newCustomization.rows = prev.rows.map((row) => ({
+        ...row,
+        columns: row.columns.map((column) => {
+          const compIndex = column.findIndex((c) => c.id === componentId);
+          if (compIndex > 0) {
+            const newColumn = [...column];
+            [newColumn[compIndex - 1], newColumn[compIndex]] = 
+              [newColumn[compIndex], newColumn[compIndex - 1]];
+            return newColumn;
+          }
+          return column;
+        }),
+      }));
+
+      return newCustomization;
+    });
+  };
+
+  const handleMoveComponentDown = (componentId: string) => {
+    setCustomization((prev) => {
+      const newCustomization = { ...prev };
+
+      // Move in top components
+      const topIndex = prev.topComponents.findIndex((c) => c.id === componentId);
+      if (topIndex !== -1 && topIndex < prev.topComponents.length - 1) {
+        const newTopComponents = [...prev.topComponents];
+        [newTopComponents[topIndex], newTopComponents[topIndex + 1]] = 
+          [newTopComponents[topIndex + 1], newTopComponents[topIndex]];
+        newCustomization.topComponents = newTopComponents;
+        return newCustomization;
+      }
+
+      // Move in bottom components
+      const bottomIndex = prev.bottomComponents.findIndex((c) => c.id === componentId);
+      if (bottomIndex !== -1 && bottomIndex < prev.bottomComponents.length - 1) {
+        const newBottomComponents = [...prev.bottomComponents];
+        [newBottomComponents[bottomIndex], newBottomComponents[bottomIndex + 1]] = 
+          [newBottomComponents[bottomIndex + 1], newBottomComponents[bottomIndex]];
+        newCustomization.bottomComponents = newBottomComponents;
+        return newCustomization;
+      }
+
+      // Move in rows
+      newCustomization.rows = prev.rows.map((row) => ({
+        ...row,
+        columns: row.columns.map((column) => {
+          const compIndex = column.findIndex((c) => c.id === componentId);
+          if (compIndex !== -1 && compIndex < column.length - 1) {
+            const newColumn = [...column];
+            [newColumn[compIndex], newColumn[compIndex + 1]] = 
+              [newColumn[compIndex + 1], newColumn[compIndex]];
+            return newColumn;
+          }
+          return column;
+        }),
+      }));
+
+      return newCustomization;
+    });
   };
 
   const handleUpdateDesign = (design: CheckoutDesign) => {
@@ -461,6 +661,9 @@ const CheckoutCustomizer = () => {
               selectedComponent={getSelectedComponentData()}
               onUpdateComponent={handleUpdateComponent}
               onRemoveComponent={handleRemoveComponent}
+              onDuplicateComponent={handleDuplicateComponent}
+              onMoveComponentUp={handleMoveComponentUp}
+              onMoveComponentDown={handleMoveComponentDown}
               onUpdateDesign={handleUpdateDesign}
               onAddRow={handleAddRow}
               onRemoveRow={handleRemoveRow}

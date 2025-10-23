@@ -45,9 +45,16 @@ const ComponentRenderer = ({
   customization: CheckoutCustomization;
   isPreviewMode?: boolean;
 }) => {
-  const baseClasses = isPreviewMode ? '' : `cursor-pointer transition-all ${
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: component.id,
+    disabled: isPreviewMode,
+  });
+
+  const baseClasses = isPreviewMode ? '' : `cursor-move transition-all ${
     isSelected ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : "hover:ring-1 hover:ring-primary/50"
-  }`;
+  } ${isDragging ? "opacity-50" : ""}`;
+
+  const renderContent = () => {
 
   switch (component.type) {
     case "text":
@@ -276,6 +283,13 @@ const ComponentRenderer = ({
     default:
       return null;
   }
+  };
+
+  return (
+    <div ref={setNodeRef} {...attributes} {...listeners}>
+      {renderContent()}
+    </div>
+  );
 };
 
 const RowRenderer = ({

@@ -406,14 +406,12 @@ const ProductEdit = () => {
       
       for (const offer of offers) {
         if (!offer.name || offer.name.trim() === "") {
-          toast.error("Preencha o nome de todas as ofertas antes de salvar");
           hasOfferError = true;
           break;
         }
         
         const price = parseFloat(offer.price);
         if (isNaN(price) || price <= 0) {
-          toast.error("O preço de todas as ofertas deve ser maior que R$ 0,00");
           hasOfferError = true;
           break;
         }
@@ -421,6 +419,7 @@ const ProductEdit = () => {
       
       if (hasOfferError) {
         setIsSaving(false);
+        // Não mostrar toast, deixar os erros visuais inline fazerem o trabalho
         return;
       }
     }

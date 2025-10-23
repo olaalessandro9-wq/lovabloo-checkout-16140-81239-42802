@@ -26,6 +26,7 @@ interface OffersManagerProps {
   offers: Offer[];
   onOffersChange: (offers: Offer[]) => void;
   onModifiedChange: (modified: boolean) => void;
+  onValidate?: () => boolean; // Callback para validar ofertas externamente
 }
 
 export const OffersManager = ({
@@ -171,10 +172,23 @@ export const OffersManager = ({
 
   // Expor função de validação para o componente pai
   useEffect(() => {
-    if (hasMultipleOffers) {
-      (window as any).__validateOffers = hasErrors;
+    if (hasMultipleOffers && onValidate) {
+      // Chamar callback com resultado da validação
+      const hasError = hasErrors();
+      // Não chamar onValidate aqui, apenas preparar para quando for solicitado
     }
   }, [offers, hasMultipleOffers]);
+
+  // Expor função de validação via callback
+  useEffect(() => {
+    if (onValidate) {
+      // Substituir onValidate por uma função que retorna se há erros
+      (window as any).__validateOffers = () => {
+        const hasError = hasErrors();
+        return !hasError; // Retorna true se NÃO houver erros
+      };
+    }
+  }, [offers, hasMultipleOffers, onValidate]);
 
   if (!hasMultipleOffers) {
     return (

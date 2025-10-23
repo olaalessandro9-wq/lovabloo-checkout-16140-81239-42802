@@ -658,15 +658,15 @@ export const CheckoutPreview = ({
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setSelectedPayment("pix")}
-              className="p-4 rounded-lg border-2 transition-all"
+              className="p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105"
               style={{
                 borderColor: selectedPayment === "pix" 
-                  ? customization.design.colors.selectedPayment || customization.design.colors.accent
-                  : customization.design.colors.secondaryText + "40",
+                  ? "#10B981"
+                  : "#E5E7EB",
                 backgroundColor: selectedPayment === "pix"
-                  ? (customization.design.colors.selectedPayment || customization.design.colors.accent) + "10"
-                  : customization.design.colors.background,
-                color: customization.design.colors.primaryText,
+                  ? "#10B981"
+                  : "#FFFFFF",
+                color: selectedPayment === "pix" ? "#FFFFFF" : "#1F2937",
               }}
             >
               <div className="flex items-center justify-center mb-1">
@@ -677,15 +677,15 @@ export const CheckoutPreview = ({
 
             <button
               onClick={() => setSelectedPayment("card")}
-              className="p-4 rounded-lg border-2 transition-all"
+              className="p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105"
               style={{
                 borderColor: selectedPayment === "card" 
-                  ? customization.design.colors.selectedPayment || customization.design.colors.accent
-                  : customization.design.colors.secondaryText + "40",
+                  ? "#10B981"
+                  : "#E5E7EB",
                 backgroundColor: selectedPayment === "card"
-                  ? (customization.design.colors.selectedPayment || customization.design.colors.accent) + "10"
-                  : customization.design.colors.background,
-                color: customization.design.colors.primaryText,
+                  ? "#10B981"
+                  : "#FFFFFF",
+                color: selectedPayment === "card" ? "#FFFFFF" : "#1F2937",
               }}
             >
               <div className="flex items-center justify-center mb-1">
@@ -702,12 +702,10 @@ export const CheckoutPreview = ({
             {orderBumps.map((bump) => (
               <div
                 key={bump.id}
-                className="p-4 rounded-2xl border-2 transition-all cursor-pointer"
+                className="p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer hover:scale-[1.01] hover:shadow-md"
                 style={{
-                  backgroundColor: customization.design.colors.form?.background || "#F9FAFB",
-                  borderColor: selectedBumps.has(bump.id)
-                    ? customization.design.colors.accent
-                    : customization.design.colors.secondaryText + "40",
+                  backgroundColor: selectedBumps.has(bump.id) ? "#ECFDF5" : "#FFFFFF",
+                  borderColor: selectedBumps.has(bump.id) ? "#10B981" : "#E5E7EB",
                 }}
                 onClick={() => toggleBump(bump.id)}
               >
@@ -836,10 +834,10 @@ export const CheckoutPreview = ({
           </div>
 
           <button
-            className="w-full py-4 rounded-lg font-bold text-lg transition-all hover:opacity-90"
+            className="w-full py-4 rounded-lg font-bold text-lg transition-all duration-200 hover:scale-[1.02] hover:shadow-lg"
             style={{
-              backgroundColor: customization.design.colors.button.background,
-              color: customization.design.colors.button.text,
+              backgroundColor: "#10B981",
+              color: "#FFFFFF",
             }}
           >
             Compra segura

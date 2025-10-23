@@ -13,6 +13,7 @@ interface CheckoutPreviewProps {
   selectedColumn: number;
   onSelectColumn: (index: number) => void;
   isPreviewMode?: boolean;
+  productData?: any;
 }
 
 const DropZone = ({ id, children, isOver }: { id: string; children: React.ReactNode; isOver?: boolean }) => {
@@ -384,6 +385,7 @@ export const CheckoutPreview = ({
   selectedColumn,
   onSelectColumn,
   isPreviewMode = false,
+  productData,
 }: CheckoutPreviewProps) => {
   const [selectedPayment, setSelectedPayment] = useState<"pix" | "card">("pix");
   const { setNodeRef: setTopRef, isOver: isTopOver } = useDroppable({ id: "top-drop-zone" });
@@ -472,33 +474,41 @@ export const CheckoutPreview = ({
           }}
         >
           <div className="flex items-start gap-4">
-            <div 
-              className="w-20 h-20 rounded-xl flex items-center justify-center text-sm flex-shrink-0"
-              style={{ 
-                backgroundColor: customization.design.colors.background,
-                color: customization.design.colors.secondaryText,
-              }}
-            >
-              IMG
-            </div>
+            {productData?.image_url ? (
+              <img
+                src={productData.image_url}
+                alt={productData.name}
+                className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+              />
+            ) : (
+              <div 
+                className="w-20 h-20 rounded-xl flex items-center justify-center text-sm flex-shrink-0"
+                style={{ 
+                  backgroundColor: customization.design.colors.background,
+                  color: customization.design.colors.secondaryText,
+                }}
+              >
+                IMG
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <h3 
                 className="text-lg font-bold mb-2"
                 style={{ color: customization.design.colors.primaryText }}
               >
-                Nome do Produto
+                {productData?.name || "Nome do Produto"}
               </h3>
               <p 
                 className="text-xl font-bold"
                 style={{ color: customization.design.colors.accent }}
               >
-                1 X de R$ 99,00
+                1 X de R$ {productData?.price ? Number(productData.price).toFixed(2).replace('.', ',') : '99,00'}
               </p>
               <p 
                 className="text-sm mt-1"
                 style={{ color: customization.design.colors.secondaryText }}
               >
-                ou R$ 99,00 à vista
+                ou R$ {productData?.price ? Number(productData.price).toFixed(2).replace('.', ',') : '99,00'} à vista
               </p>
             </div>
           </div>

@@ -106,6 +106,7 @@ const CheckoutCustomizer = () => {
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
   const [selectedRow, setSelectedRow] = useState<string | null>(null);
   const [selectedColumn, setSelectedColumn] = useState<number>(0);
+  const [productData, setProductData] = useState<any>(null);
 
   // Load checkout data from Supabase
   useEffect(() => {
@@ -119,7 +120,7 @@ const CheckoutCustomizer = () => {
     try {
       const { data: checkout, error: checkoutError } = await supabase
         .from("checkouts")
-        .select("*")
+        .select("*, products(*)")
         .eq("id", id)
         .single();
 
@@ -133,6 +134,7 @@ const CheckoutCustomizer = () => {
           bottomComponents: checkout.bottom_components || [],
         };
         setCustomization(loadedCustomization);
+        setProductData(checkout.products);
       }
     } catch (error: any) {
       console.error("Error loading checkout:", error);
@@ -433,6 +435,7 @@ const CheckoutCustomizer = () => {
               selectedColumn={selectedColumn}
               onSelectColumn={setSelectedColumn}
               isPreviewMode={isPreviewMode}
+              productData={productData}
             />
           </div>
 

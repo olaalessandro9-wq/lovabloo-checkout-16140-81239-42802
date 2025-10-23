@@ -315,15 +315,21 @@ const ProductEdit = () => {
 
   // Estado para aba ativa (persistido no sessionStorage)
   const [activeTab, setActiveTab] = useState<string>(() => {
-    // Tentar recuperar aba ativa do sessionStorage
-    const savedTab = sessionStorage.getItem(`product-edit-tab-${id}`);
-    return savedTab || "geral";
+    // Tentar recuperar aba ativa do sessionStorage (apenas se id existir)
+    if (id) {
+      const savedTab = sessionStorage.getItem(`product-edit-tab-${id}`);
+      if (savedTab) return savedTab;
+    }
+    return "geral";
   });
 
   // Salvar aba ativa no sessionStorage quando mudar
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    sessionStorage.setItem(`product-edit-tab-${id}`, value);
+    // Salvar apenas se id existir
+    if (id) {
+      sessionStorage.setItem(`product-edit-tab-${id}`, value);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

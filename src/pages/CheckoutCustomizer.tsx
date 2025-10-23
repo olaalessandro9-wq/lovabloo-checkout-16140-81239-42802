@@ -175,14 +175,27 @@ const CheckoutCustomizer = () => {
       if (bumpsError) {
         console.error("Error loading order bumps:", bumpsError);
       } else {
-        // Map order bumps to include product data
-        const mappedBumps = (bumps || []).map((bump: any) => ({
-          id: bump.id,
-          name: bump.products?.name || "Produto não encontrado",
-          description: bump.offers?.name ? `Oferta: ${bump.offers.name}` : undefined,
-          price: bump.offers?.price || bump.products?.price || 0,
-          image_url: bump.products?.image_url,
-        }));
+        // Map order bumps to include product data and customization
+        const mappedBumps = (bumps || []).map((bump: any) => {
+          const originalPrice = bump.offers?.price || bump.products?.price || 0;
+          const finalPrice = bump.discount_enabled && bump.discount_price 
+            ? bump.discount_price 
+            : originalPrice;
+          const discountPercentage = bump.discount_enabled && bump.discount_price && originalPrice > 0
+            ? Math.round(((originalPrice - bump.discount_price) / originalPrice) * 100)
+            : 0;
+
+          return {
+            id: bump.id,
+            name: bump.custom_title || bump.products?.name || "Produto não encontrado",
+            description: bump.custom_description || (bump.offers?.name ? `Oferta: ${bump.offers.name}` : undefined),
+            price: finalPrice,
+            original_price: bump.discount_enabled ? originalPrice : null,
+            image_url: bump.show_image ? bump.products?.image_url : null,
+            call_to_action: bump.call_to_action,
+            discount_percentage: discountPercentage,
+          };
+        });
         setOrderBumps(mappedBumps);
       }
     } catch (error: any) {

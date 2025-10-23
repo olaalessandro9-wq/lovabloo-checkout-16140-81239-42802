@@ -237,15 +237,15 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
             <div className="space-y-2">
               <Label htmlFor="oferta" className="text-foreground">Oferta (Opcional)</Label>
               <Select
-                value={selectedOfferId}
-                onValueChange={setSelectedOfferId}
+                value={selectedOfferId || "default"}
+                onValueChange={(value) => setSelectedOfferId(value === "default" ? "" : value)}
                 disabled={!selectedProductId || offers.length === 0}
               >
                 <SelectTrigger className="bg-background border-border text-foreground">
                   <SelectValue placeholder="Oferta padrão" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Oferta padrão</SelectItem>
+                  <SelectItem value="default">Oferta padrão</SelectItem>
                   {offers.map((offer) => (
                     <SelectItem key={offer.id} value={offer.id}>
                       {offer.name} - R$ {offer.price.toFixed(2)}

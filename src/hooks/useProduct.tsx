@@ -315,34 +315,34 @@ export const useProduct = () => {
         }
       }
 
-      // 7. Excluir order bumps
+      // 7. Excluir order bumps dos checkouts deste produto
       console.log("[deleteProduct] Excluindo order bumps...");
-      const { error: orderBumpsError } = await supabase
-        .from("order_bumps")
-        .delete()
+      const { data: productCheckouts } = await supabase
+        .from("checkouts")
+        .select("id")
         .eq("product_id", productId);
       
-      if (orderBumpsError) {
-        console.error("[deleteProduct] Erro ao excluir order bumps:", orderBumpsError);
-        // Não lançar erro se a tabela não existir
-        if (!orderBumpsError.message?.includes("does not exist")) {
-          throw orderBumpsError;
+      if (productCheckouts && productCheckouts.length > 0) {
+        const checkoutIds = productCheckouts.map(c => c.id);
+        const { error: orderBumpsError } = await supabase
+          .from("order_bumps")
+          .delete()
+          .in("checkout_id", checkoutIds);
+        
+        if (orderBumpsError) {
+          console.error("[deleteProduct] Erro ao excluir order bumps:", orderBumpsError);
         }
       }
 
-      // 8. Excluir cupons
-      console.log("[deleteProduct] Excluindo cupons...");
-      const { error: couponsError } = await supabase
-        .from("coupons")
+      // 8. Excluir coupon_products para este produto
+      console.log("[deleteProduct] Excluindo coupon_products...");
+      const { error: couponProductsError } = await supabase
+        .from("coupon_products")
         .delete()
         .eq("product_id", productId);
       
-      if (couponsError) {
-        console.error("[deleteProduct] Erro ao excluir cupons:", couponsError);
-        // Não lançar erro se a tabela não existir
-        if (!couponsError.message?.includes("does not exist")) {
-          throw couponsError;
-        }
+      if (couponProductsError) {
+        console.error("[deleteProduct] Erro ao excluir coupon_products:", couponProductsError);
       }
 
       // 9. Finalmente, excluir o produto

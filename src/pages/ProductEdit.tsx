@@ -766,7 +766,7 @@ const ProductEdit = () => {
       const linkIds = (data || []).map(cl => cl.link_id);
       console.log("[handleConfigureCheckout] Checkout ID:", checkout.id);
       console.log("[handleConfigureCheckout] Links associados:", linkIds);
-      console.log("[handleConfigureCheckout] Payment links disponíveis:", paymentLinks.map(pl => ({ id: pl.id, name: pl.name })));
+      console.log("[handleConfigureCheckout] Payment links disponíveis:", paymentLinks.map(pl => ({ id: pl.id, offer_name: pl.offer_name })));
       setCurrentCheckoutLinkIds(linkIds);
     } catch (error) {
       console.error("Error loading checkout links:", error);

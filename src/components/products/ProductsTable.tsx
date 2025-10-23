@@ -92,7 +92,7 @@ export function ProductsTable() {
           status: originalProduct.status,
           image_url: originalProduct.image_url,
           support_email: originalProduct.support_email,
-          producer_name: originalProduct.producer_name,
+          support_name: originalProduct.support_name,
           user_id: user.id,
         })
         .select()

@@ -445,7 +445,32 @@ const ProductEdit = () => {
       let finalImageUrl = product?.image_url;
 
       // Se há imagem para remover
-      if (pendingImageRemoval) {
+      if (pendingImageRemoval && product?.image_url) {
+        // Deletar a imagem antiga do Storage
+        try {
+          let imagePath = product.image_url;
+          
+          // Extrair o caminho da imagem da URL
+          if (imagePath.includes('product-images/')) {
+            imagePath = imagePath.split('product-images/')[1];
+          } else if (imagePath.includes('/')) {
+            const fileName = imagePath.split('/').pop();
+            imagePath = `${user?.id}/${fileName}`;
+          } else {
+            imagePath = `${user?.id}/${imagePath}`;
+          }
+
+          const { error: storageError } = await supabase.storage
+            .from('product-images')
+            .remove([imagePath]);
+
+          if (storageError) {
+            console.warn('Erro ao deletar imagem do Storage:', storageError);
+          }
+        } catch (storageError) {
+          console.warn('Erro ao processar deleção de imagem:', storageError);
+        }
+        
         finalImageUrl = null;
       }
       // Se há URL de imagem fornecida (prioridade)
@@ -627,7 +652,32 @@ const ProductEdit = () => {
       let finalImageUrl = product?.image_url;
 
       // Se há imagem para remover
-      if (pendingImageRemoval) {
+      if (pendingImageRemoval && product?.image_url) {
+        // Deletar a imagem antiga do Storage
+        try {
+          let imagePath = product.image_url;
+          
+          // Extrair o caminho da imagem da URL
+          if (imagePath.includes('product-images/')) {
+            imagePath = imagePath.split('product-images/')[1];
+          } else if (imagePath.includes('/')) {
+            const fileName = imagePath.split('/').pop();
+            imagePath = `${user?.id}/${fileName}`;
+          } else {
+            imagePath = `${user?.id}/${imagePath}`;
+          }
+
+          const { error: storageError } = await supabase.storage
+            .from('product-images')
+            .remove([imagePath]);
+
+          if (storageError) {
+            console.warn('Erro ao deletar imagem do Storage:', storageError);
+          }
+        } catch (storageError) {
+          console.warn('Erro ao processar deleção de imagem:', storageError);
+        }
+        
         finalImageUrl = null;
       }
       // Se há nova imagem para fazer upload

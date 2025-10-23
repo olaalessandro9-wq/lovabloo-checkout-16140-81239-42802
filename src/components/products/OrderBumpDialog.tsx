@@ -87,7 +87,13 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
 
       if (error) throw error;
 
-      setOffers(data || []);
+      const offersList = data || [];
+      setOffers(offersList);
+      
+      // Automatically select the first offer (principal)
+      if (offersList.length > 0) {
+        setSelectedOfferId(offersList[0].id);
+      }
     } catch (error) {
       console.error("Error loading offers:", error);
       toast.error("Erro ao carregar ofertas");
@@ -97,6 +103,11 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
   const handleSave = async () => {
     if (!selectedProductId) {
       toast.error("Selecione um produto");
+      return;
+    }
+
+    if (!selectedOfferId) {
+      toast.error("Selecione uma oferta");
       return;
     }
 
@@ -235,17 +246,16 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="oferta" className="text-foreground">Oferta (Opcional)</Label>
+              <Label htmlFor="oferta" className="text-foreground">Oferta *</Label>
               <Select
-                value={selectedOfferId || "default"}
-                onValueChange={(value) => setSelectedOfferId(value === "default" ? "" : value)}
+                value={selectedOfferId}
+                onValueChange={setSelectedOfferId}
                 disabled={!selectedProductId || offers.length === 0}
               >
                 <SelectTrigger className="bg-background border-border text-foreground">
-                  <SelectValue placeholder="Oferta padrão" />
+                  <SelectValue placeholder="Selecione uma oferta" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="default">Oferta padrão</SelectItem>
                   {offers.map((offer) => (
                     <SelectItem key={offer.id} value={offer.id}>
                       {offer.name} - R$ {offer.price.toFixed(2)}
@@ -254,7 +264,7 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Se não selecionar, será usada a oferta padrão do produto
+                A primeira oferta do produto é selecionada automaticamente
               </p>
             </div>
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 
 /**
  * PaymentLinkRedirect
@@ -12,13 +12,16 @@ import { Loader2 } from "lucide-react";
  * Fluxo:
  * 1. Recebe slug do link de pagamento
  * 2. Busca o link no banco de dados
- * 3. Busca o checkout padrão associado ao link
- * 4. Redireciona para /pay/:checkout_slug
+ * 3. Verifica se o link está ativo
+ * 4. Verifica se o produto está ativo
+ * 5. Busca o checkout padrão associado ao link
+ * 6. Redireciona para /pay/:checkout_slug
  */
 const PaymentLinkRedirect = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [isInactive, setIsInactive] = useState(false);
 
   useEffect(() => {
     const processPaymentLink = async () => {
@@ -28,15 +31,21 @@ const PaymentLinkRedirect = () => {
       }
 
       try {
-        // 1. Buscar o payment_link pelo slug
+        // 1. Buscar o payment_link pelo slug com status e produto
         const { data: linkData, error: linkError } = await supabase
           .from("payment_links")
           .select(`
             id,
             slug,
+            status,
             offers (
               id,
-              product_id
+              product_id,
+              products (
+                id,
+                status,
+                support_email
+              )
             )
           `)
           .eq("slug", slug)
@@ -50,7 +59,24 @@ const PaymentLinkRedirect = () => {
 
         console.log("[PaymentLinkRedirect] Link encontrado:", linkData);
 
-        // 2. Buscar checkouts associados a este link
+        // 2. Verificar se o link está ativo
+        if (linkData.status === "inactive") {
+          console.log("[PaymentLinkRedirect] Link desativado");
+          setIsInactive(true);
+          setError("Produto não disponível, inativo ou bloqueado. Contate o suporte para mais informações.");
+          return;
+        }
+
+        // 3. Verificar se o produto está ativo
+        const product = (linkData as any).offers?.products;
+        if (product && product.status === "blocked") {
+          console.log("[PaymentLinkRedirect] Produto bloqueado");
+          setIsInactive(true);
+          setError("Produto não disponível, inativo ou bloqueado. Contate o suporte para mais informações.");
+          return;
+        }
+
+        // 4. Buscar checkouts associados a este link
         const { data: checkoutLinksData, error: checkoutLinksError } = await supabase
           .from("checkout_links")
           .select(`
@@ -72,7 +98,7 @@ const PaymentLinkRedirect = () => {
           return;
         }
 
-        // 3. Extrair checkouts dos dados
+        // 5. Extrair checkouts dos dados
         const checkouts = checkoutLinksData
           .map((cl: any) => cl.checkouts)
           .filter((c: any) => c !== null);
@@ -87,13 +113,11 @@ const PaymentLinkRedirect = () => {
 
         const checkoutsData = checkouts;
 
-
-
         // Buscar offer para pegar product_id
         const { data: offerData } = await supabase
           .from("offers")
           .select("product_id")
-          .eq("id", (linkData as any).offer_id)
+          .eq("id", (linkData as any).offers?.id)
           .maybeSingle();
 
         // Priorizar checkout padrão do produto
@@ -112,7 +136,7 @@ const PaymentLinkRedirect = () => {
           targetCheckout = checkoutsData[0];
         }
 
-        // 4. Redirecionar para o checkout
+        // 6. Redirecionar para o checkout
         if (targetCheckout && targetCheckout.slug) {
           navigate(`/pay/${targetCheckout.slug}`, { replace: true });
         } else {
@@ -128,6 +152,34 @@ const PaymentLinkRedirect = () => {
   }, [slug, navigate]);
 
   if (error) {
+    // Página de erro para link inativo/bloqueado (estilo Cakto)
+    if (isInactive) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <div className="text-center max-w-md mx-auto p-6">
+            {/* Logo da plataforma */}
+            <div className="mb-8">
+              <div className="w-24 h-24 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+                <svg
+                  className="w-12 h-12 text-primary"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
+                </svg>
+              </div>
+            </div>
+            
+            {/* Mensagem de erro */}
+            <p className="text-base text-muted-foreground">
+              {error}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Página de erro genérica
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center max-w-md mx-auto p-6">

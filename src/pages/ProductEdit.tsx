@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useProduct } from "@/hooks/useProduct";
 import { OrderBumpList } from "@/components/products/OrderBumpList";
-import { OrderBumpDialog, type OrderBump } from "@/components/products/OrderBumpDialog";
+import { OrderBumpDialog } from "@/components/products/OrderBumpDialog";
 import { CheckoutTable, type Checkout } from "@/components/products/CheckoutTable";
 import { CheckoutConfigDialog } from "@/components/products/CheckoutConfigDialog";
 import { CouponsTable, type Coupon } from "@/components/products/CouponsTable";
@@ -87,9 +87,8 @@ const ProductEdit = () => {
 
   const [checkoutFieldsModified, setCheckoutFieldsModified] = useState(false);
 
-  const [orderBumps, setOrderBumps] = useState<OrderBump[]>([]);
   const [orderBumpDialogOpen, setOrderBumpDialogOpen] = useState(false);
-  const [editingOrderBump, setEditingOrderBump] = useState<OrderBump | null>(null);
+  const [orderBumpKey, setOrderBumpKey] = useState(0);
 
   const [upsellSettings, setUpsellSettings] = useState({
     hasCustomThankYouPage: false,
@@ -266,18 +265,7 @@ const ProductEdit = () => {
   };
 
   const loadOrderBumps = async () => {
-    if (!productId) return;
-    try {
-      const { data, error } = await supabase
-        .from("order_bumps")
-        .select("*")
-        .order("created_at", { ascending: false });
-      
-      if (error) throw error;
-      // Order bumps will be filtered by checkout_id when needed
-    } catch (error) {
-      console.error("Error loading order bumps:", error);
-    }
+    // Order bumps are now loaded directly by OrderBumpList component
   };
 
   const loadOffers = async () => {
@@ -804,23 +792,12 @@ const ProductEdit = () => {
   };
 
   const handleAddOrderBump = () => {
-    setEditingOrderBump(null);
     setOrderBumpDialogOpen(true);
   };
 
-  const handleSaveOrderBump = (orderBump: OrderBump) => {
-    if (editingOrderBump) {
-      setOrderBumps(orderBumps.map(ob => ob.id === orderBump.id ? orderBump : ob));
-      toast.error("O order bump foi atualizado com sucesso");
-    } else {
-      setOrderBumps([...orderBumps, orderBump]);
-      toast.error("O order bump foi adicionado com sucesso");
-    }
-  };
-
-  const handleRemoveOrderBump = (id: string) => {
-    setOrderBumps(orderBumps.filter(ob => ob.id !== id));
-    toast.error("O order bump foi removido");
+  const handleOrderBumpSuccess = () => {
+    // Refresh order bumps list
+    setOrderBumpKey(prev => prev + 1);
   };
 
   const handleAddCheckout = () => {
@@ -1541,9 +1518,9 @@ const ProductEdit = () => {
                 </Button>
               </div>
               <OrderBumpList 
-                orderBumps={orderBumps}
+                key={orderBumpKey}
+                productId={productId || ""}
                 onAdd={handleAddOrderBump}
-                onRemove={handleRemoveOrderBump}
               />
             </div>
           </TabsContent>
@@ -1825,12 +1802,9 @@ const ProductEdit = () => {
 
         <OrderBumpDialog
           open={orderBumpDialogOpen}
-          onOpenChange={(open) => {
-            setOrderBumpDialogOpen(open);
-            if (!open) setEditingOrderBump(null);
-          }}
-          onSave={handleSaveOrderBump}
-          orderBump={editingOrderBump || undefined}
+          onOpenChange={setOrderBumpDialogOpen}
+          productId={productId || ""}
+          onSuccess={handleOrderBumpSuccess}
         />
 
         <CheckoutConfigDialog

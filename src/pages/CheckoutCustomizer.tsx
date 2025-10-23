@@ -138,17 +138,39 @@ const CheckoutCustomizer = () => {
         setProductData(checkout.products);
       }
 
-      // Load order bumps
+      // Load order bumps with product data
       const { data: bumps, error: bumpsError } = await supabase
         .from("order_bumps")
-        .select("*")
+        .select(`
+          *,
+          products!order_bumps_product_id_fkey (
+            id,
+            name,
+            price,
+            image_url
+          ),
+          offers (
+            id,
+            name,
+            price
+          )
+        `)
         .eq("checkout_id", id)
+        .eq("active", true)
         .order("position");
 
       if (bumpsError) {
         console.error("Error loading order bumps:", bumpsError);
       } else {
-        setOrderBumps(bumps || []);
+        // Map order bumps to include product data
+        const mappedBumps = (bumps || []).map((bump: any) => ({
+          id: bump.id,
+          name: bump.products?.name || "Produto não encontrado",
+          description: bump.offers?.name ? `Oferta: ${bump.offers.name}` : undefined,
+          price: bump.offers?.price || bump.products?.price || 0,
+          image_url: bump.products?.image_url,
+        }));
+        setOrderBumps(mappedBumps);
       }
     } catch (error: any) {
       console.error("Error loading checkout:", error);

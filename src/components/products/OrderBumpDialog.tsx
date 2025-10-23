@@ -5,73 +5,175 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { X, Gift } from "lucide-react";
+import { X, Gift, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export interface OrderBump {
+interface Product {
   id: string;
-  produto: string;
-  oferta: string;
-  aplicarDesconto: boolean;
-  textoAceitacao: string;
-  titulo: string;
-  descricao: string;
-  exibirImagem: boolean;
+  name: string;
+  price: number;
+  image_url?: string;
+}
+
+interface Offer {
+  id: string;
+  name: string;
+  price: number;
 }
 
 interface OrderBumpDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (orderBump: OrderBump) => void;
-  orderBump?: OrderBump | null;
+  productId: string;
+  onSuccess: () => void;
 }
 
-export function OrderBumpDialog({ open, onOpenChange, onSave, orderBump }: OrderBumpDialogProps) {
-  const [formData, setFormData] = useState<OrderBump>({
-    id: "",
-    produto: "",
-    oferta: "",
-    aplicarDesconto: false,
-    textoAceitacao: "SIM, EU ACEITO ESSA OFERTA ESPECIAL!",
-    titulo: "Nome do seu produto",
-    descricao: "Adicione a compra",
-    exibirImagem: false,
-  });
+export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: OrderBumpDialogProps) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  const [selectedOfferId, setSelectedOfferId] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {
-    if (orderBump) {
-      setFormData(orderBump);
-    } else {
-      setFormData({
-        id: Date.now().toString(),
-        produto: "",
-        oferta: "",
-        aplicarDesconto: false,
-        textoAceitacao: "SIM, EU ACEITO ESSA OFERTA ESPECIAL!",
-        titulo: "Nome do seu produto",
-        descricao: "Adicione a compra",
-        exibirImagem: false,
-      });
+    if (open) {
+      loadProducts();
     }
-  }, [orderBump, open]);
+  }, [open, productId]);
 
-  const handleSave = () => {
-    if (!formData.produto || !formData.oferta) {
+  useEffect(() => {
+    if (selectedProductId) {
+      loadOffers(selectedProductId);
+    } else {
+      setOffers([]);
+      setSelectedOfferId("");
+    }
+  }, [selectedProductId]);
+
+  const loadProducts = async () => {
+    try {
+      setLoadingProducts(true);
+      
+      // Load all products except the current one
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, price, image_url")
+        .neq("id", productId)
+        .order("name", { ascending: true });
+
+      if (error) throw error;
+
+      setProducts(data || []);
+    } catch (error) {
+      console.error("Error loading products:", error);
+      toast.error("Erro ao carregar produtos");
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const loadOffers = async (prodId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("offers")
+        .select("id, name, price")
+        .eq("product_id", prodId)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      setOffers(data || []);
+    } catch (error) {
+      console.error("Error loading offers:", error);
+      toast.error("Erro ao carregar ofertas");
+    }
+  };
+
+  const handleSave = async () => {
+    if (!selectedProductId) {
+      toast.error("Selecione um produto");
       return;
     }
-    
-    onSave(formData);
-    onOpenChange(false);
+
+    try {
+      setLoading(true);
+
+      // Get all checkouts for the current product
+      const { data: checkouts, error: checkoutsError } = await supabase
+        .from("checkouts")
+        .select("id")
+        .eq("product_id", productId);
+
+      if (checkoutsError) throw checkoutsError;
+
+      if (!checkouts || checkouts.length === 0) {
+        toast.error("Nenhum checkout encontrado para este produto");
+        return;
+      }
+
+      // Get current max position
+      const { data: existingBumps, error: bumpsError } = await supabase
+        .from("order_bumps")
+        .select("position")
+        .in("checkout_id", checkouts.map(c => c.id))
+        .order("position", { ascending: false })
+        .limit(1);
+
+      if (bumpsError) throw bumpsError;
+
+      const nextPosition = existingBumps && existingBumps.length > 0 
+        ? existingBumps[0].position + 1 
+        : 0;
+
+      // Add order bump to all checkouts of this product
+      const orderBumps = checkouts.map(checkout => ({
+        checkout_id: checkout.id,
+        product_id: selectedProductId,
+        offer_id: selectedOfferId || null,
+        position: nextPosition,
+        active: true,
+      }));
+
+      const { error: insertError } = await supabase
+        .from("order_bumps")
+        .insert(orderBumps);
+
+      if (insertError) throw insertError;
+
+      toast.success("Order bump adicionado com sucesso");
+      onSuccess();
+      onOpenChange(false);
+      
+      // Reset form
+      setSelectedProductId("");
+      setSelectedOfferId("");
+    } catch (error: any) {
+      console.error("Error saving order bump:", error);
+      
+      if (error.code === "23505") {
+        toast.error("Este produto já está configurado como order bump");
+      } else {
+        toast.error("Erro ao salvar order bump");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
+    setSelectedProductId("");
+    setSelectedOfferId("");
     onOpenChange(false);
   };
+
+  const selectedProduct = products.find(p => p.id === selectedProductId);
+  const selectedOffer = offers.find(o => o.id === selectedOfferId);
+  const displayPrice = selectedOffer ? selectedOffer.price : selectedProduct?.price || 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -83,10 +185,10 @@ export function OrderBumpDialog({ open, onOpenChange, onSave, orderBump }: Order
                 <div className="w-8 h-8 bg-primary/20 rounded flex items-center justify-center">
                   <Gift className="w-4 h-4 text-primary" />
                 </div>
-                Order Bump
+                Adicionar Order Bump
               </DialogTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Ofereça um produto complementar ao seu cliente
+                Selecione um produto para oferecer como complemento
               </p>
             </div>
             <Button 
@@ -104,92 +206,69 @@ export function OrderBumpDialog({ open, onOpenChange, onSave, orderBump }: Order
           {/* Formulário */}
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="produto" className="text-foreground">Produto</Label>
+              <Label htmlFor="produto" className="text-foreground">Produto *</Label>
+              {loadingProducts ? (
+                <div className="flex items-center justify-center p-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : (
+                <Select
+                  value={selectedProductId}
+                  onValueChange={setSelectedProductId}
+                >
+                  <SelectTrigger className="bg-background border-border text-foreground">
+                    <SelectValue placeholder="Selecione um produto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.length === 0 ? (
+                      <div className="p-4 text-sm text-muted-foreground text-center">
+                        Nenhum produto disponível
+                      </div>
+                    ) : (
+                      products.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name} - R$ {product.price.toFixed(2)}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Selecione o produto que será oferecido como order bump
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="oferta" className="text-foreground">Oferta (Opcional)</Label>
               <Select
-                value={formData.produto}
-                onValueChange={(value) => setFormData({ ...formData, produto: value })}
+                value={selectedOfferId}
+                onValueChange={setSelectedOfferId}
+                disabled={!selectedProductId || offers.length === 0}
               >
                 <SelectTrigger className="bg-background border-border text-foreground">
-                  <SelectValue placeholder="Selecione um produto" />
+                  <SelectValue placeholder="Oferta padrão" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="produto1">Produto 1</SelectItem>
-                  <SelectItem value="produto2">Produto 2</SelectItem>
-                  <SelectItem value="produto3">Produto 3</SelectItem>
+                  <SelectItem value="">Oferta padrão</SelectItem>
+                  {offers.map((offer) => (
+                    <SelectItem key={offer.id} value={offer.id}>
+                      {offer.name} - R$ {offer.price.toFixed(2)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                Se não selecionar, será usada a oferta padrão do produto
+              </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="oferta" className="text-foreground">Oferta</Label>
-              <Select
-                value={formData.oferta}
-                onValueChange={(value) => setFormData({ ...formData, oferta: value })}
-              >
-                <SelectTrigger className="bg-background border-border text-foreground">
-                  <SelectValue placeholder="Selecione uma oferta" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="oferta1">Oferta Principal</SelectItem>
-                  <SelectItem value="oferta2">Oferta Desconto 20%</SelectItem>
-                  <SelectItem value="oferta3">Oferta Desconto 30%</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="aplicarDesconto" 
-                checked={formData.aplicarDesconto}
-                onCheckedChange={(checked) => setFormData({ ...formData, aplicarDesconto: checked as boolean })}
-              />
-              <Label htmlFor="aplicarDesconto" className="text-foreground cursor-pointer">
-                Aplicar desconto
-              </Label>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="textoAceitacao" className="text-foreground">Texto aceitação</Label>
-              <Textarea
-                id="textoAceitacao"
-                value={formData.textoAceitacao}
-                onChange={(e) => setFormData({ ...formData, textoAceitacao: e.target.value })}
-                className="bg-background border-border text-foreground"
-                placeholder="SIM, EU ACEITO ESSA OFERTA ESPECIAL!"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="titulo" className="text-foreground">Título</Label>
-              <Input
-                id="titulo"
-                value={formData.titulo}
-                onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                className="bg-background border-border text-foreground"
-                placeholder="Nome do seu produto"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="descricao" className="text-foreground">Descrição</Label>
-              <Input
-                id="descricao"
-                value={formData.descricao}
-                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                className="bg-background border-border text-foreground"
-                placeholder="Adicione a compra"
-              />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="exibirImagem" 
-                checked={formData.exibirImagem}
-                onCheckedChange={(checked) => setFormData({ ...formData, exibirImagem: checked as boolean })}
-              />
-              <Label htmlFor="exibirImagem" className="text-foreground cursor-pointer">
-                Exibir imagem do produto
-              </Label>
+            <div className="bg-muted rounded-lg p-4 space-y-2">
+              <h4 className="text-sm font-semibold text-foreground">💡 Dica</h4>
+              <p className="text-xs text-muted-foreground">
+                Order bumps são exibidos no checkout como ofertas complementares. 
+                O cliente pode aceitar ou recusar clicando em um checkbox.
+              </p>
             </div>
           </div>
 
@@ -197,59 +276,65 @@ export function OrderBumpDialog({ open, onOpenChange, onSave, orderBump }: Order
           <div className="space-y-2">
             <Label className="text-foreground">Preview</Label>
             <div className="bg-background border border-border rounded-lg p-6">
-              <div className="flex items-start gap-2 mb-4">
-                <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-primary"></div>
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-sm font-semibold text-foreground mb-1">
-                    {formData.textoAceitacao || "SIM, EU ACEITO ESSA OFERTA ESPECIAL!"}
-                  </h4>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <h3 className="font-semibold text-foreground">
-                  {formData.titulo || "Nome do seu produto"}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {formData.descricao || "Adicione a compra"}
-                </p>
-                
-                {formData.produto && formData.oferta && (
-                  <div className="pt-3 border-t border-border">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Produto: {formData.produto}</span>
-                      <span className="text-xs text-muted-foreground">Oferta: {formData.oferta}</span>
+              {selectedProduct ? (
+                <>
+                  <div className="flex items-start gap-2 mb-4">
+                    <div className="w-5 h-5 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-primary"></div>
                     </div>
-                    {formData.aplicarDesconto && (
-                      <p className="text-xs text-primary mt-1">✓ Com desconto aplicado</p>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-foreground mb-1">
+                        SIM, EU ACEITO ESSA OFERTA ESPECIAL!
+                      </h4>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {selectedProduct.image_url && (
+                      <div className="w-full h-32 bg-muted rounded-lg overflow-hidden">
+                        <img 
+                          src={selectedProduct.image_url} 
+                          alt={selectedProduct.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    
+                    <h3 className="font-semibold text-foreground">
+                      {selectedProduct.name}
+                    </h3>
+                    
+                    <div className="flex items-center justify-between pt-3 border-t border-border">
+                      <span className="text-sm text-muted-foreground">Preço:</span>
+                      <span className="text-lg font-bold text-primary">
+                        R$ {displayPrice.toFixed(2)}
+                      </span>
+                    </div>
+
+                    {selectedOffer && (
+                      <p className="text-xs text-primary">
+                        ✓ Oferta especial: {selectedOffer.name}
+                      </p>
                     )}
                   </div>
-                )}
 
-                {formData.exibirImagem && (
-                  <div className="mt-4 p-4 bg-muted rounded-lg text-center">
-                    <p className="text-xs text-muted-foreground">Imagem do produto será exibida aqui</p>
+                  <div className="mt-4 pt-4 border-t border-border">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-primary rounded"></div>
+                      <Label className="text-sm text-foreground">
+                        Adicionar ao pedido
+                      </Label>
+                    </div>
                   </div>
-                )}
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-border">
-                <div className="flex items-center gap-2">
-                  <Checkbox id="preview-check" disabled />
-                  <Label htmlFor="preview-check" className="text-sm text-foreground">
-                    Adicionar Produto
-                  </Label>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <Gift className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">
+                    Selecione um produto para ver o preview
+                  </p>
                 </div>
-              </div>
-            </div>
-
-            <div className="bg-muted rounded-lg p-3 mt-4">
-              <p className="text-xs text-muted-foreground flex items-start gap-2">
-                <span className="text-primary">ℹ</span>
-                <span><strong>Dica:</strong> Este preview mostra como o order bump aparecerá no checkout do seu cliente.</span>
-              </p>
+              )}
             </div>
           </div>
         </div>
@@ -259,18 +344,27 @@ export function OrderBumpDialog({ open, onOpenChange, onSave, orderBump }: Order
             variant="ghost" 
             onClick={handleCancel}
             className="border border-border"
+            disabled={loading}
           >
             Cancelar
           </Button>
           <Button 
             onClick={handleSave}
             className="bg-primary hover:bg-primary/90"
-            disabled={!formData.produto || !formData.oferta}
+            disabled={!selectedProductId || loading}
           >
-            Salvar
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Salvando...
+              </>
+            ) : (
+              "Salvar"
+            )}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+

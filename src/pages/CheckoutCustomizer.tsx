@@ -177,12 +177,12 @@ const CheckoutCustomizer = () => {
       } else {
         // Map order bumps to include product data and customization
         const mappedBumps = (bumps || []).map((bump: any) => {
-          const originalPrice = bump.offers?.price || bump.products?.price || 0;
-          const finalPrice = bump.discount_enabled && bump.discount_price 
+          const finalPrice = bump.offers?.price || bump.products?.price || 0;
+          const originalPrice = bump.discount_enabled && bump.discount_price 
             ? bump.discount_price 
-            : originalPrice;
-          const discountPercentage = bump.discount_enabled && bump.discount_price && originalPrice > 0
-            ? Math.round(((originalPrice - bump.discount_price) / originalPrice) * 100)
+            : finalPrice;
+          const discountPercentage = bump.discount_enabled && bump.discount_price && bump.discount_price > finalPrice
+            ? Math.round(((bump.discount_price - finalPrice) / bump.discount_price) * 100)
             : 0;
 
           return {
@@ -190,7 +190,7 @@ const CheckoutCustomizer = () => {
             name: bump.custom_title || bump.products?.name || "Produto não encontrado",
             description: bump.custom_description || undefined,
             price: finalPrice,
-            original_price: bump.discount_enabled ? originalPrice : null,
+            original_price: bump.discount_enabled && bump.discount_price > finalPrice ? originalPrice : null,
             image_url: bump.show_image ? bump.products?.image_url : null,
             call_to_action: bump.call_to_action,
             discount_percentage: discountPercentage,

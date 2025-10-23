@@ -206,6 +206,17 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
       return;
     }
 
+    // Validate discount price if discount is enabled
+    if (discountEnabled) {
+      const currentPrice = selectedOffer?.price || selectedProduct?.price || 0;
+      const originPrice = parseCurrency(discountPrice);
+      
+      if (originPrice <= currentPrice) {
+        toast.error("Valor deve ser maior que a oferta");
+        return;
+      }
+    }
+
     try {
       setLoading(true);
 
@@ -268,9 +279,9 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
   const selectedOffer = offers.find(o => o.id === selectedOfferId);
   
   // Calculate prices for preview
-  const originalPrice = selectedOffer?.price || selectedProduct?.price || 0;
-  const finalPrice = discountEnabled ? parseCurrency(discountPrice) : originalPrice;
-  const discountPercentage = discountEnabled && finalPrice < originalPrice && originalPrice > 0
+  const finalPrice = selectedOffer?.price || selectedProduct?.price || 0;
+  const originalPrice = discountEnabled ? parseCurrency(discountPrice) : finalPrice;
+  const discountPercentage = discountEnabled && originalPrice > finalPrice && originalPrice > 0
     ? Math.round(((originalPrice - finalPrice) / originalPrice) * 100)
     : 0;
 
@@ -363,10 +374,10 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
               </Label>
             </div>
 
-            {/* Campo Preço da Oferta (condicional) */}
+            {/* Campo Preço de Origem (condicional) */}
             {discountEnabled && (
               <div className="space-y-2">
-                <Label htmlFor="discountPrice" className="text-foreground">Preço da oferta</Label>
+                <Label htmlFor="discountPrice" className="text-foreground">Preço de origem</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     R$
@@ -375,13 +386,23 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
                     id="discountPrice"
                     value={discountPrice}
                     onChange={handleDiscountPriceChange}
-                    className="pl-10 bg-background border-border text-foreground"
+                    className={`pl-10 bg-background text-foreground ${
+                      discountEnabled && parseCurrency(discountPrice) <= (selectedOffer?.price || selectedProduct?.price || 0)
+                        ? "border-red-500"
+                        : "border-border"
+                    }`}
                     placeholder="0,00"
                   />
                 </div>
-                <p className="text-xs text-primary">
-                  {discountPercentage > 0 && `Desconto de aproximadamente ${discountPercentage}%`}
-                </p>
+                {discountEnabled && parseCurrency(discountPrice) <= (selectedOffer?.price || selectedProduct?.price || 0) ? (
+                  <p className="text-xs text-red-500">
+                    Valor deve ser maior que a oferta
+                  </p>
+                ) : (
+                  <p className="text-xs text-primary">
+                    {discountPercentage > 0 && `Desconto de aproximadamente ${discountPercentage}%`}
+                  </p>
+                )}
               </div>
             )}
 

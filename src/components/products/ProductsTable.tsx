@@ -73,15 +73,81 @@ export function ProductsTable() {
     if (!user) return;
 
     try {
-      const { error } = await supabase.from("products").insert({
-        name: `${product.name} (Cópia)`,
-        price: product.price,
-        status: product.status,
-        user_id: user.id,
-      });
+      // 1. Buscar todos os dados do produto original
+      const { data: originalProduct, error: productError } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", product.id)
+        .single();
 
-      if (error) throw error;
-      toast.success("Produto duplicado com sucesso");
+      if (productError) throw productError;
+
+      // 2. Criar novo produto com todos os dados (exceto id e timestamps)
+      const { data: newProduct, error: insertError } = await supabase
+        .from("products")
+        .insert({
+          name: `${originalProduct.name} (Cópia)`,
+          description: originalProduct.description,
+          price: originalProduct.price,
+          status: originalProduct.status,
+          image_url: originalProduct.image_url,
+          support_email: originalProduct.support_email,
+          producer_name: originalProduct.producer_name,
+          user_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // 3. Copiar ofertas adicionais (não copiar a oferta padrão pois será criada automaticamente)
+      const { data: originalOffers, error: offersError } = await supabase
+        .from("offers")
+        .select("*")
+        .eq("product_id", product.id)
+        .eq("is_default", false); // Só ofertas adicionais
+
+      if (offersError) throw offersError;
+
+      if (originalOffers && originalOffers.length > 0) {
+        const newOffers = originalOffers.map(offer => ({
+          product_id: newProduct.id,
+          name: offer.name,
+          price: offer.price,
+          is_default: false,
+        }));
+
+        const { error: offersInsertError } = await supabase
+          .from("offers")
+          .insert(newOffers);
+
+        if (offersInsertError) throw offersInsertError;
+      }
+
+      // 4. Copiar checkouts (exceto o padrão que será criado automaticamente)
+      const { data: originalCheckouts, error: checkoutsError } = await supabase
+        .from("checkouts")
+        .select("*")
+        .eq("product_id", product.id)
+        .eq("is_default", false); // Só checkouts adicionais
+
+      if (checkoutsError) throw checkoutsError;
+
+      if (originalCheckouts && originalCheckouts.length > 0) {
+        const newCheckouts = originalCheckouts.map(checkout => ({
+          product_id: newProduct.id,
+          name: checkout.name,
+          is_default: false,
+        }));
+
+        const { error: checkoutsInsertError } = await supabase
+          .from("checkouts")
+          .insert(newCheckouts);
+
+        if (checkoutsInsertError) throw checkoutsInsertError;
+      }
+
+      toast.success("Produto duplicado com sucesso!");
       loadProducts();
     } catch (error: any) {
       toast.error("Erro ao duplicar produto");

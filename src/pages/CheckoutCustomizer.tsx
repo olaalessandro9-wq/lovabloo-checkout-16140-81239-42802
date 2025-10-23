@@ -6,6 +6,7 @@ import { CheckoutPreview } from "@/components/checkout/CheckoutPreview";
 import { CheckoutCustomizationPanel } from "@/components/checkout/CheckoutCustomizationPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 
 export type ViewMode = "desktop" | "mobile";
 
@@ -50,6 +51,8 @@ export interface CheckoutDesign {
 export interface CheckoutCustomization {
   design: CheckoutDesign;
   rows: CheckoutRow[];
+  topComponents: CheckoutComponent[];
+  bottomComponents: CheckoutComponent[];
 }
 
 const CheckoutCustomizer = () => {
@@ -60,6 +63,15 @@ const CheckoutCustomizer = () => {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const [customization, setCustomization] = useState<CheckoutCustomization>({
     design: {
@@ -80,7 +92,15 @@ const CheckoutCustomizer = () => {
         selectedPayment: "#10B981",
       },
     },
-    rows: [],
+    rows: [
+      {
+        id: `row-${Date.now()}`,
+        layout: "single",
+        columns: [[]],
+      },
+    ],
+    topComponents: [],
+    bottomComponents: [],
   });
 
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null);
@@ -106,18 +126,19 @@ const CheckoutCustomizer = () => {
       if (checkoutError) throw checkoutError;
 
       if (checkout) {
-        // Load design and rows from database
         const loadedCustomization: CheckoutCustomization = {
           design: checkout.design || customization.design,
-          rows: checkout.components || [],
+          rows: checkout.components || customization.rows,
+          topComponents: checkout.top_components || [],
+          bottomComponents: checkout.bottom_components || [],
         };
         setCustomization(loadedCustomization);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading checkout:", error);
       toast({
         title: "Erro ao carregar checkout",
-        description: "Não foi possível carregar os dados do checkout.",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -129,7 +150,7 @@ const CheckoutCustomizer = () => {
     if (!checkoutId) {
       toast({
         title: "Erro",
-        description: "ID do checkout não encontrado.",
+        description: "ID do checkout não encontrado",
         variant: "destructive",
       });
       return;
@@ -142,7 +163,8 @@ const CheckoutCustomizer = () => {
         .update({
           design: customization.design,
           components: customization.rows,
-          updated_at: new Date().toISOString(),
+          top_components: customization.topComponents,
+          bottom_components: customization.bottomComponents,
         })
         .eq("id", checkoutId);
 
@@ -150,13 +172,13 @@ const CheckoutCustomizer = () => {
 
       toast({
         title: "Sucesso!",
-        description: "Checkout salvo com sucesso.",
+        description: "Checkout salvo com sucesso",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving checkout:", error);
       toast({
         title: "Erro ao salvar",
-        description: "Não foi possível salvar as alterações.",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -164,250 +186,282 @@ const CheckoutCustomizer = () => {
     }
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+
+    if (!over) return;
+
+    const componentType = active.id as string;
+    const dropZone = over.id as string;
+
+    const newComponent: CheckoutComponent = {
+      id: `component-${Date.now()}`,
+      type: componentType as any,
+      content: {},
+    };
+
+    setCustomization((prev) => {
+      const newCustomization = { ...prev };
+
+      if (dropZone === "top-drop-zone") {
+        // Add to top components
+        newCustomization.topComponents = [...prev.topComponents, newComponent];
+      } else if (dropZone === "bottom-drop-zone") {
+        // Add to bottom components
+        newCustomization.bottomComponents = [...prev.bottomComponents, newComponent];
+      } else if (dropZone.startsWith("row-")) {
+        // Add to row column
+        const [, rowId, columnIndex] = dropZone.split("-");
+        const rowIndex = prev.rows.findIndex((r) => r.id === `row-${rowId}`);
+        
+        if (rowIndex !== -1) {
+          const updatedRows = [...prev.rows];
+          const colIndex = parseInt(columnIndex);
+          updatedRows[rowIndex].columns[colIndex] = [
+            ...updatedRows[rowIndex].columns[colIndex],
+            newComponent,
+          ];
+          newCustomization.rows = updatedRows;
+        }
+      }
+
+      return newCustomization;
+    });
+
+    // Auto-select the new component
+    setSelectedComponent(newComponent.id);
+  };
+
   const handleAddRow = (layout: LayoutType) => {
+    const columnCount = 
+      layout === "single" ? 1 :
+      layout === "two-columns" ? 2 :
+      layout === "two-columns-asymmetric" ? 2 :
+      3;
+
     const newRow: CheckoutRow = {
       id: `row-${Date.now()}`,
       layout,
-      columns: Array(getColumnCount(layout)).fill([]).map(() => []),
+      columns: Array(columnCount).fill([]).map(() => []),
     };
 
-    setCustomization({
-      ...customization,
-      rows: [...customization.rows, newRow],
-    });
+    setCustomization((prev) => ({
+      ...prev,
+      rows: [...prev.rows, newRow],
+    }));
 
     setSelectedRow(newRow.id);
   };
 
-  const getColumnCount = (layout: LayoutType): number => {
-    switch (layout) {
-      case "single":
-        return 1;
-      case "two-columns":
-      case "two-columns-asymmetric":
-        return 2;
-      case "three-columns":
-        return 3;
-      default:
-        return 1;
-    }
-  };
+  const handleRemoveRow = (rowId: string) => {
+    setCustomization((prev) => ({
+      ...prev,
+      rows: prev.rows.filter((row) => row.id !== rowId),
+    }));
 
-  const handleAddComponent = (type: CheckoutComponent["type"], rowId?: string, columnIndex?: number) => {
-    const newComponent: CheckoutComponent = {
-      id: `component-${Date.now()}`,
-      type,
-      content: getDefaultContent(type),
-    };
-
-    if (rowId && columnIndex !== undefined) {
-      // Add to specific row and column
-      setCustomization({
-        ...customization,
-        rows: customization.rows.map((row) => {
-          if (row.id === rowId) {
-            const newColumns = [...row.columns];
-            newColumns[columnIndex] = [...newColumns[columnIndex], newComponent];
-            return { ...row, columns: newColumns };
-          }
-          return row;
-        }),
-      });
-    } else {
-      // Add to selected row or create new single-column row
-      if (selectedRow) {
-        setCustomization({
-          ...customization,
-          rows: customization.rows.map((row) => {
-            if (row.id === selectedRow) {
-              const newColumns = [...row.columns];
-              newColumns[selectedColumn] = [...newColumns[selectedColumn], newComponent];
-              return { ...row, columns: newColumns };
-            }
-            return row;
-          }),
-        });
-      } else {
-        // Create new single-column row
-        const newRow: CheckoutRow = {
-          id: `row-${Date.now()}`,
-          layout: "single",
-          columns: [[newComponent]],
-        };
-        setCustomization({
-          ...customization,
-          rows: [...customization.rows, newRow],
-        });
-        setSelectedRow(newRow.id);
-      }
-    }
-
-    setSelectedComponent(newComponent.id);
-  };
-
-  const getDefaultContent = (type: CheckoutComponent["type"]) => {
-    switch (type) {
-      case "text":
-        return { text: "Texto editável", fontSize: 16, color: "#000000" };
-      case "timer":
-        return { minutes: 15, seconds: 0, timerColor: "#EF4444" };
-      case "advantage":
-        return { title: "Vantagem", description: "", icon: "check" };
-      case "seal":
-        return { sealText: "SELO", icon: "star" };
-      case "testimonial":
-        return { testimonialText: "Depoimento", authorName: "Nome", authorImage: "" };
-      case "video":
-        return { videoUrl: "", videoType: "youtube" };
-      case "image":
-        return { imageUrl: "" };
-      default:
-        return {};
-    }
-  };
-
-  const handleUpdateComponent = (componentId: string, content: any) => {
-    setCustomization({
-      ...customization,
-      rows: customization.rows.map((row) => ({
-        ...row,
-        columns: row.columns.map((column) =>
-          column.map((comp) =>
-            comp.id === componentId ? { ...comp, content } : comp
-          )
-        ),
-      })),
-    });
-  };
-
-  const handleDeleteComponent = (componentId: string) => {
-    setCustomization({
-      ...customization,
-      rows: customization.rows.map((row) => ({
-        ...row,
-        columns: row.columns.map((column) =>
-          column.filter((comp) => comp.id !== componentId)
-        ),
-      })),
-    });
-    setSelectedComponent(null);
-  };
-
-  const handleDeleteRow = (rowId: string) => {
-    setCustomization({
-      ...customization,
-      rows: customization.rows.filter((row) => row.id !== rowId),
-    });
     if (selectedRow === rowId) {
       setSelectedRow(null);
     }
   };
 
-  const handleUpdateDesign = (design: Partial<CheckoutDesign>) => {
-    setCustomization({
-      ...customization,
-      design: { ...customization.design, ...design },
+  const handleUpdateComponent = (componentId: string, content: any) => {
+    setCustomization((prev) => {
+      const newCustomization = { ...prev };
+
+      // Check top components
+      const topIndex = prev.topComponents.findIndex((c) => c.id === componentId);
+      if (topIndex !== -1) {
+        newCustomization.topComponents = [...prev.topComponents];
+        newCustomization.topComponents[topIndex] = {
+          ...newCustomization.topComponents[topIndex],
+          content,
+        };
+        return newCustomization;
+      }
+
+      // Check bottom components
+      const bottomIndex = prev.bottomComponents.findIndex((c) => c.id === componentId);
+      if (bottomIndex !== -1) {
+        newCustomization.bottomComponents = [...prev.bottomComponents];
+        newCustomization.bottomComponents[bottomIndex] = {
+          ...newCustomization.bottomComponents[bottomIndex],
+          content,
+        };
+        return newCustomization;
+      }
+
+      // Check rows
+      const updatedRows = prev.rows.map((row) => ({
+        ...row,
+        columns: row.columns.map((column) =>
+          column.map((component) =>
+            component.id === componentId
+              ? { ...component, content }
+              : component
+          )
+        ),
+      }));
+
+      newCustomization.rows = updatedRows;
+      return newCustomization;
     });
   };
 
-  const getSelectedComponent = () => {
+  const handleRemoveComponent = (componentId: string) => {
+    setCustomization((prev) => {
+      const newCustomization = { ...prev };
+
+      // Remove from top components
+      newCustomization.topComponents = prev.topComponents.filter((c) => c.id !== componentId);
+
+      // Remove from bottom components
+      newCustomization.bottomComponents = prev.bottomComponents.filter((c) => c.id !== componentId);
+
+      // Remove from rows
+      newCustomization.rows = prev.rows.map((row) => ({
+        ...row,
+        columns: row.columns.map((column) =>
+          column.filter((component) => component.id !== componentId)
+        ),
+      }));
+
+      return newCustomization;
+    });
+
+    if (selectedComponent === componentId) {
+      setSelectedComponent(null);
+    }
+  };
+
+  const handleUpdateDesign = (design: CheckoutDesign) => {
+    setCustomization((prev) => ({
+      ...prev,
+      design,
+    }));
+  };
+
+  const getSelectedComponentData = () => {
     if (!selectedComponent) return null;
 
+    // Check top components
+    const topComponent = customization.topComponents.find((c) => c.id === selectedComponent);
+    if (topComponent) return topComponent;
+
+    // Check bottom components
+    const bottomComponent = customization.bottomComponents.find((c) => c.id === selectedComponent);
+    if (bottomComponent) return bottomComponent;
+
+    // Check rows
     for (const row of customization.rows) {
       for (const column of row.columns) {
         const component = column.find((c) => c.id === selectedComponent);
         if (component) return component;
       }
     }
+
     return null;
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-xl font-semibold">Personalizar Checkout</h1>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 border rounded-lg p-1">
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="border-b bg-card">
+          <div className="flex items-center justify-between px-6 py-4">
+            <div className="flex items-center gap-4">
               <Button
-                variant={viewMode === "desktop" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("desktop")}
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate(-1)}
               >
-                <Monitor className="h-4 w-4 mr-2" />
-                Desktop
+                <ArrowLeft className="h-5 w-5" />
               </Button>
-              <Button
-                variant={viewMode === "mobile" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("mobile")}
-              >
-                <Smartphone className="h-4 w-4 mr-2" />
-                Mobile
-              </Button>
+              <h1 className="text-xl font-semibold">Personalizar Checkout</h1>
             </div>
 
-            <Button
-              variant="outline"
-              onClick={() => setIsPreviewMode(!isPreviewMode)}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Preview
-            </Button>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 border rounded-lg p-1">
+                <Button
+                  variant={viewMode === "desktop" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("desktop")}
+                >
+                  <Monitor className="h-4 w-4 mr-2" />
+                  Desktop
+                </Button>
+                <Button
+                  variant={viewMode === "mobile" ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("mobile")}
+                >
+                  <Smartphone className="h-4 w-4 mr-2" />
+                  Mobile
+                </Button>
+              </div>
 
-            <Button onClick={handleSave} disabled={loading}>
-              {loading ? "Salvando..." : "Salvar"}
-            </Button>
+              <Button
+                variant="outline"
+                onClick={() => setIsPreviewMode(!isPreviewMode)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Preview
+              </Button>
+
+              <Button onClick={handleSave} disabled={loading}>
+                {loading ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Preview Area */}
-        <div className="flex-1 overflow-auto bg-muted/20">
-          <CheckoutPreview
-            customization={customization}
-            viewMode={viewMode}
-            selectedComponentId={selectedComponent}
-            onSelectComponent={setSelectedComponent}
-            selectedRowId={selectedRow}
-            onSelectRow={setSelectedRow}
-            selectedColumn={selectedColumn}
-            onSelectColumn={setSelectedColumn}
-            isPreviewMode={isPreviewMode}
-          />
+        {/* Main Content */}
+        <div className="flex h-[calc(100vh-73px)]">
+          {/* Preview Area */}
+          <div className="flex-1 overflow-auto">
+            <CheckoutPreview
+              customization={customization}
+              viewMode={viewMode}
+              selectedComponentId={selectedComponent}
+              onSelectComponent={setSelectedComponent}
+              selectedRowId={selectedRow}
+              onSelectRow={setSelectedRow}
+              selectedColumn={selectedColumn}
+              onSelectColumn={setSelectedColumn}
+              isPreviewMode={isPreviewMode}
+            />
+          </div>
+
+          {/* Customization Panel */}
+          {!isPreviewMode && (
+            <CheckoutCustomizationPanel
+              customization={customization}
+              selectedComponent={getSelectedComponentData()}
+              onUpdateComponent={handleUpdateComponent}
+              onRemoveComponent={handleRemoveComponent}
+              onUpdateDesign={handleUpdateDesign}
+              onAddRow={handleAddRow}
+              onRemoveRow={handleRemoveRow}
+              onBack={() => setSelectedComponent(null)}
+              rows={customization.rows}
+              selectedRowId={selectedRow}
+            />
+          )}
         </div>
-
-        {/* Customization Panel */}
-        {!isPreviewMode && (
-          <CheckoutCustomizationPanel
-            customization={customization}
-            selectedComponent={getSelectedComponent()}
-            onAddComponent={handleAddComponent}
-            onUpdateComponent={handleUpdateComponent}
-            onDeleteComponent={handleDeleteComponent}
-            onUpdateDesign={handleUpdateDesign}
-            onAddRow={handleAddRow}
-            onDeleteRow={handleDeleteRow}
-            selectedRow={selectedRow}
-            onSelectRow={setSelectedRow}
-            rows={customization.rows}
-          />
-        )}
       </div>
-    </div>
+
+      <DragOverlay>
+        {activeId ? (
+          <div className="bg-primary/10 border-2 border-primary rounded-lg p-4 cursor-grabbing">
+            <p className="text-sm font-medium capitalize">{activeId}</p>
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };
 

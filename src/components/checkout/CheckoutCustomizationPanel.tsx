@@ -1,640 +1,739 @@
-import { CheckoutCustomization, CheckoutComponent, CheckoutDesign, CheckoutRow, LayoutType } from "@/pages/CheckoutCustomizer";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Type, Image, CheckCircle, Award, Clock, MessageSquare, Video, Columns, Trash2 } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CheckoutComponent, CheckoutDesign, CheckoutRow, LayoutType } from "@/pages/CheckoutCustomizer";
+import { ArrowLeft, Trash2, Columns, Columns2, Columns3, LayoutGrid } from "lucide-react";
+import { useDraggable } from "@dnd-kit/core";
 
 interface CheckoutCustomizationPanelProps {
-  customization: CheckoutCustomization;
+  customization: any;
   selectedComponent: CheckoutComponent | null;
-  onAddComponent: (type: CheckoutComponent["type"], rowId?: string, columnIndex?: number) => void;
   onUpdateComponent: (componentId: string, content: any) => void;
-  onDeleteComponent: (componentId: string) => void;
-  onUpdateDesign: (design: Partial<CheckoutDesign>) => void;
+  onRemoveComponent: (componentId: string) => void;
+  onUpdateDesign: (design: CheckoutDesign) => void;
   onAddRow: (layout: LayoutType) => void;
-  onDeleteRow: (rowId: string) => void;
-  selectedRow: string | null;
-  onSelectRow: (rowId: string) => void;
+  onRemoveRow: (rowId: string) => void;
+  onBack: () => void;
   rows: CheckoutRow[];
+  selectedRowId: string | null;
 }
 
-const ColorPicker = ({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}) => {
+const DraggableComponent = ({ type, icon, label }: { type: string; icon: React.ReactNode; label: string }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: type,
+  });
+
   return (
-    <div className="space-y-2">
-      <Label className="text-sm text-foreground">{label}</Label>
-      <div className="flex gap-2 items-center">
-        <input
-          type="color"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-12 h-12 rounded border border-border cursor-pointer"
-        />
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="flex-1 px-3 py-2 bg-background border border-border rounded text-sm text-foreground"
-          placeholder="#000000"
-        />
-      </div>
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={`flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed cursor-grab active:cursor-grabbing transition-all ${
+        isDragging ? "opacity-50 scale-95" : "hover:border-primary hover:bg-primary/5"
+      }`}
+    >
+      {icon}
+      <span className="text-sm mt-2">{label}</span>
     </div>
   );
 };
 
-const componentItems = [
-  { id: "text", label: "Texto", icon: Type },
-  { id: "image", label: "Imagem", icon: Image },
-  { id: "advantage", label: "Vantagem", icon: CheckCircle },
-  { id: "seal", label: "Selo", icon: Award },
-  { id: "timer", label: "Cronômetro", icon: Clock },
-  { id: "testimonial", label: "Depoimento", icon: MessageSquare },
-  { id: "video", label: "Vídeo", icon: Video },
-];
-
-const layoutItems = [
-  { id: "single", label: "1 Coluna", columns: 1 },
-  { id: "two-columns", label: "2 Colunas", columns: 2 },
-  { id: "two-columns-asymmetric", label: "2 Colunas (1/3 - 2/3)", columns: 2 },
-  { id: "three-columns", label: "3 Colunas", columns: 3 },
-];
-
 export const CheckoutCustomizationPanel = ({
   customization,
   selectedComponent,
-  onAddComponent,
   onUpdateComponent,
-  onDeleteComponent,
+  onRemoveComponent,
   onUpdateDesign,
   onAddRow,
-  onDeleteRow,
-  selectedRow,
-  onSelectRow,
+  onRemoveRow,
+  onBack,
   rows,
+  selectedRowId,
 }: CheckoutCustomizationPanelProps) => {
+  const [activeTab, setActiveTab] = useState("components");
+
+  if (selectedComponent) {
+    return (
+      <div className="w-96 border-l bg-card p-6 overflow-auto">
+        <div className="flex items-center gap-2 mb-6">
+          <Button variant="ghost" size="icon" onClick={onBack}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h3 className="font-semibold capitalize">Editar {selectedComponent.type}</h3>
+        </div>
+
+        <div className="space-y-4">
+          {selectedComponent.type === "text" && (
+            <>
+              <div>
+                <Label>Texto</Label>
+                <Input
+                  value={selectedComponent.content?.text || ""}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      text: e.target.value,
+                    })
+                  }
+                  placeholder="Digite o texto"
+                />
+              </div>
+              <div>
+                <Label>Tamanho da Fonte</Label>
+                <Input
+                  type="number"
+                  value={selectedComponent.content?.fontSize || 16}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      fontSize: parseInt(e.target.value),
+                    })
+                  }
+                  min={12}
+                  max={48}
+                />
+              </div>
+              <div>
+                <Label>Cor</Label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={selectedComponent.content?.color || "#000000"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        color: e.target.value,
+                      })
+                    }
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={selectedComponent.content?.color || "#000000"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        color: e.target.value,
+                      })
+                    }
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {selectedComponent.type === "image" && (
+            <div>
+              <Label>URL da Imagem</Label>
+              <Input
+                value={selectedComponent.content?.imageUrl || ""}
+                onChange={(e) =>
+                  onUpdateComponent(selectedComponent.id, {
+                    ...selectedComponent.content,
+                    imageUrl: e.target.value,
+                  })
+                }
+                placeholder="https://exemplo.com/imagem.jpg"
+              />
+            </div>
+          )}
+
+          {selectedComponent.type === "advantage" && (
+            <>
+              <div>
+                <Label>Ícone</Label>
+                <Select
+                  value={selectedComponent.content?.icon || "check"}
+                  onValueChange={(value) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      icon: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="check">✓ Check</SelectItem>
+                    <SelectItem value="star">★ Estrela</SelectItem>
+                    <SelectItem value="heart">♥ Coração</SelectItem>
+                    <SelectItem value="shield">🛡️ Escudo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Título</Label>
+                <Input
+                  value={selectedComponent.content?.title || ""}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      title: e.target.value,
+                    })
+                  }
+                  placeholder="Título da vantagem"
+                />
+              </div>
+              <div>
+                <Label>Descrição</Label>
+                <Input
+                  value={selectedComponent.content?.description || ""}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      description: e.target.value,
+                    })
+                  }
+                  placeholder="Descrição da vantagem"
+                />
+              </div>
+            </>
+          )}
+
+          {selectedComponent.type === "seal" && (
+            <>
+              <div>
+                <Label>Ícone</Label>
+                <Select
+                  value={selectedComponent.content?.icon || "star"}
+                  onValueChange={(value) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      icon: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="star">★ Estrela</SelectItem>
+                    <SelectItem value="shield">🛡️ Escudo</SelectItem>
+                    <SelectItem value="award">🏆 Prêmio</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Texto do Selo</Label>
+                <Input
+                  value={selectedComponent.content?.sealText || ""}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      sealText: e.target.value,
+                    })
+                  }
+                  placeholder="SELO"
+                />
+              </div>
+            </>
+          )}
+
+          {selectedComponent.type === "timer" && (
+            <>
+              <div>
+                <Label>Minutos</Label>
+                <Input
+                  type="number"
+                  value={selectedComponent.content?.minutes || 15}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      minutes: parseInt(e.target.value),
+                    })
+                  }
+                  min={0}
+                  max={59}
+                />
+              </div>
+              <div>
+                <Label>Segundos</Label>
+                <Input
+                  type="number"
+                  value={selectedComponent.content?.seconds || 0}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      seconds: parseInt(e.target.value),
+                    })
+                  }
+                  min={0}
+                  max={59}
+                />
+              </div>
+              <div>
+                <Label>Cor do Cronômetro</Label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={selectedComponent.content?.timerColor || "#10B981"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        timerColor: e.target.value,
+                      })
+                    }
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={selectedComponent.content?.timerColor || "#10B981"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        timerColor: e.target.value,
+                      })
+                    }
+                    placeholder="#10B981"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          {selectedComponent.type === "testimonial" && (
+            <>
+              <div>
+                <Label>Texto do Depoimento</Label>
+                <Input
+                  value={selectedComponent.content?.testimonialText || ""}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      testimonialText: e.target.value,
+                    })
+                  }
+                  placeholder="Depoimento do cliente"
+                />
+              </div>
+              <div>
+                <Label>Nome do Autor</Label>
+                <Input
+                  value={selectedComponent.content?.authorName || ""}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      authorName: e.target.value,
+                    })
+                  }
+                  placeholder="Nome do Cliente"
+                />
+              </div>
+              <div>
+                <Label>Foto do Autor (URL)</Label>
+                <Input
+                  value={selectedComponent.content?.authorImage || ""}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      authorImage: e.target.value,
+                    })
+                  }
+                  placeholder="https://exemplo.com/foto.jpg"
+                />
+              </div>
+            </>
+          )}
+
+          {selectedComponent.type === "video" && (
+            <>
+              <div>
+                <Label>Tipo de Vídeo</Label>
+                <Select
+                  value={selectedComponent.content?.videoType || "youtube"}
+                  onValueChange={(value) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      videoType: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="youtube">YouTube</SelectItem>
+                    <SelectItem value="vimeo">Vimeo</SelectItem>
+                    <SelectItem value="custom">URL Customizada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>URL do Vídeo</Label>
+                <Input
+                  value={selectedComponent.content?.videoUrl || ""}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      videoUrl: e.target.value,
+                    })
+                  }
+                  placeholder="https://youtube.com/watch?v=..."
+                />
+              </div>
+            </>
+          )}
+
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={() => onRemoveComponent(selectedComponent.id)}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Excluir Componente
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-96 border-l border-border bg-card flex flex-col h-full">
-      <Tabs defaultValue="components" className="flex-1 flex flex-col h-full">
+    <div className="w-96 border-l bg-card overflow-auto">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
         <TabsList className="w-full grid grid-cols-3 rounded-none border-b">
           <TabsTrigger value="components">Componentes</TabsTrigger>
-          <TabsTrigger value="linhas">Linhas</TabsTrigger>
+          <TabsTrigger value="rows">Linhas</TabsTrigger>
           <TabsTrigger value="settings">Configurações</TabsTrigger>
         </TabsList>
 
-        {/* Componentes Tab */}
-        <TabsContent value="components" className="flex-1 mt-0">
-          <ScrollArea className="h-full">
-            <div className="p-6">
-              {selectedComponent ? (
-                // Editor de componente selecionado
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-foreground">
-                      Editar {componentItems.find(i => i.id === selectedComponent.type)?.label}
-                    </h2>
+        <TabsContent value="components" className="p-6 space-y-4">
+          <div>
+            <h3 className="font-semibold mb-4">Componentes</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Arraste os componentes para o checkout
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <DraggableComponent type="text" icon={<span className="text-2xl">T</span>} label="Texto" />
+            <DraggableComponent type="image" icon={<span className="text-2xl">🖼️</span>} label="Imagem" />
+            <DraggableComponent type="advantage" icon={<span className="text-2xl">✓</span>} label="Vantagem" />
+            <DraggableComponent type="seal" icon={<span className="text-2xl">🏅</span>} label="Selo" />
+            <DraggableComponent type="timer" icon={<span className="text-2xl">⏱️</span>} label="Cronômetro" />
+            <DraggableComponent type="testimonial" icon={<span className="text-2xl">💬</span>} label="Depoimento" />
+            <DraggableComponent type="video" icon={<span className="text-2xl">🎥</span>} label="Vídeo" />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="rows" className="p-6 space-y-4">
+          <div>
+            <h3 className="font-semibold mb-4">Layouts de Linhas</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Adicione linhas com diferentes layouts
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => onAddRow("single")}
+              className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed hover:border-primary hover:bg-primary/5 transition-all"
+            >
+              <Columns className="h-8 w-8 mb-2" />
+              <span className="text-sm">1 Coluna</span>
+            </button>
+
+            <button
+              onClick={() => onAddRow("two-columns")}
+              className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed hover:border-primary hover:bg-primary/5 transition-all"
+            >
+              <Columns2 className="h-8 w-8 mb-2" />
+              <span className="text-sm">2 Colunas</span>
+            </button>
+
+            <button
+              onClick={() => onAddRow("two-columns-asymmetric")}
+              className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed hover:border-primary hover:bg-primary/5 transition-all"
+            >
+              <LayoutGrid className="h-8 w-8 mb-2" />
+              <span className="text-sm">2 Colunas (33/66)</span>
+            </button>
+
+            <button
+              onClick={() => onAddRow("three-columns")}
+              className="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed hover:border-primary hover:bg-primary/5 transition-all"
+            >
+              <Columns3 className="h-8 w-8 mb-2" />
+              <span className="text-sm">3 Colunas</span>
+            </button>
+          </div>
+
+          {rows.length > 0 && (
+            <div className="mt-6">
+              <h4 className="font-semibold mb-3">Linhas Adicionadas</h4>
+              <div className="space-y-2">
+                {rows.map((row) => (
+                  <div
+                    key={row.id}
+                    className={`flex items-center justify-between p-3 rounded-lg border ${
+                      selectedRowId === row.id ? "border-primary bg-primary/5" : "border-border"
+                    }`}
+                  >
+                    <span className="text-sm capitalize">
+                      {row.layout === "single" && "1 Coluna"}
+                      {row.layout === "two-columns" && "2 Colunas"}
+                      {row.layout === "two-columns-asymmetric" && "2 Colunas (33/66)"}
+                      {row.layout === "three-columns" && "3 Colunas"}
+                    </span>
                     <Button
                       variant="ghost"
-                      size="sm"
-                      onClick={() => onUpdateComponent(selectedComponent.id, null)}
+                      size="icon"
+                      onClick={() => onRemoveRow(row.id)}
                     >
-                      Voltar
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-
-                  {/* Text Editor */}
-                  {selectedComponent.type === "text" && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Texto</Label>
-                        <textarea
-                          value={selectedComponent.content?.text || ""}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            text: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground min-h-[100px]"
-                          placeholder="Digite o texto"
-                        />
-                      </div>
-                      <div>
-                        <Label>Tamanho da Fonte</Label>
-                        <input
-                          type="number"
-                          value={selectedComponent.content?.fontSize || 16}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            fontSize: parseInt(e.target.value)
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          min="12"
-                          max="48"
-                        />
-                      </div>
-                      <ColorPicker
-                        label="Cor do Texto"
-                        value={selectedComponent.content?.color || "#000000"}
-                        onChange={(value) => onUpdateComponent(selectedComponent.id, {
-                          ...selectedComponent.content,
-                          color: value
-                        })}
-                      />
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={() => onDeleteComponent(selectedComponent.id)}
-                      >
-                        Excluir Componente
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Image Editor */}
-                  {selectedComponent.type === "image" && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>URL da Imagem</Label>
-                        <input
-                          type="text"
-                          value={selectedComponent.content?.imageUrl || ""}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            imageUrl: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          placeholder="https://exemplo.com/imagem.jpg"
-                        />
-                      </div>
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={() => onDeleteComponent(selectedComponent.id)}
-                      >
-                        Excluir Componente
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Advantage Editor */}
-                  {selectedComponent.type === "advantage" && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Título</Label>
-                        <input
-                          type="text"
-                          value={selectedComponent.content?.title || ""}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            title: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          placeholder="Título da vantagem"
-                        />
-                      </div>
-                      <div>
-                        <Label>Descrição</Label>
-                        <textarea
-                          value={selectedComponent.content?.description || ""}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            description: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground min-h-[80px]"
-                          placeholder="Descrição da vantagem"
-                        />
-                      </div>
-                      <div>
-                        <Label>Ícone</Label>
-                        <select
-                          value={selectedComponent.content?.icon || "check"}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            icon: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                        >
-                          <option value="check">Check</option>
-                          <option value="star">Estrela</option>
-                          <option value="heart">Coração</option>
-                          <option value="shield">Escudo</option>
-                        </select>
-                      </div>
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={() => onDeleteComponent(selectedComponent.id)}
-                      >
-                        Excluir Componente
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Seal Editor */}
-                  {selectedComponent.type === "seal" && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Texto do Selo</Label>
-                        <input
-                          type="text"
-                          value={selectedComponent.content?.sealText || ""}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            sealText: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          placeholder="Ex: GARANTIA"
-                        />
-                      </div>
-                      <div>
-                        <Label>Ícone</Label>
-                        <select
-                          value={selectedComponent.content?.icon || "star"}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            icon: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                        >
-                          <option value="star">Estrela</option>
-                          <option value="shield">Escudo</option>
-                          <option value="award">Prêmio</option>
-                        </select>
-                      </div>
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={() => onDeleteComponent(selectedComponent.id)}
-                      >
-                        Excluir Componente
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Timer Editor */}
-                  {selectedComponent.type === "timer" && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Minutos</Label>
-                        <input
-                          type="number"
-                          value={selectedComponent.content?.minutes || 15}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            minutes: parseInt(e.target.value)
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          min="0"
-                          max="60"
-                        />
-                      </div>
-                      <div>
-                        <Label>Segundos</Label>
-                        <input
-                          type="number"
-                          value={selectedComponent.content?.seconds || 0}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            seconds: parseInt(e.target.value)
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          min="0"
-                          max="59"
-                        />
-                      </div>
-                      <ColorPicker
-                        label="Cor do Cronômetro"
-                        value={selectedComponent.content?.timerColor || "#EF4444"}
-                        onChange={(value) => onUpdateComponent(selectedComponent.id, {
-                          ...selectedComponent.content,
-                          timerColor: value
-                        })}
-                      />
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={() => onDeleteComponent(selectedComponent.id)}
-                      >
-                        Excluir Componente
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Testimonial Editor */}
-                  {selectedComponent.type === "testimonial" && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Depoimento</Label>
-                        <textarea
-                          value={selectedComponent.content?.testimonialText || ""}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            testimonialText: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground min-h-[100px]"
-                          placeholder="Texto do depoimento"
-                        />
-                      </div>
-                      <div>
-                        <Label>Nome do Autor</Label>
-                        <input
-                          type="text"
-                          value={selectedComponent.content?.authorName || ""}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            authorName: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          placeholder="Nome do cliente"
-                        />
-                      </div>
-                      <div>
-                        <Label>URL da Foto do Autor</Label>
-                        <input
-                          type="text"
-                          value={selectedComponent.content?.authorImage || ""}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            authorImage: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          placeholder="https://exemplo.com/foto.jpg"
-                        />
-                      </div>
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={() => onDeleteComponent(selectedComponent.id)}
-                      >
-                        Excluir Componente
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Video Editor */}
-                  {selectedComponent.type === "video" && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Tipo de Vídeo</Label>
-                        <select
-                          value={selectedComponent.content?.videoType || "youtube"}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            videoType: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                        >
-                          <option value="youtube">YouTube</option>
-                          <option value="vimeo">Vimeo</option>
-                          <option value="custom">URL Customizada</option>
-                        </select>
-                      </div>
-                      <div>
-                        <Label>URL do Vídeo</Label>
-                        <input
-                          type="text"
-                          value={selectedComponent.content?.videoUrl || ""}
-                          onChange={(e) => onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            videoUrl: e.target.value
-                          })}
-                          className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                          placeholder="https://www.youtube.com/watch?v=..."
-                        />
-                      </div>
-                      <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={() => onDeleteComponent(selectedComponent.id)}
-                      >
-                        Excluir Componente
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                // Lista de componentes quando nenhum está selecionado
-                <>
-                  <h2 className="text-lg font-semibold mb-2 text-foreground">
-                    Componentes
-                  </h2>
-                  <p className="text-sm text-muted-foreground mb-6">
-                    Clique para adicionar componentes ao checkout
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    {componentItems.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Card
-                          key={item.id}
-                          onClick={() => onAddComponent(item.id as CheckoutComponent["type"])}
-                          className="p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-accent transition-colors h-24"
-                        >
-                          <Icon className="w-6 h-6 text-muted-foreground" />
-                          <span className="text-sm font-medium">{item.label}</span>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
-          </ScrollArea>
-        </TabsContent>
-
-        {/* Linhas Tab */}
-        <TabsContent value="linhas" className="flex-1 mt-0">
-          <ScrollArea className="h-full">
-            <div className="p-6 space-y-6">
-              <div>
-                <h2 className="text-lg font-semibold mb-2 text-foreground">
-                  Layouts de Linhas
-                </h2>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Adicione linhas com diferentes layouts de colunas
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {layoutItems.map((item) => (
-                  <Card
-                    key={item.id}
-                    onClick={() => onAddRow(item.id as LayoutType)}
-                    className="p-4 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-accent transition-colors h-24"
-                  >
-                    <Columns className="w-6 h-6 text-muted-foreground" />
-                    <span className="text-sm font-medium text-center">{item.label}</span>
-                  </Card>
                 ))}
               </div>
-
-              {rows.length > 0 && (
-                <>
-                  <Separator />
-                  <div>
-                    <h3 className="font-medium mb-4 text-foreground">Linhas Adicionadas</h3>
-                    <div className="space-y-2">
-                      {rows.map((row, index) => (
-                        <div
-                          key={row.id}
-                          className={`flex items-center justify-between p-3 rounded border ${
-                            selectedRow === row.id ? "border-primary bg-accent" : "border-border"
-                          }`}
-                          onClick={() => onSelectRow(row.id)}
-                        >
-                          <span className="text-sm">
-                            Linha {index + 1} - {layoutItems.find(l => l.id === row.layout)?.label}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDeleteRow(row.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
             </div>
-          </ScrollArea>
+          )}
         </TabsContent>
 
-        {/* Configurações Tab */}
-        <TabsContent value="settings" className="flex-1 mt-0">
-          <ScrollArea className="h-full">
-            <div className="p-6 space-y-6">
-              <div>
-                <h2 className="text-lg font-semibold mb-2 text-foreground">
-                  Configurações
-                </h2>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Personalize as cores e fonte do checkout
-                </p>
-              </div>
+        <TabsContent value="settings" className="p-6 space-y-6">
+          <div>
+            <h3 className="font-semibold mb-4">Configurações de Design</h3>
+          </div>
 
-              {/* Font Selection */}
-              <div className="space-y-2">
-                <Label className="text-sm text-foreground">Fonte</Label>
-                <select
-                  value={customization.design.font}
-                  onChange={(e) => onUpdateDesign({ font: e.target.value })}
-                  className="w-full px-3 py-2 bg-background border border-border rounded text-foreground"
-                >
-                  <option value="Inter">Inter</option>
-                  <option value="Roboto">Roboto</option>
-                  <option value="Poppins">Poppins</option>
-                  <option value="Montserrat">Montserrat</option>
-                </select>
-              </div>
+          <div className="space-y-4">
+            <div>
+              <Label>Fonte</Label>
+              <Select
+                value={customization.design.font}
+                onValueChange={(value) =>
+                  onUpdateDesign({
+                    ...customization.design,
+                    font: value,
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Inter">Inter</SelectItem>
+                  <SelectItem value="Roboto">Roboto</SelectItem>
+                  <SelectItem value="Poppins">Poppins</SelectItem>
+                  <SelectItem value="Montserrat">Montserrat</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <Separator />
+            <div>
+              <h4 className="font-semibold mb-3">Cores Principais</h4>
+              <div className="space-y-3">
+                <div>
+                  <Label>Cor de Fundo</Label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={customization.design.colors.background}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            background: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-12 h-10 rounded cursor-pointer"
+                    />
+                    <Input
+                      value={customization.design.colors.background}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            background: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
 
-              {/* Colors */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-foreground">Cores Principais</h4>
-                
-                <ColorPicker
-                  label="Cor de Fundo"
-                  value={customization.design.colors.background}
-                  onChange={(value) => onUpdateDesign({ 
-                    colors: { ...customization.design.colors, background: value } 
-                  })}
-                />
+                <div>
+                  <Label>Cor do Texto Principal</Label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={customization.design.colors.primaryText}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            primaryText: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-12 h-10 rounded cursor-pointer"
+                    />
+                    <Input
+                      value={customization.design.colors.primaryText}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            primaryText: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
 
-                <ColorPicker
-                  label="Cor do Texto Principal"
-                  value={customization.design.colors.primaryText}
-                  onChange={(value) => onUpdateDesign({ 
-                    colors: { ...customization.design.colors, primaryText: value } 
-                  })}
-                />
+                <div>
+                  <Label>Cor do Texto Secundário</Label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={customization.design.colors.secondaryText}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            secondaryText: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-12 h-10 rounded cursor-pointer"
+                    />
+                    <Input
+                      value={customization.design.colors.secondaryText}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            secondaryText: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
 
-                <ColorPicker
-                  label="Cor do Texto Secundário"
-                  value={customization.design.colors.secondaryText}
-                  onChange={(value) => onUpdateDesign({ 
-                    colors: { ...customization.design.colors, secondaryText: value } 
-                  })}
-                />
-
-                <ColorPicker
-                  label="Cor de Destaque"
-                  value={customization.design.colors.accent}
-                  onChange={(value) => onUpdateDesign({ 
-                    colors: { ...customization.design.colors, accent: value } 
-                  })}
-                />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h4 className="font-medium text-foreground">Botões</h4>
-
-                <ColorPicker
-                  label="Cor do Botão Principal"
-                  value={customization.design.colors.button.background}
-                  onChange={(value) => onUpdateDesign({ 
-                    colors: { 
-                      ...customization.design.colors, 
-                      button: { ...customization.design.colors.button, background: value } 
-                    } 
-                  })}
-                />
-
-                <ColorPicker
-                  label="Cor do Texto do Botão"
-                  value={customization.design.colors.button.text}
-                  onChange={(value) => onUpdateDesign({ 
-                    colors: { 
-                      ...customization.design.colors, 
-                      button: { ...customization.design.colors.button, text: value } 
-                    } 
-                  })}
-                />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <h4 className="font-medium text-foreground">Formulário</h4>
-
-                <ColorPicker
-                  label="Cor de Fundo dos Campos"
-                  value={customization.design.colors.form?.background || "#F9FAFB"}
-                  onChange={(value) => onUpdateDesign({ 
-                    colors: { 
-                      ...customization.design.colors, 
-                      form: { background: value } 
-                    } 
-                  })}
-                />
-
-                <ColorPicker
-                  label="Cor do Pagamento Selecionado"
-                  value={customization.design.colors.selectedPayment || customization.design.colors.accent}
-                  onChange={(value) => onUpdateDesign({ 
-                    colors: { ...customization.design.colors, selectedPayment: value } 
-                  })}
-                />
+                <div>
+                  <Label>Cor de Destaque</Label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={customization.design.colors.accent}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            accent: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-12 h-10 rounded cursor-pointer"
+                    />
+                    <Input
+                      value={customization.design.colors.accent}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            accent: e.target.value,
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </ScrollArea>
+
+            <div>
+              <h4 className="font-semibold mb-3">Botões</h4>
+              <div className="space-y-3">
+                <div>
+                  <Label>Cor do Botão Principal</Label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={customization.design.colors.button.background}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            button: {
+                              ...customization.design.colors.button,
+                              background: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="w-12 h-10 rounded cursor-pointer"
+                    />
+                    <Input
+                      value={customization.design.colors.button.background}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            button: {
+                              ...customization.design.colors.button,
+                              background: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Cor do Texto do Botão</Label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={customization.design.colors.button.text}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            button: {
+                              ...customization.design.colors.button,
+                              text: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                      className="w-12 h-10 rounded cursor-pointer"
+                    />
+                    <Input
+                      value={customization.design.colors.button.text}
+                      onChange={(e) =>
+                        onUpdateDesign({
+                          ...customization.design,
+                          colors: {
+                            ...customization.design.colors,
+                            button: {
+                              ...customization.design.colors.button,
+                              text: e.target.value,
+                            },
+                          },
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -1,6 +1,7 @@
 import { CheckoutCustomization, CheckoutComponent, CheckoutRow, ViewMode } from "@/pages/CheckoutCustomizer";
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { useDroppable } from "@dnd-kit/core";
 
 interface CheckoutPreviewProps {
   customization: CheckoutCustomization;
@@ -13,6 +14,21 @@ interface CheckoutPreviewProps {
   onSelectColumn: (index: number) => void;
   isPreviewMode?: boolean;
 }
+
+const DropZone = ({ id, children, isOver }: { id: string; children: React.ReactNode; isOver?: boolean }) => {
+  const { setNodeRef } = useDroppable({ id });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`min-h-[100px] rounded-lg border-2 border-dashed transition-all ${
+        isOver ? "border-primary bg-primary/10" : "border-muted-foreground/30"
+      }`}
+    >
+      {children}
+    </div>
+  );
+};
 
 const ComponentRenderer = ({ 
   component, 
@@ -314,39 +330,45 @@ const RowRenderer = ({
       } : undefined}
     >
       <div className={`grid ${getColumnClasses()} gap-4`}>
-        {row.columns.map((column, columnIndex) => (
-          <div
-            key={columnIndex}
-            className={`${getColumnSpan(columnIndex)} rounded-lg p-4 flex flex-col gap-3 ${
-              isPreviewMode 
-                ? 'min-h-0' 
-                : 'min-h-[150px] border-2 border-dashed border-muted-foreground/30'
-            } ${!isPreviewMode && isSelected && selectedColumn === columnIndex ? 'border-primary' : ''}`}
-            onClick={!isPreviewMode ? (e) => {
-              e.stopPropagation();
-              onSelectRow(row.id);
-              onSelectColumn(columnIndex);
-            } : undefined}
-          >
-            {column.length === 0 && !isPreviewMode ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
-                <Plus className="w-6 h-6" />
-                <span className="text-sm">Adicione componentes aqui</span>
-              </div>
-            ) : (
-              column.map((component) => (
-                <ComponentRenderer
-                  key={component.id}
-                  component={component}
-                  customization={customization}
-                  isSelected={selectedComponentId === component.id}
-                  onClick={() => !isPreviewMode && onSelectComponent(component.id)}
-                  isPreviewMode={isPreviewMode}
-                />
-              ))
-            )}
-          </div>
-        ))}
+        {row.columns.map((column, columnIndex) => {
+          const dropZoneId = `${row.id}-${columnIndex}`;
+          const { setNodeRef, isOver } = useDroppable({ id: dropZoneId });
+
+          return (
+            <div
+              key={columnIndex}
+              ref={setNodeRef}
+              className={`${getColumnSpan(columnIndex)} rounded-lg p-4 flex flex-col gap-3 ${
+                isPreviewMode 
+                  ? 'min-h-0' 
+                  : `min-h-[150px] border-2 border-dashed ${isOver ? 'border-primary bg-primary/10' : 'border-muted-foreground/30'}`
+              } ${!isPreviewMode && isSelected && selectedColumn === columnIndex ? 'border-primary' : ''}`}
+              onClick={!isPreviewMode ? (e) => {
+                e.stopPropagation();
+                onSelectRow(row.id);
+                onSelectColumn(columnIndex);
+              } : undefined}
+            >
+              {column.length === 0 && !isPreviewMode ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
+                  <Plus className="w-6 h-6" />
+                  <span className="text-sm">Arraste componentes aqui</span>
+                </div>
+              ) : (
+                column.map((component) => (
+                  <ComponentRenderer
+                    key={component.id}
+                    component={component}
+                    customization={customization}
+                    isSelected={selectedComponentId === component.id}
+                    onClick={() => !isPreviewMode && onSelectComponent(component.id)}
+                    isPreviewMode={isPreviewMode}
+                  />
+                ))
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -364,6 +386,8 @@ export const CheckoutPreview = ({
   isPreviewMode = false,
 }: CheckoutPreviewProps) => {
   const [selectedPayment, setSelectedPayment] = useState<"pix" | "card">("pix");
+  const { setNodeRef: setTopRef, isOver: isTopOver } = useDroppable({ id: "top-drop-zone" });
+  const { setNodeRef: setBottomRef, isOver: isBottomOver } = useDroppable({ id: "bottom-drop-zone" });
 
   const maxWidth = viewMode === "mobile" ? "max-w-md" : "max-w-4xl";
 
@@ -376,6 +400,50 @@ export const CheckoutPreview = ({
       }}
     >
       <div className={`w-full ${maxWidth} space-y-4`}>
+        {/* Top Drop Zone */}
+        {!isPreviewMode && (
+          <div
+            ref={setTopRef}
+            className={`min-h-[100px] rounded-lg border-2 border-dashed transition-all flex flex-col gap-3 p-4 ${
+              isTopOver ? "border-primary bg-primary/10" : "border-muted-foreground/30"
+            }`}
+          >
+            {customization.topComponents.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
+                <Plus className="w-6 h-6" />
+                <span className="text-sm">Arraste componentes para o topo</span>
+              </div>
+            ) : (
+              customization.topComponents.map((component) => (
+                <ComponentRenderer
+                  key={component.id}
+                  component={component}
+                  customization={customization}
+                  isSelected={selectedComponentId === component.id}
+                  onClick={() => onSelectComponent(component.id)}
+                  isPreviewMode={false}
+                />
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Top Components (Preview Mode) */}
+        {isPreviewMode && customization.topComponents.length > 0 && (
+          <div className="space-y-3">
+            {customization.topComponents.map((component) => (
+              <ComponentRenderer
+                key={component.id}
+                component={component}
+                customization={customization}
+                isSelected={false}
+                onClick={() => {}}
+                isPreviewMode={true}
+              />
+            ))}
+          </div>
+        )}
+
         {/* Custom Rows Area */}
         {customization.rows.length > 0 && (
           <div className="space-y-4">
@@ -616,6 +684,50 @@ export const CheckoutPreview = ({
             🔒 Pagamento 100% seguro
           </p>
         </div>
+
+        {/* Bottom Drop Zone */}
+        {!isPreviewMode && (
+          <div
+            ref={setBottomRef}
+            className={`min-h-[100px] rounded-lg border-2 border-dashed transition-all flex flex-col gap-3 p-4 ${
+              isBottomOver ? "border-primary bg-primary/10" : "border-muted-foreground/30"
+            }`}
+          >
+            {customization.bottomComponents.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
+                <Plus className="w-6 h-6" />
+                <span className="text-sm">Arraste componentes para o final</span>
+              </div>
+            ) : (
+              customization.bottomComponents.map((component) => (
+                <ComponentRenderer
+                  key={component.id}
+                  component={component}
+                  customization={customization}
+                  isSelected={selectedComponentId === component.id}
+                  onClick={() => onSelectComponent(component.id)}
+                  isPreviewMode={false}
+                />
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Bottom Components (Preview Mode) */}
+        {isPreviewMode && customization.bottomComponents.length > 0 && (
+          <div className="space-y-3">
+            {customization.bottomComponents.map((component) => (
+              <ComponentRenderer
+                key={component.id}
+                component={component}
+                customization={customization}
+                isSelected={false}
+                onClick={() => {}}
+                isPreviewMode={true}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

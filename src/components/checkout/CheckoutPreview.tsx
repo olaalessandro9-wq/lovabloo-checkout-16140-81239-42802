@@ -2,6 +2,7 @@ import { CheckoutCustomization, CheckoutComponent, CheckoutRow, ViewMode } from 
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
+import { PixIcon, CreditCardIcon } from "@/components/icons";
 
 interface CheckoutPreviewProps {
   customization: CheckoutCustomization;
@@ -668,7 +669,9 @@ export const CheckoutPreview = ({
                 color: customization.design.colors.primaryText,
               }}
             >
-              <div className="text-2xl mb-1">💳</div>
+              <div className="flex items-center justify-center mb-1">
+                <PixIcon size={28} />
+              </div>
               <div className="text-sm font-semibold">PIX</div>
             </button>
 
@@ -685,8 +688,10 @@ export const CheckoutPreview = ({
                 color: customization.design.colors.primaryText,
               }}
             >
-              <div className="text-2xl mb-1">💳</div>
-              <div className="text-sm font-semibold">Cartão</div>
+              <div className="flex items-center justify-center mb-1">
+                <CreditCardIcon size={28} />
+              </div>
+              <div className="text-sm font-semibold">Cartão de Crédito</div>
             </button>
           </div>
         </div>

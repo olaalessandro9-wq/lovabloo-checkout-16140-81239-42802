@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useProduct } from "@/hooks/useProduct";
 import { OrderBumpList } from "@/components/products/OrderBumpList";
+import { PixIcon, CreditCardIcon } from "@/components/icons";
 import { OrderBumpDialog } from "@/components/products/OrderBumpDialog";
 import { CheckoutTable, type Checkout } from "@/components/products/CheckoutTable";
 import { CheckoutConfigDialog } from "@/components/products/CheckoutConfigDialog";
@@ -1353,14 +1354,10 @@ const ProductEdit = () => {
           <TabsContent value="configuracoes" className="space-y-6">
             <div className="bg-card border border-border rounded-lg p-6 space-y-6">
               <div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Pagamento</h3>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Aprenda sobre as configurações de parcelamento no checkout
-                </p>
+                <h3 className="text-lg font-semibold text-foreground mb-6">Métodos de Pagamento</h3>
 
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-base font-medium text-foreground mb-4">Métodos de pagamento</h4>
                     <p className="text-sm text-muted-foreground mb-4">
                       Arraste os elementos abaixo para definir a ordem que aparecerá no checkout e clique no botão 
                       "Método padrão" para definir como pagamento padrão do checkout se o método de pagamento estiver selecionado
@@ -1370,9 +1367,7 @@ const ProductEdit = () => {
                       <div className="border border-primary bg-primary/10 rounded-lg p-4 text-center">
                         <div className="flex items-center justify-center mb-2">
                           <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-                            <svg className="w-6 h-6 text-primary" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M19 7h-8v6h8V7zm0 8h-8v6h8v-6zM5 7H3v14h2V7z"/>
-                            </svg>
+                            <PixIcon className="text-primary" size={24} />
                           </div>
                         </div>
                         <p className="text-sm font-medium text-foreground mb-1">PIX</p>
@@ -1393,7 +1388,7 @@ const ProductEdit = () => {
                       <div className="border border-primary bg-primary/10 rounded-lg p-4 text-center">
                         <div className="flex items-center justify-center mb-2">
                           <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-                            <CreditCard className="w-6 h-6 text-primary" />
+                            <CreditCardIcon className="text-primary" size={24} />
                           </div>
                         </div>
                         <p className="text-sm font-medium text-foreground mb-1">Cartão de Crédito</p>

@@ -211,9 +211,12 @@ export type Database = {
       checkouts: {
         Row: {
           background_color: string | null
+          bottom_components: Json | null
           button_color: string | null
           button_text_color: string | null
+          components: Json | null
           created_at: string | null
+          design: Json | null
           font: string | null
           form_background_color: string | null
           id: string
@@ -226,14 +229,18 @@ export type Database = {
           seller_name: string | null
           slug: string | null
           text_color: string | null
+          top_components: Json | null
           updated_at: string | null
           visits_count: number
         }
         Insert: {
           background_color?: string | null
+          bottom_components?: Json | null
           button_color?: string | null
           button_text_color?: string | null
+          components?: Json | null
           created_at?: string | null
+          design?: Json | null
           font?: string | null
           form_background_color?: string | null
           id?: string
@@ -246,14 +253,18 @@ export type Database = {
           seller_name?: string | null
           slug?: string | null
           text_color?: string | null
+          top_components?: Json | null
           updated_at?: string | null
           visits_count?: number
         }
         Update: {
           background_color?: string | null
+          bottom_components?: Json | null
           button_color?: string | null
           button_text_color?: string | null
+          components?: Json | null
           created_at?: string | null
+          design?: Json | null
           font?: string | null
           form_background_color?: string | null
           id?: string
@@ -266,6 +277,7 @@ export type Database = {
           seller_name?: string | null
           slug?: string | null
           text_color?: string | null
+          top_components?: Json | null
           updated_at?: string | null
           visits_count?: number
         }
@@ -430,30 +442,33 @@ export type Database = {
       order_bumps: {
         Row: {
           active: boolean | null
-          checkout_id: string | null
+          checkout_id: string
           created_at: string | null
-          description: string | null
           id: string
-          name: string
-          price: number
+          offer_id: string | null
+          position: number
+          product_id: string
+          updated_at: string | null
         }
         Insert: {
           active?: boolean | null
-          checkout_id?: string | null
+          checkout_id: string
           created_at?: string | null
-          description?: string | null
           id?: string
-          name: string
-          price: number
+          offer_id?: string | null
+          position?: number
+          product_id: string
+          updated_at?: string | null
         }
         Update: {
           active?: boolean | null
-          checkout_id?: string | null
+          checkout_id?: string
           created_at?: string | null
-          description?: string | null
           id?: string
-          name?: string
-          price?: number
+          offer_id?: string | null
+          position?: number
+          product_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -461,6 +476,20 @@ export type Database = {
             columns: ["checkout_id"]
             isOneToOne: false
             referencedRelation: "checkouts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_bumps_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_bumps_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]

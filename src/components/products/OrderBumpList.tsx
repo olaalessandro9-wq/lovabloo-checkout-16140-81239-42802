@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Trash2, GripVertical, Gift } from "lucide-react";
+import { Trash2, GripVertical, Gift, MoreVertical, Pencil } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -21,10 +27,11 @@ interface OrderBump {
 interface OrderBumpListProps {
   productId: string;
   onAdd: () => void;
+  onEdit?: (orderBump: OrderBump) => void;
   maxOrderBumps?: number;
 }
 
-export function OrderBumpList({ productId, onAdd, maxOrderBumps = 5 }: OrderBumpListProps) {
+export function OrderBumpList({ productId, onAdd, onEdit, maxOrderBumps = 5 }: OrderBumpListProps) {
   const [orderBumps, setOrderBumps] = useState<OrderBump[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -124,13 +131,6 @@ export function OrderBumpList({ productId, onAdd, maxOrderBumps = 5 }: OrderBump
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">Order Bumps</h3>
-        <p className="text-sm text-muted-foreground mb-6">
-          Selecione produtos para oferecer como complemento durante o checkout
-        </p>
-      </div>
-
       {orderBumps.length > 0 && (
         <div className="space-y-3">
           {orderBumps.map((orderBump, index) => (
@@ -167,14 +167,35 @@ export function OrderBumpList({ productId, onAdd, maxOrderBumps = 5 }: OrderBump
                       </div>
                     </div>
                     
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemove(orderBump.id)}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="w-4 w-4" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="hover:bg-accent"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {onEdit && (
+                          <DropdownMenuItem
+                            onClick={() => onEdit(orderBump)}
+                            className="cursor-pointer"
+                          >
+                            <Pencil className="w-4 h-4 mr-2" />
+                            Editar
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem
+                          onClick={() => handleRemove(orderBump.id)}
+                          className="cursor-pointer text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Deletar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </div>

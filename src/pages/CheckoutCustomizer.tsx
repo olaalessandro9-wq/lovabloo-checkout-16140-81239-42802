@@ -92,13 +92,7 @@ const CheckoutCustomizer = () => {
         selectedPayment: "#10B981",
       },
     },
-    rows: [
-      {
-        id: `row-${Date.now()}`,
-        layout: "single",
-        columns: [[]],
-      },
-    ],
+    rows: [],
     topComponents: [],
     bottomComponents: [],
   });

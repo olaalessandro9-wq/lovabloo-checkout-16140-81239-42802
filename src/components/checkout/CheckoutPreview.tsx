@@ -449,7 +449,7 @@ export const CheckoutPreview = ({
             {customization.topComponents.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
                 <Plus className="w-6 h-6" />
-                <span className="text-sm">Arraste componentes para o topo</span>
+                <span className="text-sm">Arraste componentes aqui</span>
               </div>
             ) : (
               customization.topComponents.map((component) => (
@@ -859,7 +859,7 @@ export const CheckoutPreview = ({
             {customization.bottomComponents.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-2">
                 <Plus className="w-6 h-6" />
-                <span className="text-sm">Arraste componentes para o final</span>
+                <span className="text-sm">Arraste componentes aqui</span>
               </div>
             ) : (
               customization.bottomComponents.map((component) => (

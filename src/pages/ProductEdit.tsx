@@ -797,6 +797,12 @@ const ProductEdit = () => {
     setOrderBumpDialogOpen(true);
   };
 
+  const handleEditOrderBump = (orderBump: any) => {
+    // TODO: Implement edit functionality
+    // For now, just show a toast
+    toast.info("Edição de order bump em desenvolvimento");
+  };
+
   const handleOrderBumpSuccess = () => {
     // Refresh order bumps list
     setOrderBumpKey(prev => prev + 1);
@@ -1523,6 +1529,7 @@ const ProductEdit = () => {
                 key={orderBumpKey}
                 productId={productId || ""}
                 onAdd={handleAddOrderBump}
+                onEdit={handleEditOrderBump}
               />
             </div>
           </TabsContent>

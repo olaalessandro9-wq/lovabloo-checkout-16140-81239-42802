@@ -1,7 +1,7 @@
 import { CheckoutCustomization, CheckoutComponent, CheckoutRow, ViewMode } from "@/pages/CheckoutCustomizer";
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { useDroppable } from "@dnd-kit/core";
+import { useDroppable, useDraggable } from "@dnd-kit/core";
 
 interface CheckoutPreviewProps {
   customization: CheckoutCustomization;

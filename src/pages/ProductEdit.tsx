@@ -24,9 +24,11 @@ import { CouponDialog } from "@/components/products/CouponDialog";
 import { LinksTable, type PaymentLink } from "@/components/products/LinksTable";
 import { OffersManager, type Offer } from "@/components/products/OffersManager";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const ProductEdit = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, loadProduct, productId } = useProduct();
   
   // Estado para a seção Geral

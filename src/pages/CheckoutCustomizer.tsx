@@ -129,10 +129,23 @@ const CheckoutCustomizer = () => {
 
       if (checkout) {
         const loadedCustomization: CheckoutCustomization = {
-          design: checkout.design || customization.design,
-          rows: checkout.components || customization.rows,
-          topComponents: checkout.top_components || [],
-          bottomComponents: checkout.bottom_components || [],
+          design: {
+            font: checkout.font || 'Inter',
+            theme: 'custom',
+            colors: {
+              background: checkout.background_color || '#FFFFFF',
+              primaryText: checkout.text_color || '#000000',
+              secondaryText: '#6B7280',
+              accent: checkout.primary_color || '#10B981',
+              button: {
+                background: checkout.button_color || '#10B981',
+                text: checkout.button_text_color || '#FFFFFF',
+              },
+            },
+          },
+          rows: customization.rows,
+          topComponents: [],
+          bottomComponents: [],
         };
         setCustomization(loadedCustomization);
         setProductData(checkout.products);
@@ -199,10 +212,12 @@ const CheckoutCustomizer = () => {
       const { error } = await supabase
         .from("checkouts")
         .update({
-          design: customization.design,
-          components: customization.rows,
-          top_components: customization.topComponents,
-          bottom_components: customization.bottomComponents,
+          font: customization.design.font,
+          background_color: customization.design.colors.background,
+          text_color: customization.design.colors.primaryText,
+          primary_color: customization.design.colors.accent,
+          button_color: customization.design.colors.button.background,
+          button_text_color: customization.design.colors.button.text,
         })
         .eq("id", checkoutId);
 

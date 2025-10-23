@@ -117,25 +117,20 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
       }
 
       // Get current max position
-      const { data: existingBumps, error: bumpsError } = await supabase
-        .from("order_bumps")
-        .select("position")
-        .in("checkout_id", checkouts.map(c => c.id))
-        .order("position", { ascending: false })
-        .limit(1);
-
-      if (bumpsError) throw bumpsError;
-
-      const nextPosition = existingBumps && existingBumps.length > 0 
-        ? existingBumps[0].position + 1 
-        : 0;
+      // Get the selected product and offer details
+      const selectedProduct = products.find(p => p.id === selectedProductId);
+      const selectedOffer = offers.find(o => o.id === selectedOfferId);
+      
+      if (!selectedProduct) {
+        throw new Error("Produto não encontrado");
+      }
 
       // Add order bump to all checkouts of this product
       const orderBumps = checkouts.map(checkout => ({
         checkout_id: checkout.id,
-        product_id: selectedProductId,
-        offer_id: selectedOfferId || null,
-        position: nextPosition,
+        name: selectedOffer ? selectedOffer.name : selectedProduct.name,
+        price: selectedOffer ? selectedOffer.price : selectedProduct.price,
+        description: selectedOffer ? `Oferta: ${selectedOffer.name}` : undefined,
         active: true,
       }));
 

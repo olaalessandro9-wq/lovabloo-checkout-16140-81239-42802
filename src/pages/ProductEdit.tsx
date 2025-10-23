@@ -479,8 +479,36 @@ const ProductEdit = () => {
       }
       // Se há nova imagem para fazer upload
       else if (imageFile) {
+        // Deletar imagem antiga se existir (antes de fazer upload da nova)
+        if (product?.image_url) {
+          try {
+            let oldImagePath = product.image_url;
+            
+            // Extrair o caminho da imagem antiga
+            if (oldImagePath.includes('product-images/')) {
+              oldImagePath = oldImagePath.split('product-images/')[1];
+            } else if (oldImagePath.includes('/')) {
+              const fileName = oldImagePath.split('/').pop();
+              oldImagePath = `${user?.id}/${fileName}`;
+            } else {
+              oldImagePath = `${user?.id}/${oldImagePath}`;
+            }
+
+            const { error: deleteError } = await supabase.storage
+              .from('product-images')
+              .remove([oldImagePath]);
+
+            if (deleteError) {
+              console.warn('Erro ao deletar imagem antiga:', deleteError);
+            }
+          } catch (deleteError) {
+            console.warn('Erro ao processar deleção de imagem antiga:', deleteError);
+          }
+        }
+
+        // Fazer upload da nova imagem
         const fileExt = imageFile.name.split(".").pop();
-        const fileName = `${productId || Date.now()}.${fileExt}`;
+        const fileName = `${user?.id}/${productId || Date.now()}.${fileExt}`;
 
         try {
           const { error: uploadError } = await supabase.storage
@@ -682,8 +710,36 @@ const ProductEdit = () => {
       }
       // Se há nova imagem para fazer upload
       else if (imageFile) {
+        // Deletar imagem antiga se existir (antes de fazer upload da nova)
+        if (product?.image_url) {
+          try {
+            let oldImagePath = product.image_url;
+            
+            // Extrair o caminho da imagem antiga
+            if (oldImagePath.includes('product-images/')) {
+              oldImagePath = oldImagePath.split('product-images/')[1];
+            } else if (oldImagePath.includes('/')) {
+              const fileName = oldImagePath.split('/').pop();
+              oldImagePath = `${user?.id}/${fileName}`;
+            } else {
+              oldImagePath = `${user?.id}/${oldImagePath}`;
+            }
+
+            const { error: deleteError } = await supabase.storage
+              .from('product-images')
+              .remove([oldImagePath]);
+
+            if (deleteError) {
+              console.warn('Erro ao deletar imagem antiga:', deleteError);
+            }
+          } catch (deleteError) {
+            console.warn('Erro ao processar deleção de imagem antiga:', deleteError);
+          }
+        }
+
+        // Fazer upload da nova imagem
         const fileExt = imageFile.name.split(".").pop();
-        const fileName = `${productId || Date.now()}.${fileExt}`;
+        const fileName = `${user?.id}/${productId || Date.now()}.${fileExt}`;
 
         try {
           const { error: uploadError } = await supabase.storage

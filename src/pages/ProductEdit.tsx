@@ -314,21 +314,24 @@ const ProductEdit = () => {
   const [currentCheckoutLinkIds, setCurrentCheckoutLinkIds] = useState<string[]>([]);
 
   // Estado para aba ativa (persistido no sessionStorage)
-  const [activeTab, setActiveTab] = useState<string>(() => {
-    // Tentar recuperar aba ativa do sessionStorage (apenas se id existir)
-    if (id) {
-      const savedTab = sessionStorage.getItem(`product-edit-tab-${id}`);
-      if (savedTab) return savedTab;
+  const [activeTab, setActiveTab] = useState<string>("geral");
+
+  // Carregar aba salva do sessionStorage quando productId estiver disponível
+  useEffect(() => {
+    if (productId) {
+      const savedTab = sessionStorage.getItem(`product-edit-tab-${productId}`);
+      if (savedTab) {
+        setActiveTab(savedTab);
+      }
     }
-    return "geral";
-  });
+  }, [productId]);
 
   // Salvar aba ativa no sessionStorage quando mudar
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    // Salvar apenas se id existir
-    if (id) {
-      sessionStorage.setItem(`product-edit-tab-${id}`, value);
+    // Salvar apenas se productId existir
+    if (productId) {
+      sessionStorage.setItem(`product-edit-tab-${productId}`, value);
     }
   };
 

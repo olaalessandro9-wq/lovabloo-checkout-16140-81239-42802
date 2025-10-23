@@ -129,7 +129,23 @@ const ProductEdit = () => {
     console.log("[loadPaymentLinks] Loading links for product:", productId);
     
     try {
-      // Buscar payment_links com ofertas e checkouts associados
+      // Primeiro, buscar todas as ofertas do produto
+      const { data: offersData, error: offersError } = await supabase
+        .from("offers")
+        .select("id")
+        .eq("product_id", productId);
+      
+      if (offersError) throw offersError;
+      
+      const offerIds = (offersData || []).map(o => o.id);
+      
+      if (offerIds.length === 0) {
+        console.log("[loadPaymentLinks] No offers found for product");
+        setPaymentLinks([]);
+        return;
+      }
+      
+      // Depois, buscar payment_links dessas ofertas
       const { data: linksData, error: linksError } = await supabase
         .from("payment_links")
         .select(`
@@ -145,7 +161,7 @@ const ProductEdit = () => {
             product_id
           )
         `)
-        .eq("offers.product_id", productId);
+        .in("offer_id", offerIds);
       
       if (linksError) throw linksError;
       

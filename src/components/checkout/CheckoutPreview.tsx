@@ -703,7 +703,7 @@ export const CheckoutPreview = ({
                   {bump.image_url && (
                     <img
                       src={bump.image_url}
-                      alt={bump.title}
+                      alt={bump.name}
                       className="w-16 h-16 rounded-lg object-cover"
                     />
                   )}
@@ -712,7 +712,7 @@ export const CheckoutPreview = ({
                       className="font-semibold mb-1"
                       style={{ color: customization.design.colors.primaryText }}
                     >
-                      {bump.title}
+                      {bump.name}
                     </h5>
                     {bump.description && (
                       <p

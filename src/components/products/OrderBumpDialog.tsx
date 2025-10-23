@@ -127,21 +127,12 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
         return;
       }
 
-      // Get current max position
-      // Get the selected product and offer details
-      const selectedProduct = products.find(p => p.id === selectedProductId);
-      const selectedOffer = offers.find(o => o.id === selectedOfferId);
-      
-      if (!selectedProduct) {
-        throw new Error("Produto não encontrado");
-      }
-
       // Add order bump to all checkouts of this product
+      // Save product_id and offer_id references instead of duplicating data
       const orderBumps = checkouts.map(checkout => ({
         checkout_id: checkout.id,
-        name: selectedOffer ? selectedOffer.name : selectedProduct.name,
-        price: selectedOffer ? selectedOffer.price : selectedProduct.price,
-        description: selectedOffer ? `Oferta: ${selectedOffer.name}` : undefined,
+        product_id: selectedProductId,
+        offer_id: selectedOfferId,
         active: true,
       }));
 

@@ -731,7 +731,11 @@ export const CheckoutPreview = ({
                   <input
                     type="checkbox"
                     checked={selectedBumps.has(bump.id)}
-                    onChange={() => toggleBump(bump.id)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleBump(bump.id);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
                     className="mt-1"
                     style={{ accentColor: customization.design.colors.accent }}
                   />

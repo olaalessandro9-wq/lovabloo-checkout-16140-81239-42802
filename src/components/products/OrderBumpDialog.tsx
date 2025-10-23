@@ -53,8 +53,6 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
   useEffect(() => {
     if (open) {
       loadProducts();
-      // Reset form when dialog opens
-      resetForm();
     }
   }, [open, productId]);
 
@@ -204,9 +202,9 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
       if (insertError) throw insertError;
 
       toast.success("Order bump adicionado com sucesso");
+      resetForm(); // Reset before closing
       onSuccess();
       onOpenChange(false);
-      resetForm();
     } catch (error: any) {
       console.error("Error saving order bump:", error);
       
@@ -221,7 +219,6 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
   };
 
   const handleCancel = () => {
-    resetForm();
     onOpenChange(false);
   };
 
@@ -485,11 +482,7 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
                       )}
                     </div>
 
-                    {selectedOffer && (
-                      <p className="text-xs text-primary">
-                        ✓ Oferta especial: {selectedOffer.name}
-                      </p>
-                    )}
+
                   </div>
 
                   {/* Checkbox Adicionar */}

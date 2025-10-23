@@ -188,7 +188,7 @@ const CheckoutCustomizer = () => {
           return {
             id: bump.id,
             name: bump.custom_title || bump.products?.name || "Produto não encontrado",
-            description: bump.custom_description || (bump.offers?.name ? `Oferta: ${bump.offers.name}` : undefined),
+            description: bump.custom_description || undefined,
             price: finalPrice,
             original_price: bump.discount_enabled ? originalPrice : null,
             image_url: bump.show_image ? bump.products?.image_url : null,

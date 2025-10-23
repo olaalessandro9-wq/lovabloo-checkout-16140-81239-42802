@@ -50,11 +50,49 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
   const [customDescription, setCustomDescription] = useState("Adicione a compra");
   const [showImage, setShowImage] = useState(true);
 
+  const STORAGE_KEY = `orderBumpForm_${productId}`;
+
+  // Load form data from localStorage when dialog opens
   useEffect(() => {
     if (open) {
       loadProducts();
+      
+      // Try to load saved form data
+      const savedData = localStorage.getItem(STORAGE_KEY);
+      if (savedData) {
+        try {
+          const parsed = JSON.parse(savedData);
+          setSelectedProductId(parsed.selectedProductId || "");
+          setSelectedOfferId(parsed.selectedOfferId || "");
+          setDiscountEnabled(parsed.discountEnabled || false);
+          setDiscountPrice(parsed.discountPrice || "0,00");
+          setCallToAction(parsed.callToAction || "SIM, EU ACEITO ESSA OFERTA ESPECIAL!");
+          setCustomTitle(parsed.customTitle || "");
+          setCustomDescription(parsed.customDescription || "Adicione a compra");
+          setShowImage(parsed.showImage !== undefined ? parsed.showImage : true);
+        } catch (e) {
+          console.error("Error loading saved form data:", e);
+        }
+      }
     }
   }, [open, productId]);
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    if (open) {
+      const formData = {
+        selectedProductId,
+        selectedOfferId,
+        discountEnabled,
+        discountPrice,
+        callToAction,
+        customTitle,
+        customDescription,
+        showImage,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+    }
+  }, [open, selectedProductId, selectedOfferId, discountEnabled, discountPrice, callToAction, customTitle, customDescription, showImage, STORAGE_KEY]);
 
   useEffect(() => {
     if (selectedProductId) {
@@ -82,6 +120,9 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
     setCustomTitle("");
     setCustomDescription("Adicione a compra");
     setShowImage(true);
+    
+    // Clear localStorage
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   const loadProducts = async () => {
@@ -219,6 +260,7 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
   };
 
   const handleCancel = () => {
+    resetForm(); // Clear form and localStorage when closing
     onOpenChange(false);
   };
 
@@ -236,26 +278,16 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto bg-card border-border">
         <DialogHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <DialogTitle className="text-foreground text-xl flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary/20 rounded flex items-center justify-center">
-                  <Gift className="w-4 h-4 text-primary" />
-                </div>
-                Adicionar Order Bump
-              </DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Selecione um produto para oferecer como complemento
-              </p>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={handleCancel}
-              className="h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+          <div>
+            <DialogTitle className="text-foreground text-xl flex items-center gap-2">
+              <div className="w-8 h-8 bg-primary/20 rounded flex items-center justify-center">
+                <Gift className="w-4 h-4 text-primary" />
+              </div>
+              Adicionar Order Bump
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Selecione um produto para oferecer como complemento
+            </p>
           </div>
         </DialogHeader>
         

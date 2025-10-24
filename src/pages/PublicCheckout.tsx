@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { parseJsonSafely } from "@/lib/utils";
 
 interface CheckoutData {
   id: string;
@@ -19,6 +20,16 @@ interface CheckoutData {
     price: number;
     image_url: string | null;
   };
+  // Campos de personalização
+  font?: string;
+  background_color?: string;
+  text_color?: string;
+  primary_color?: string;
+  button_color?: string;
+  button_text_color?: string;
+  components?: any[];
+  top_components?: any[];
+  bottom_components?: any[];
 }
 
 const PublicCheckout = () => {
@@ -54,6 +65,15 @@ const PublicCheckout = () => {
           name,
           slug,
           visits_count,
+          font,
+          background_color,
+          text_color,
+          primary_color,
+          button_color,
+          button_text_color,
+          components,
+          top_components,
+          bottom_components,
           products (
             id,
             name,
@@ -88,6 +108,16 @@ const PublicCheckout = () => {
           price: data.products.price,
           image_url: data.products.image_url,
         },
+        // Campos de personalização
+        font: data.font,
+        background_color: data.background_color,
+        text_color: data.text_color,
+        primary_color: data.primary_color,
+        button_color: data.button_color,
+        button_text_color: data.button_text_color,
+        components: parseJsonSafely(data.components, []),
+        top_components: parseJsonSafely(data.top_components, []),
+        bottom_components: parseJsonSafely(data.bottom_components, []),
       });
     } catch (error) {
       console.error("Error:", error);
@@ -173,7 +203,14 @@ const PublicCheckout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
+    <div 
+      className="min-h-screen py-12 px-4"
+      style={{
+        backgroundColor: checkout.background_color || '#FFFFFF',
+        color: checkout.text_color || '#000000',
+        fontFamily: checkout.font || 'Inter',
+      }}
+    >
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
         {/* Coluna Esquerda: Informações do Produto */}
         <div className="space-y-6">
@@ -185,13 +222,22 @@ const PublicCheckout = () => {
             />
           )}
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-4">
+            <h1 
+              className="text-3xl font-bold mb-4"
+              style={{ color: checkout.text_color || '#000000' }}
+            >
               {checkout.product.name}
             </h1>
-            <p className="text-muted-foreground mb-6">
+            <p 
+              className="mb-6"
+              style={{ color: checkout.text_color || '#6B7280' }}
+            >
               {checkout.product.description}
             </p>
-            <div className="text-4xl font-bold text-primary">
+            <div 
+              className="text-4xl font-bold"
+              style={{ color: checkout.primary_color || '#10B981' }}
+            >
               R$ {checkout.product.price.toFixed(2)}
             </div>
           </div>
@@ -199,7 +245,10 @@ const PublicCheckout = () => {
 
         {/* Coluna Direita: Formulário de Checkout */}
         <div className="bg-card border border-border rounded-lg p-6">
-          <h2 className="text-2xl font-bold text-foreground mb-6">
+          <h2 
+            className="text-2xl font-bold mb-6"
+            style={{ color: checkout.text_color || '#000000' }}
+          >
             Finalizar Compra
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -247,7 +296,15 @@ const PublicCheckout = () => {
               />
             </div>
 
-            <Button type="submit" className="w-full" size="lg">
+            <Button 
+              type="submit" 
+              className="w-full" 
+              size="lg"
+              style={{
+                backgroundColor: checkout.button_color || '#10B981',
+                color: checkout.button_text_color || '#FFFFFF',
+              }}
+            >
               Finalizar Compra - R$ {checkout.product.price.toFixed(2)}
             </Button>
 

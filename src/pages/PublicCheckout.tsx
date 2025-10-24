@@ -221,7 +221,7 @@ const PublicCheckout = () => {
               {/* Header do Produto - Integrado com "Seus dados" */}
               <div className="bg-white rounded-xl shadow-sm p-5 mb-4">
                 {/* Cabeçalho do Produto */}
-                <div className="flex items-center gap-3 pb-5 mb-5 border-b border-gray-200">
+                <div className="flex items-center gap-3 mb-5">
                   {checkout.product?.image_url ? (
                     <img 
                       src={checkout.product.image_url} 
@@ -536,19 +536,6 @@ const PublicCheckout = () => {
                   </button>
                 </div>
 
-                {/* Total Destacado */}
-                <div className="bg-white rounded-xl shadow-sm p-5">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-base font-semibold text-gray-900 tracking-tight">Total</span>
-                    <div className="text-right">
-                      <p className="text-xl font-bold text-gray-900">
-                        R$ {((checkout.product?.price / 100 || 0) + 0.99).toFixed(2).replace('.', ',')}
-                      </p>
-                      <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">à vista no {selectedPayment === 'pix' ? 'PIX' : 'Cartão de Crédito'}</p>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Card de Informações Legais - Unificado com "Compra segura" */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                   {/* Cabeçalho "Compra segura" */}
@@ -585,6 +572,19 @@ const PublicCheckout = () => {
                           Termos de serviço
                         </a>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total Destacado */}
+                <div className="bg-white rounded-xl shadow-sm p-5">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-base font-semibold text-gray-900 tracking-tight">Total</span>
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-gray-900">
+                        R$ {((checkout.product?.price / 100 || 0) + 0.99).toFixed(2).replace('.', ',')}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">à vista no {selectedPayment === 'pix' ? 'PIX' : 'Cartão de Crédito'}</p>
                     </div>
                   </div>
                 </div>

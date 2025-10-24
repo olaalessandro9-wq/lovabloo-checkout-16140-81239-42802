@@ -126,16 +126,16 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
   };
 
   const loadProducts = async () => {
+    setLoadingProducts(true);
+    
     try {
-      setLoadingProducts(true);
-      
-      // Load all active products except the current one
+      // @ts-ignore
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, price, image_url")
+        .select("*")
         .neq("id", productId)
         .eq("active", true)
-        .order("name", { ascending: true });
+        .order("name");
 
       if (error) throw error;
 
@@ -150,11 +150,12 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
 
   const loadOffers = async (prodId: string) => {
     try {
+      // @ts-ignore
       const { data, error } = await supabase
         .from("offers")
-        .select("id, name, price")
+        .select("*")
         .eq("product_id", prodId)
-        .order("created_at", { ascending: true });
+        .order("created_at");
 
       if (error) throw error;
 

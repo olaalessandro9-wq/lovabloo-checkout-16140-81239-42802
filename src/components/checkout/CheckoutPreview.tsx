@@ -276,7 +276,7 @@ const ComponentRenderer = ({
           className={`p-6 rounded-lg ${baseClasses}`}
           onClick={onClick}
           style={{
-            backgroundColor: customization.design.colors.formBackground || customization.design.colors.form?.background || "#F9FAFB",
+            backgroundColor: customization.design.colors.form?.background || "#F9FAFB",
           }}
         >
           <div className="flex gap-4">
@@ -329,7 +329,7 @@ const ComponentRenderer = ({
           className={`p-4 rounded-lg ${baseClasses}`}
           onClick={onClick}
           style={{
-            backgroundColor: customization.design.colors.formBackground || customization.design.colors.form?.background || "#F9FAFB",
+            backgroundColor: customization.design.colors.form?.background || "#F9FAFB",
           }}
         >
           {embedUrl ? (
@@ -582,7 +582,7 @@ export const CheckoutPreview = ({
         <div
           className="p-6 rounded-2xl"
           style={{ 
-            backgroundColor: customization.design.colors.formBackground || customization.design.colors.form?.background || "#F9FAFB",
+            backgroundColor: customization.design.colors.form?.background || "#F9FAFB",
           }}
         >
           <div className="flex items-start gap-4">
@@ -630,7 +630,7 @@ export const CheckoutPreview = ({
         <div
           className="p-6 rounded-2xl space-y-4"
           style={{ 
-            backgroundColor: customization.design.colors.formBackground || customization.design.colors.form?.background || "#F9FAFB",
+            backgroundColor: customization.design.colors.form?.background || "#F9FAFB",
           }}
         >
           <h4 
@@ -712,7 +712,7 @@ export const CheckoutPreview = ({
         <div
           className="p-6 rounded-2xl space-y-4"
           style={{ 
-            backgroundColor: customization.design.colors.formBackground || customization.design.colors.form?.background || "#F9FAFB",
+            backgroundColor: customization.design.colors.form?.background || "#F9FAFB",
           }}
         >
           <h4 
@@ -736,10 +736,10 @@ export const CheckoutPreview = ({
               className="p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105"
               style={{
                 borderColor: selectedPayment === "pix" 
-                  ? (customization.design.colors.active || "#10B981")
+                  ? customization.design.colors.accent
                   : "#E5E7EB",
                 backgroundColor: selectedPayment === "pix"
-                  ? (customization.design.colors.active || "#10B981")
+                  ? customization.design.colors.accent
                   : customization.design.colors.background,
                 color: selectedPayment === "pix" 
                   ? "#FFFFFF" 
@@ -751,7 +751,7 @@ export const CheckoutPreview = ({
                   size={28} 
                   color={selectedPayment === "pix" 
                     ? "#FFFFFF" 
-                    : (customization.design.colors.icon || customization.design.colors.primaryText)
+                    : customization.design.colors.primaryText
                   }
                 />
               </div>
@@ -763,10 +763,10 @@ export const CheckoutPreview = ({
               className="p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105"
               style={{
                 borderColor: selectedPayment === "card" 
-                  ? (customization.design.colors.active || "#10B981")
+                  ? customization.design.colors.accent
                   : "#E5E7EB",
                 backgroundColor: selectedPayment === "card"
-                  ? (customization.design.colors.active || "#10B981")
+                  ? customization.design.colors.accent
                   : customization.design.colors.background,
                 color: selectedPayment === "card" 
                   ? "#FFFFFF" 
@@ -778,7 +778,7 @@ export const CheckoutPreview = ({
                   size={28}
                   color={selectedPayment === "card" 
                     ? "#FFFFFF" 
-                    : (customization.design.colors.icon || customization.design.colors.primaryText)
+                    : customization.design.colors.primaryText
                   }
                 />
               </div>
@@ -796,10 +796,10 @@ export const CheckoutPreview = ({
                 className="p-4 rounded-2xl border-2 transition-all duration-200 cursor-pointer hover:scale-[1.01] hover:shadow-md"
                 style={{
                   backgroundColor: selectedBumps.has(bump.id) 
-                    ? (customization.design.colors.active || "#10B981") + "10" 
+                    ? customization.design.colors.accent + "10" 
                     : customization.design.colors.background,
                   borderColor: selectedBumps.has(bump.id) 
-                    ? (customization.design.colors.active || "#10B981") 
+                    ? customization.design.colors.accent 
                     : "#E5E7EB",
                 }}
                 onClick={() => toggleBump(bump.id)}
@@ -835,7 +835,7 @@ export const CheckoutPreview = ({
                     }}
                     onClick={(e) => e.stopPropagation()}
                     className="mt-1"
-                    style={{ accentColor: customization.design.colors.active || customization.design.colors.accent }}
+                    style={{ accentColor: customization.design.colors.accent }}
                   />
                   
                   {/* Imagem (condicional) */}
@@ -910,7 +910,7 @@ export const CheckoutPreview = ({
         <div
           className="p-6 rounded-2xl"
           style={{ 
-            backgroundColor: customization.design.colors.formBackground || customization.design.colors.form?.background || "#F9FAFB",
+            backgroundColor: customization.design.colors.form?.background || "#F9FAFB",
           }}
         >
           <div className="flex justify-between items-center mb-4">

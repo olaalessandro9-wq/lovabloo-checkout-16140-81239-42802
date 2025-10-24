@@ -213,7 +213,6 @@ export const CheckoutCustomizationPanel = ({
                   max={50}
                   placeholder="8"
                 />
-                </div>
               </div>
             </>
           )}

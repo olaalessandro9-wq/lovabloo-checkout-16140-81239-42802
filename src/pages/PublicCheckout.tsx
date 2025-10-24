@@ -9,7 +9,7 @@ import { ImageIcon } from "@/components/icons/ImageIcon";
 import { LockIcon } from "@/components/icons/LockIcon";
 import { PixIcon } from "@/components/icons/PixIcon";
 import { CreditCardIcon } from "@/components/icons/CreditCardIcon";
-import { CheckCircleIcon } from "@/components/icons/CheckCircleIcon";
+import { CheckCircleFilledIcon } from "@/components/icons/CheckCircleFilledIcon";
 
 interface CheckoutData {
   id: string;
@@ -206,14 +206,14 @@ const PublicCheckout = () => {
   return (
     <>
       {checkout.top_components && Array.isArray(checkout.top_components) && checkout.top_components.length > 0 && (
-        <div className="w-full" style={{ fontFamily: checkout.font || 'Inter' }}>
+        <div className="w-full" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
           {checkout.top_components.map((component: any, index: number) => (
             <CheckoutComponentRenderer key={index} component={component} />
           ))}
         </div>
       )}
 
-      <div className="min-h-screen bg-gray-50" style={{ fontFamily: checkout.font || 'Inter' }}>
+      <div className="min-h-screen bg-gray-50" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Coluna Principal - Formulário (Esquerda no Desktop) */}
@@ -234,7 +234,7 @@ const PublicCheckout = () => {
                     </div>
                   )}
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900 leading-tight">{checkout.product?.name}</h1>
+                    <h1 className="text-xl font-bold text-gray-900 leading-tight tracking-tight">{checkout.product?.name}</h1>
                     <p className="text-lg font-semibold text-gray-900 mt-1">
                       R$ {(checkout.product?.price / 100)?.toFixed(2).replace('.', ',')} <span className="text-sm font-normal text-gray-600">à vista</span>
                     </p>
@@ -242,7 +242,7 @@ const PublicCheckout = () => {
                 </div>
 
                 {/* Formulário de Dados */}
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 tracking-tight">
                   <User className="w-5 h-5" />
                   Seus dados
                 </h2>
@@ -304,7 +304,7 @@ const PublicCheckout = () => {
 
               {/* Métodos de Pagamento */}
               <div className="bg-white rounded-xl shadow-sm p-5">
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 tracking-tight">
                   <Wallet className="w-5 h-5" />
                   Pagamento
                 </h2>
@@ -343,20 +343,20 @@ const PublicCheckout = () => {
 
                 {selectedPayment === 'pix' && (
                   <>
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-1.5 mb-4">
-                      <div className="flex items-start gap-2">
-                        <CheckCircleIcon className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-xs text-green-800 leading-relaxed">Liberação imediata</span>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-2 mb-4">
+                      <div className="flex items-start gap-2.5">
+                        <CheckCircleFilledIcon size={18} color="#10B981" className="flex-shrink-0 mt-0.5" />
+                        <span className="text-xs text-green-800 leading-relaxed font-medium">Liberação imediata</span>
                       </div>
-                      <div className="flex items-start gap-2">
-                        <CheckCircleIcon className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-xs text-green-800 leading-relaxed">É simples, só usar o aplicativo de seu banco para pagar Pix</span>
+                      <div className="flex items-start gap-2.5">
+                        <CheckCircleFilledIcon size={18} color="#10B981" className="flex-shrink-0 mt-0.5" />
+                        <span className="text-xs text-green-800 leading-relaxed font-medium">É simples, só usar o aplicativo de seu banco para pagar Pix</span>
                       </div>
                     </div>
 
                     {/* Resumo do Pedido - PIX */}
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-900 mb-3 text-sm">Resumo do pedido</h4>
+                      <h4 className="font-semibold text-gray-900 mb-3 text-sm tracking-tight">Resumo do pedido</h4>
                       
                       <div className="flex items-start gap-3 mb-3">
                         {checkout.product?.image_url ? (
@@ -404,7 +404,7 @@ const PublicCheckout = () => {
                   <>
                     {/* Resumo do Pedido - Cartão de Crédito */}
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-900 mb-3 text-sm">Resumo do pedido</h4>
+                      <h4 className="font-semibold text-gray-900 mb-3 text-sm tracking-tight">Resumo do pedido</h4>
                       
                       <div className="flex items-start gap-3 mb-3">
                         {checkout.product?.image_url ? (
@@ -452,7 +452,7 @@ const PublicCheckout = () => {
 
                 <button
                   onClick={handleSubmit}
-                  className="w-full mt-5 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90"
+                  className="w-full mt-5 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
                   style={{
                     backgroundColor: checkout.button_color || '#10B981',
                     color: checkout.button_text_color || '#FFFFFF'
@@ -474,7 +474,7 @@ const PublicCheckout = () => {
 
                     {/* Compra Segura com Check */}
                     <div className="flex items-center justify-center gap-2">
-                      <CheckCircleIcon className="w-4 h-4 text-green-600" />
+                      <CheckCircleFilledIcon size={16} color="#10B981" />
                       <span className="text-xs font-semibold text-gray-900">Compra 100% segura</span>
                     </div>
 
@@ -509,14 +509,6 @@ const PublicCheckout = () => {
             {/* Sidebar - Resumo do Pedido (Direita no Desktop) */}
             <div className="lg:col-span-4">
               <div className="lg:sticky lg:top-2 space-y-3">
-                {/* Card Compra Segura - Sem aparência de botão */}
-                <div className="bg-green-600 rounded-xl px-5 py-3 text-center">
-                  <div className="flex items-center justify-center gap-2.5">
-                    <LockIcon className="w-5 h-5" color="#FFFFFF" />
-                    <span className="font-bold text-white text-sm">Compra segura</span>
-                  </div>
-                </div>
-
                 {/* Mini Preview do Produto */}
                 <div className="bg-white rounded-xl shadow-sm p-4">
                   <div className="flex items-center gap-3 mb-2.5">
@@ -532,7 +524,7 @@ const PublicCheckout = () => {
                       </div>
                     )}
                     <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 text-sm leading-tight">{checkout.product?.name}</h4>
+                      <h4 className="font-semibold text-gray-900 text-sm leading-tight tracking-tight">{checkout.product?.name}</h4>
                       <p className="text-base font-bold text-gray-900 mt-0.5">
                         R$ {(checkout.product?.price / 100)?.toFixed(2).replace('.', ',')}
                         <span className="text-xs font-normal text-gray-600"> à vista</span>
@@ -547,7 +539,7 @@ const PublicCheckout = () => {
                 {/* Total Destacado */}
                 <div className="bg-white rounded-xl shadow-sm p-5">
                   <div className="flex justify-between items-baseline">
-                    <span className="text-base font-semibold text-gray-900">Total</span>
+                    <span className="text-base font-semibold text-gray-900 tracking-tight">Total</span>
                     <div className="text-right">
                       <p className="text-xl font-bold text-gray-900">
                         R$ {((checkout.product?.price / 100 || 0) + 0.99).toFixed(2).replace('.', ',')}
@@ -557,31 +549,42 @@ const PublicCheckout = () => {
                   </div>
                 </div>
 
-                {/* Card de Informações Legais - Unificado sem divisórias */}
-                <div className="bg-white rounded-xl shadow-sm p-4 text-center">
-                  <div className="space-y-3">
-                    {/* Logo/Nome + Processador */}
-                    <p className="text-xs text-gray-700 leading-relaxed">
-                      <span className="font-bold text-gray-900">Rise Checkout</span> está processando este pagamento para o vendedor{' '}
-                      <span className="font-semibold text-gray-900">
-                        {checkout.seller_name || checkout.product?.support_name || 'Vendedor'}
-                      </span>
-                    </p>
+                {/* Card de Informações Legais - Unificado com "Compra segura" */}
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                  {/* Cabeçalho "Compra segura" */}
+                  <div className="bg-green-600 px-5 py-3 text-center">
+                    <div className="flex items-center justify-center gap-2.5">
+                      <LockIcon className="w-5 h-5" color="#FFFFFF" />
+                      <span className="font-bold text-white text-sm tracking-tight">Compra segura</span>
+                    </div>
+                  </div>
+                  
+                  {/* Conteúdo das Informações Legais */}
+                  <div className="p-4 text-center">
+                    <div className="space-y-3">
+                      {/* Logo/Nome + Processador */}
+                      <p className="text-xs text-gray-700 leading-relaxed">
+                        <span className="font-bold text-gray-900">Rise Checkout</span> está processando este pagamento para o vendedor{' '}
+                        <span className="font-semibold text-gray-900">
+                          {checkout.seller_name || checkout.product?.support_name || 'Vendedor'}
+                        </span>
+                      </p>
 
-                    {/* reCAPTCHA */}
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      Este site é protegido pelo reCAPTCHA do Google
-                    </p>
+                      {/* reCAPTCHA */}
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        Este site é protegido pelo reCAPTCHA do Google
+                      </p>
 
-                    {/* Links Legais */}
-                    <div className="flex items-center justify-center gap-2 text-xs">
-                      <a href="#" className="text-blue-600 hover:underline">
-                        Política de privacidade
-                      </a>
-                      <span className="text-gray-400">e</span>
-                      <a href="#" className="text-blue-600 hover:underline">
-                        Termos de serviço
-                      </a>
+                      {/* Links Legais */}
+                      <div className="flex items-center justify-center gap-2 text-xs">
+                        <a href="#" className="text-blue-600 hover:underline">
+                          Política de privacidade
+                        </a>
+                        <span className="text-gray-400">e</span>
+                        <a href="#" className="text-blue-600 hover:underline">
+                          Termos de serviço
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -593,7 +596,7 @@ const PublicCheckout = () => {
       </div>
 
       {checkout.bottom_components && Array.isArray(checkout.bottom_components) && checkout.bottom_components.length > 0 && (
-        <div className="w-full" style={{ fontFamily: checkout.font || 'Inter' }}>
+        <div className="w-full" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
           {checkout.bottom_components.map((component: any, index: number) => (
             <CheckoutComponentRenderer key={index} component={component} />
           ))}

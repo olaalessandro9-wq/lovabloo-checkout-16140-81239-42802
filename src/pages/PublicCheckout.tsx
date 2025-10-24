@@ -214,48 +214,48 @@ const PublicCheckout = () => {
       )}
 
       <div className="min-h-screen bg-gray-50" style={{ fontFamily: checkout.font || 'Inter' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
-          {/* Header do Produto - Desktop Only (similar ao Cakto) */}
-          <div className="hidden lg:flex items-center gap-4 mb-8 bg-white rounded-lg p-6 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
+          {/* Header do Produto - Desktop Only */}
+          <div className="hidden lg:flex items-center gap-3 mb-6 bg-white rounded-lg p-4 shadow-sm">
             {checkout.product?.image_url ? (
               <img 
                 src={checkout.product.image_url} 
                 alt={checkout.product?.name || 'Produto'}
-                className="w-20 h-20 object-cover rounded-lg"
+                className="w-16 h-16 object-cover rounded-lg"
               />
             ) : (
-              <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                <ImageIcon className="w-8 h-8 text-gray-400" />
+              <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                <ImageIcon className="w-6 h-6 text-gray-400" />
               </div>
             )}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{checkout.product?.name}</h1>
-              <p className="text-xl font-semibold text-gray-900 mt-1">
+              <h1 className="text-xl font-bold text-gray-900">{checkout.product?.name}</h1>
+              <p className="text-lg font-semibold text-gray-900 mt-0.5">
                 R$ {(checkout.product?.price / 100)?.toFixed(2).replace('.', ',')} à vista
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Coluna Principal - Formulário (Esquerda no Desktop) */}
-            <div className="lg:col-span-7">
+            <div className="lg:col-span-8">
               {/* Cabeçalho Mobile */}
-              <div className="lg:hidden mb-6 bg-white rounded-lg p-6 shadow-sm">
-                <div className="flex items-start gap-4">
+              <div className="lg:hidden mb-4 bg-white rounded-lg p-4 shadow-sm">
+                <div className="flex items-start gap-3">
                   {checkout.product?.image_url ? (
                     <img 
                       src={checkout.product.image_url} 
                       alt={checkout.product?.name || 'Produto'}
-                      className="w-20 h-20 object-cover rounded-lg"
+                      className="w-16 h-16 object-cover rounded-lg"
                     />
                   ) : (
-                    <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
-                      <ImageIcon className="w-8 h-8 text-gray-400" />
+                    <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <ImageIcon className="w-6 h-6 text-gray-400" />
                     </div>
                   )}
                   <div className="flex-1">
-                    <h2 className="text-lg font-semibold text-gray-900">{checkout.product?.name}</h2>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                    <h2 className="text-base font-semibold text-gray-900">{checkout.product?.name}</h2>
+                    <p className="text-xl font-bold text-gray-900 mt-1">
                       R$ {(checkout.product?.price / 100)?.toFixed(2).replace('.', ',')}
                       <span className="text-sm font-normal text-gray-600"> à vista</span>
                     </p>
@@ -264,60 +264,60 @@ const PublicCheckout = () => {
               </div>
 
               {/* Formulário de Dados */}
-              <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <div className="bg-white rounded-lg shadow-sm p-5 mb-4">
+                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <User className="w-5 h-5" />
                   Seus dados
                 </h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Nome completo
                     </label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Email
                     </label>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       CPF/CNPJ
                     </label>
                     <input
                       type="text"
                       value={formData.document}
                       onChange={(e) => setFormData({...formData, document: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Celular
                     </label>
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                       placeholder="+55 (00) 00000-0000"
                       required
                     />
@@ -326,82 +326,82 @@ const PublicCheckout = () => {
               </div>
 
               {/* Métodos de Pagamento */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <div className="bg-white rounded-lg shadow-sm p-5">
+                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <Wallet className="w-5 h-5" />
                   Pagamento
                 </h2>
                 
-                <div className="space-y-3 mb-6">
+                <div className="space-y-2.5 mb-4">
                   <button
                     type="button"
                     onClick={() => setSelectedPayment('pix')}
-                    className={`w-full px-6 py-4 rounded-lg border-2 transition-all text-left ${
+                    className={`w-full px-4 py-3 rounded-lg border-2 transition-all text-left ${
                       selectedPayment === 'pix' 
                         ? 'border-green-500 bg-green-50' 
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <PixIcon className="w-6 h-6" color="#00A868" />
-                      <span className="font-semibold text-gray-900">PIX</span>
+                      <PixIcon className="w-5 h-5" color="#00A868" />
+                      <span className="font-semibold text-gray-900 text-sm">PIX</span>
                     </div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setSelectedPayment('credit_card')}
-                    className={`w-full px-6 py-4 rounded-lg border-2 transition-all text-left ${
+                    className={`w-full px-4 py-3 rounded-lg border-2 transition-all text-left ${
                       selectedPayment === 'credit_card' 
                         ? 'border-blue-500 bg-blue-50' 
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <CreditCardIcon className="w-6 h-6" color="#3B82F6" />
-                      <span className="font-semibold text-gray-900">Cartão de Crédito</span>
+                      <CreditCardIcon className="w-5 h-5" color="#3B82F6" />
+                      <span className="font-semibold text-gray-900 text-sm">Cartão de Crédito</span>
                     </div>
                   </button>
                 </div>
 
                 {selectedPayment === 'pix' && (
                   <>
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2 mb-4">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-1.5 mb-4">
                       <div className="flex items-start gap-2">
-                        <CheckCircleIcon className="w-5 h-5 text-green-600 mt-0.5" />
-                        <span className="text-sm text-green-800">Liberação imediata</span>
+                        <CheckCircleIcon className="w-4 h-4 text-green-600 mt-0.5" />
+                        <span className="text-xs text-green-800">Liberação imediata</span>
                       </div>
                       <div className="flex items-start gap-2">
-                        <CheckCircleIcon className="w-5 h-5 text-green-600 mt-0.5" />
-                        <span className="text-sm text-green-800">É simples, só usar o aplicativo de seu banco para pagar Pix</span>
+                        <CheckCircleIcon className="w-4 h-4 text-green-600 mt-0.5" />
+                        <span className="text-xs text-green-800">É simples, só usar o aplicativo de seu banco para pagar Pix</span>
                       </div>
                     </div>
 
                     {/* Resumo do Pedido - PIX */}
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-900 mb-4">Resumo do pedido</h4>
+                      <h4 className="font-semibold text-gray-900 mb-3 text-sm">Resumo do pedido</h4>
                       
-                      <div className="flex items-start gap-3 mb-4">
+                      <div className="flex items-start gap-3 mb-3">
                         {checkout.product?.image_url ? (
                           <img 
                             src={checkout.product.image_url} 
                             alt={checkout.product?.name || 'Produto'}
-                            className="w-16 h-16 object-cover rounded-lg"
+                            className="w-14 h-14 object-cover rounded-lg"
                           />
                         ) : (
-                          <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <ImageIcon className="w-6 h-6 text-gray-400" />
+                          <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <ImageIcon className="w-5 h-5 text-gray-400" />
                           </div>
                         )}
                         <div className="flex-1">
                           <h5 className="text-sm font-medium text-gray-900">{checkout.product?.name}</h5>
-                          <p className="text-lg font-bold text-gray-900 mt-1">
+                          <p className="text-base font-bold text-gray-900 mt-0.5">
                             R$ {(checkout.product?.price / 100)?.toFixed(2).replace('.', ',')}
                           </p>
                         </div>
                       </div>
 
-                      <div className="space-y-2 text-sm border-t border-gray-300 pt-3">
+                      <div className="space-y-1.5 text-sm border-t border-gray-300 pt-2.5">
                         <div className="flex justify-between">
                           <span className="text-gray-600">Produto</span>
                           <span className="text-gray-900 font-medium">
@@ -412,7 +412,7 @@ const PublicCheckout = () => {
                           <span className="text-gray-600">Taxa de serviço</span>
                           <span className="text-gray-900 font-medium">R$ 0,99</span>
                         </div>
-                        <div className="flex justify-between text-base font-bold pt-2 border-t border-gray-300">
+                        <div className="flex justify-between text-sm font-bold pt-1.5 border-t border-gray-300">
                           <span className="text-gray-900">Total</span>
                           <span className="text-gray-900">
                             R$ {((checkout.product?.price / 100 || 0) + 0.99).toFixed(2).replace('.', ',')}
@@ -427,29 +427,29 @@ const PublicCheckout = () => {
                   <>
                     {/* Resumo do Pedido - Cartão de Crédito */}
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-900 mb-4">Resumo do pedido</h4>
+                      <h4 className="font-semibold text-gray-900 mb-3 text-sm">Resumo do pedido</h4>
                       
-                      <div className="flex items-start gap-3 mb-4">
+                      <div className="flex items-start gap-3 mb-3">
                         {checkout.product?.image_url ? (
                           <img 
                             src={checkout.product.image_url} 
                             alt={checkout.product?.name || 'Produto'}
-                            className="w-16 h-16 object-cover rounded-lg"
+                            className="w-14 h-14 object-cover rounded-lg"
                           />
                         ) : (
-                          <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <ImageIcon className="w-6 h-6 text-gray-400" />
+                          <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
+                            <ImageIcon className="w-5 h-5 text-gray-400" />
                           </div>
                         )}
                         <div className="flex-1">
                           <h5 className="text-sm font-medium text-gray-900">{checkout.product?.name}</h5>
-                          <p className="text-lg font-bold text-gray-900 mt-1">
+                          <p className="text-base font-bold text-gray-900 mt-0.5">
                             R$ {(checkout.product?.price / 100)?.toFixed(2).replace('.', ',')}
                           </p>
                         </div>
                       </div>
 
-                      <div className="space-y-2 text-sm border-t border-gray-300 pt-3">
+                      <div className="space-y-1.5 text-sm border-t border-gray-300 pt-2.5">
                         <div className="flex justify-between">
                           <span className="text-gray-600">Produto</span>
                           <span className="text-gray-900 font-medium">
@@ -460,7 +460,7 @@ const PublicCheckout = () => {
                           <span className="text-gray-600">Taxa de serviço</span>
                           <span className="text-gray-900 font-medium">R$ 0,99</span>
                         </div>
-                        <div className="flex justify-between text-base font-bold pt-2 border-t border-gray-300">
+                        <div className="flex justify-between text-sm font-bold pt-1.5 border-t border-gray-300">
                           <span className="text-gray-900">Total</span>
                           <span className="text-gray-900">
                             R$ {((checkout.product?.price / 100 || 0) + 0.99).toFixed(2).replace('.', ',')}
@@ -468,14 +468,14 @@ const PublicCheckout = () => {
                         </div>
                       </div>
 
-                      <p className="text-xs text-gray-600 mt-3">à vista no Cartão de Crédito</p>
+                      <p className="text-xs text-gray-600 mt-2">à vista no Cartão de Crédito</p>
                     </div>
                   </>
                 )}
 
                 <button
                   onClick={handleSubmit}
-                  className="w-full mt-6 py-4 rounded-lg font-bold text-lg transition-all"
+                  className="w-full mt-5 py-3.5 rounded-lg font-bold text-base transition-all"
                   style={{
                     backgroundColor: checkout.button_color || '#10B981',
                     color: checkout.button_text_color || '#FFFFFF'
@@ -485,9 +485,9 @@ const PublicCheckout = () => {
                 </button>
 
                 {/* Card de Informações Legais - Abaixo do Botão */}
-                <div className="bg-white rounded-lg shadow-sm p-5 mt-6 space-y-3 text-center border border-gray-200">
+                <div className="bg-white rounded-lg shadow-sm p-4 mt-5 space-y-2.5 text-center border border-gray-200">
                   {/* Logo/Nome + Processador */}
-                  <div className="pb-3 border-b border-gray-200">
+                  <div className="pb-2 border-b border-gray-200">
                     <p className="text-xs text-gray-700 leading-relaxed">
                       <span className="font-bold text-gray-900">Rise Checkout</span> está processando este pagamento para o vendedor{' '}
                       <span className="font-semibold text-gray-900">
@@ -497,20 +497,20 @@ const PublicCheckout = () => {
                   </div>
 
                   {/* Compra Segura com Check */}
-                  <div className="flex items-center justify-center gap-2 pb-3 border-b border-gray-200">
+                  <div className="flex items-center justify-center gap-2 pb-2 border-b border-gray-200">
                     <CheckCircleIcon className="w-4 h-4 text-green-600" />
                     <span className="text-xs font-semibold text-gray-900">Compra 100% segura</span>
                   </div>
 
                   {/* reCAPTCHA */}
-                  <div className="pb-3 border-b border-gray-200">
+                  <div className="pb-2 border-b border-gray-200">
                     <p className="text-xs text-gray-600">
                       Este site é protegido pelo reCAPTCHA do Google
                     </p>
                   </div>
 
                   {/* Links Legais */}
-                  <div className="pb-3">
+                  <div className="pb-2">
                     <div className="flex items-center justify-center gap-2 text-xs">
                       <a href="#" className="text-blue-600 hover:underline">
                         Política de privacidade
@@ -523,7 +523,7 @@ const PublicCheckout = () => {
                   </div>
 
                   {/* Termos de Compra */}
-                  <div className="pt-2 border-t border-gray-200">
+                  <div className="pt-1.5 border-t border-gray-200">
                     <p className="text-xs text-gray-600">
                       Ao continuar, você concorda com os{' '}
                       <a href="#" className="text-blue-600 hover:underline">
@@ -536,31 +536,31 @@ const PublicCheckout = () => {
             </div>
 
             {/* Sidebar - Resumo do Pedido (Direita no Desktop) */}
-            <div className="lg:col-span-5">
+            <div className="lg:col-span-4">
               <div className="lg:sticky lg:top-2 space-y-3">
                 {/* Card Compra Segura */}
-                <div className="bg-green-600 rounded-lg px-6 py-3 flex items-center justify-center gap-3">
+                <div className="bg-green-600 rounded-lg px-5 py-2.5 flex items-center justify-center gap-2.5">
                   <LockIcon className="w-5 h-5" color="#FFFFFF" />
-                  <span className="font-bold text-white">Compra 100% segura</span>
+                  <span className="font-bold text-white text-sm">Compra 100% segura</span>
                 </div>
 
                 {/* Mini Preview do Produto */}
                 <div className="bg-white rounded-lg shadow-sm p-4">
-                  <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-3 mb-2.5">
                     {checkout.product?.image_url ? (
                       <img 
                         src={checkout.product.image_url} 
                         alt={checkout.product?.name || 'Produto'}
-                        className="w-16 h-16 object-cover rounded-lg"
+                        className="w-14 h-14 object-cover rounded-lg"
                       />
                     ) : (
-                      <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
-                        <ImageIcon className="w-6 h-6 text-gray-400" />
+                      <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <ImageIcon className="w-5 h-5 text-gray-400" />
                       </div>
                     )}
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-900 text-sm">{checkout.product?.name}</h4>
-                      <p className="text-lg font-bold text-gray-900 mt-1">
+                      <p className="text-base font-bold text-gray-900 mt-0.5">
                         R$ {(checkout.product?.price / 100)?.toFixed(2).replace('.', ',')}
                         <span className="text-xs font-normal text-gray-600"> à vista</span>
                       </p>
@@ -572,20 +572,20 @@ const PublicCheckout = () => {
                 </div>
 
                 {/* Total Destacado */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="bg-white rounded-lg shadow-sm p-5">
                   <div className="flex justify-between items-baseline">
-                    <span className="text-lg font-semibold text-gray-900">Total</span>
+                    <span className="text-base font-semibold text-gray-900">Total</span>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-gray-900">
+                      <p className="text-xl font-bold text-gray-900">
                         R$ {((checkout.product?.price / 100 || 0) + 0.99).toFixed(2).replace('.', ',')}
                       </p>
-                      <p className="text-xs text-gray-600 mt-1">à vista no {selectedPayment === 'pix' ? 'PIX' : 'Cartão de Crédito'}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">à vista no {selectedPayment === 'pix' ? 'PIX' : 'Cartão de Crédito'}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Card de Informações Legais e Processamento */}
-                <div className="bg-white rounded-lg shadow-sm p-4 space-y-3 text-center">
+                <div className="bg-white rounded-lg shadow-sm p-3.5 space-y-2.5 text-center">
                   {/* Logo/Nome + Processador */}
                   <div className="pb-2 border-b border-gray-200">
                     <p className="text-xs text-gray-700 leading-relaxed">
@@ -635,3 +635,4 @@ const PublicCheckout = () => {
 };
 
 export default PublicCheckout;
+

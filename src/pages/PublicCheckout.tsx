@@ -23,6 +23,7 @@ interface CheckoutData {
     description: string;
     price: number;
     image_url: string | null;
+    support_name?: string;
   };
   font?: string;
   background_color?: string;
@@ -83,7 +84,8 @@ const PublicCheckout = () => {
             name,
             description,
             price,
-            image_url
+            image_url,
+            support_name
           )
         `)
         .eq("slug", slug)
@@ -112,6 +114,7 @@ const PublicCheckout = () => {
           description: data.products.description,
           price: data.products.price,
           image_url: data.products.image_url,
+          support_name: data.products.support_name,
         },
         font: data.font,
         background_color: data.background_color,
@@ -212,6 +215,27 @@ const PublicCheckout = () => {
 
       <div className="min-h-screen bg-gray-50" style={{ fontFamily: checkout.font || 'Inter' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-12">
+          {/* Header do Produto - Desktop Only (similar ao Cakto) */}
+          <div className="hidden lg:flex items-center gap-4 mb-8 bg-white rounded-lg p-6 shadow-sm">
+            {checkout.product?.image_url ? (
+              <img 
+                src={checkout.product.image_url} 
+                alt={checkout.product?.name || 'Produto'}
+                className="w-20 h-20 object-cover rounded-lg"
+              />
+            ) : (
+              <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
+                <ImageIcon className="w-8 h-8 text-gray-400" />
+              </div>
+            )}
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{checkout.product?.name}</h1>
+              <p className="text-xl font-semibold text-gray-900 mt-1">
+                R$ {checkout.product?.price?.toFixed(2).replace('.', ',')} à vista
+              </p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             {/* Coluna Principal - Formulário (Esquerda no Desktop) */}
             <div className="lg:col-span-7">
@@ -285,9 +309,6 @@ const PublicCheckout = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Celular
-                      <button type="button" className="ml-2 text-xs text-blue-600 hover:underline">
-                        Porque pedimos esse dado?
-                      </button>
                     </label>
                     <input
                       type="tel"
@@ -362,7 +383,7 @@ const PublicCheckout = () => {
                 </button>
 
                 <div className="mt-4 text-center text-sm text-gray-600">
-                  <p>Rise Checkout está processando este pagamento para o vendedor {checkout.seller_name || 'Vendedor'}</p>
+                  <p>Rise Checkout está processando este pagamento para o vendedor {checkout.seller_name || checkout.product?.support_name || 'Vendedor'}</p>
                 </div>
               </div>
             </div>

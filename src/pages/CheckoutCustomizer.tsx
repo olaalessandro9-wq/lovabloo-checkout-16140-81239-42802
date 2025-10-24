@@ -226,9 +226,9 @@ const CheckoutCustomizer = () => {
           primary_color: customization.design.colors.accent,
           button_color: customization.design.colors.button.background,
           button_text_color: customization.design.colors.button.text,
-          components: customization.rows,
-          top_components: customization.topComponents,
-          bottom_components: customization.bottomComponents,
+          components: JSON.parse(JSON.stringify(customization.rows)),
+          top_components: JSON.parse(JSON.stringify(customization.topComponents)),
+          bottom_components: JSON.parse(JSON.stringify(customization.bottomComponents)),
         })
         .eq("id", checkoutId);
 

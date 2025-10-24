@@ -113,27 +113,23 @@ const PaymentLinkRedirect = () => {
 
         const checkoutsData = checkouts;
 
-        // Buscar offer para pegar product_id
-        const { data: offerData } = await supabase
-          .from("offers")
-          .select("product_id")
-          .eq("id", (linkData as any).offers?.id)
-          .maybeSingle();
+        // IMPORTANTE: Usar o PRIMEIRO checkout associado ao link
+        // (que é o checkout personalizado escolhido pelo usuário)
+        let targetCheckout = checkoutsData[0];
 
-        // Priorizar checkout padrão do produto
-        const productId = offerData?.product_id;
-        let targetCheckout = checkoutsData.find(
-          (c: any) => c.is_default && c.product_id === productId
-        );
-
-        // Se não encontrar checkout padrão do produto, usar qualquer checkout padrão
+        // Se não houver checkout associado, buscar o padrão como fallback
         if (!targetCheckout) {
-          targetCheckout = checkoutsData.find((c: any) => c.is_default);
-        }
+          const { data: offerData } = await supabase
+            .from("offers")
+            .select("product_id")
+            .eq("id", (linkData as any).offers?.id)
+            .maybeSingle();
 
-        // Se não encontrar nenhum padrão, usar o primeiro disponível
-        if (!targetCheckout) {
-          targetCheckout = checkoutsData[0];
+          const productId = offerData?.product_id;
+          
+          targetCheckout = checkoutsData.find(
+            (c: any) => c.is_default && c.product_id === productId
+          );
         }
 
         // 6. Redirecionar para o checkout

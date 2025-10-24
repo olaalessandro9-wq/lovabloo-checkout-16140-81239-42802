@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { PixIcon, CreditCardIcon, LockIcon } from "@/components/icons";
+import { CheckIconCakto } from "@/components/icons/CheckIconCakto";
 
 interface CheckoutPreviewProps {
   customization: CheckoutCustomization;
@@ -59,8 +60,12 @@ const ComponentRenderer = ({
 
   switch (component.type) {
     case "text":
+      const textColor = component.content?.color || customization.design.colors.primaryText || "#000000";
+      const textContent = component.content?.text || "Texto editável - Clique para editar";
+      
       return (
         <div 
+          key={`${component.id}-${textContent}-${textColor}`}
           className={`p-4 ${baseClasses}`}
           onClick={onClick}
           style={{
@@ -73,11 +78,11 @@ const ComponentRenderer = ({
         >
           <p 
             style={{
-              color: component.content?.color || customization.design.colors.primaryText || "#000000",
+              color: textColor,
               fontSize: `${component.content?.fontSize || 16}px`,
             }}
           >
-            {component.content?.text || "Texto editável - Clique para editar"}
+            {textContent}
           </p>
         </div>
       );
@@ -106,7 +111,19 @@ const ComponentRenderer = ({
               className="max-w-full h-auto rounded"
             />
           ) : (
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center w-full">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center w-full flex flex-col items-center gap-2">
+              <svg 
+                width="48" 
+                height="48" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="#9CA3AF" 
+                strokeWidth="1.5"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
               <p 
                 className="text-sm"
                 style={{ color: customization.design.colors.secondaryText }}
@@ -120,26 +137,13 @@ const ComponentRenderer = ({
     
     case "advantage":
       const advantageIcon = component.content?.icon || "check";
-      const advantageIcons: Record<string, string> = {
-        at: "@",
-        chart: "📈",
-        message: "💬",
-        cursor: "👆",
-        cloud: "☁️",
-        download: "⬇️",
-        file: "📄",
-        heart: "❤️",
-        users: "👥",
-        play: "▶️",
-        check: "✔️",
-        globe: "🌐",
-      };
-      
       const primaryColor = component.content?.primaryColor || "#1DB88E";
       const titleColor = component.content?.titleColor || "#000000";
       const darkMode = component.content?.darkMode || false;
       const verticalMode = component.content?.verticalMode || false;
       const size = component.content?.size || "original";
+      const advantageTitle = component.content?.title || "Vantagem";
+      const advantageDescription = component.content?.description || "Descrição da vantagem";
       
       const getSizeClass = () => {
         if (size === "small") return "text-xs";
@@ -148,40 +152,39 @@ const ComponentRenderer = ({
       };
       
       const getIconSize = () => {
-        if (size === "small") return "w-6 h-6 text-xs";
-        if (size === "large") return "w-12 h-12 text-xl";
-        return "w-8 h-8 text-sm";
+        if (size === "small") return 32;
+        if (size === "large") return 56;
+        return 40;
       };
       
       return (
         <div 
-          className={`p-4 rounded-lg flex ${verticalMode ? 'flex-col items-center text-center' : 'items-start'} gap-3 ${baseClasses}`}
+          className={`p-4 rounded-lg flex ${verticalMode ? 'flex-col items-center text-center' : 'items-center'} gap-4 ${baseClasses}`}
           onClick={onClick}
           style={{
             backgroundColor: darkMode ? "#1F2937" : "#FFFFFF",
+            border: "1px solid #E5E7EB",
           }}
         >
-          <div 
-            className={`${getIconSize()} rounded-full flex items-center justify-center flex-shrink-0`}
-            style={{ backgroundColor: primaryColor }}
-          >
-            <span className="text-white">{advantageIcons[advantageIcon]}</span>
+          <div className="flex-shrink-0">
+            <CheckIconCakto 
+              size={getIconSize()}
+              color={primaryColor}
+            />
           </div>
           <div className="flex-1">
             <p 
               className={`font-semibold mb-1 ${getSizeClass()}`}
               style={{ color: darkMode ? "#FFFFFF" : titleColor }}
             >
-              {component.content?.title || "Vantagem"}
+              {advantageTitle}
             </p>
-            {component.content?.description && (
-              <p 
-                className={getSizeClass()}
-                style={{ color: darkMode ? "#D1D5DB" : customization.design.colors.secondaryText }}
-              >
-                {component.content.description}
-              </p>
-            )}
+            <p 
+              className={getSizeClass()}
+              style={{ color: darkMode ? "#D1D5DB" : customization.design.colors.secondaryText }}
+            >
+              {advantageDescription}
+            </p>
           </div>
         </div>
       );

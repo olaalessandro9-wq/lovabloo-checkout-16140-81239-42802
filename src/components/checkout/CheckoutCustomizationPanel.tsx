@@ -471,7 +471,7 @@ export const CheckoutCustomizationPanel = ({
                       title: e.target.value,
                     })
                   }
-                  placeholder="Título da vantagem"
+                  placeholder="Vantagem"
                 />
               </div>
               <div>

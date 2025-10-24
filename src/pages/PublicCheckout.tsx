@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { parseJsonSafely } from "@/lib/utils";
+import CheckoutComponentRenderer from "@/components/checkout/CheckoutComponentRenderer";
 
 interface CheckoutData {
   id: string;
@@ -211,108 +212,129 @@ const PublicCheckout = () => {
         fontFamily: checkout.font || 'Inter',
       }}
     >
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8">
-        {/* Coluna Esquerda: Informações do Produto */}
-        <div className="space-y-6">
-          {checkout.product.image_url && (
-            <img
-              src={checkout.product.image_url}
-              alt={checkout.product.name}
-              className="w-full rounded-lg shadow-lg"
-            />
-          )}
-          <div>
-            <h1 
-              className="text-3xl font-bold mb-4"
+      <div className="max-w-6xl mx-auto">
+        {/* Componentes do Topo */}
+        {checkout.top_components && checkout.top_components.length > 0 && (
+          <div className="mb-8">
+            {checkout.top_components.map((component: any, index: number) => (
+              <CheckoutComponentRenderer key={`top-${index}`} component={component} />
+            ))}
+          </div>
+        )}
+
+        {/* Conteúdo Principal */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Coluna Esquerda: Informações do Produto */}
+          <div className="space-y-6">
+            {checkout.product.image_url && (
+              <img
+                src={checkout.product.image_url}
+                alt={checkout.product.name}
+                className="w-full rounded-lg shadow-lg"
+              />
+            )}
+            <div>
+              <h1 
+                className="text-3xl font-bold mb-4"
+                style={{ color: checkout.text_color || '#000000' }}
+              >
+                {checkout.product.name}
+              </h1>
+              <p 
+                className="mb-6"
+                style={{ color: checkout.text_color || '#6B7280' }}
+              >
+                {checkout.product.description}
+              </p>
+              <div 
+                className="text-4xl font-bold"
+                style={{ color: checkout.primary_color || '#10B981' }}
+              >
+                R$ {checkout.product.price.toFixed(2)}
+              </div>
+            </div>
+          </div>
+
+          {/* Coluna Direita: Formulário de Checkout */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h2 
+              className="text-2xl font-bold mb-6"
               style={{ color: checkout.text_color || '#000000' }}
             >
-              {checkout.product.name}
-            </h1>
-            <p 
-              className="mb-6"
-              style={{ color: checkout.text_color || '#6B7280' }}
-            >
-              {checkout.product.description}
-            </p>
-            <div 
-              className="text-4xl font-bold"
-              style={{ color: checkout.primary_color || '#10B981' }}
-            >
-              R$ {checkout.product.price.toFixed(2)}
-            </div>
+              Finalizar Compra
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Nome Completo *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Seu nome completo"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="email">E-mail *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="seu@email.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="phone">Telefone</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="cpf">CPF</Label>
+                <Input
+                  id="cpf"
+                  value={formData.cpf}
+                  onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+                  placeholder="000.000.000-00"
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full" 
+                size="lg"
+                style={{
+                  backgroundColor: checkout.button_color || '#10B981',
+                  color: checkout.button_text_color || '#FFFFFF',
+                }}
+              >
+                Finalizar Compra - R$ {checkout.product.price.toFixed(2)}
+              </Button>
+
+              <p className="text-xs text-muted-foreground text-center">
+                Ao finalizar a compra, você concorda com nossos termos de uso
+              </p>
+            </form>
           </div>
         </div>
 
-        {/* Coluna Direita: Formulário de Checkout */}
-        <div className="bg-card border border-border rounded-lg p-6">
-          <h2 
-            className="text-2xl font-bold mb-6"
-            style={{ color: checkout.text_color || '#000000' }}
-          >
-            Finalizar Compra
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Nome Completo *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Seu nome completo"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="email">E-mail *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="seu@email.com"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="phone">Telefone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="(00) 00000-0000"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="cpf">CPF</Label>
-              <Input
-                id="cpf"
-                value={formData.cpf}
-                onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
-                placeholder="000.000.000-00"
-              />
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full" 
-              size="lg"
-              style={{
-                backgroundColor: checkout.button_color || '#10B981',
-                color: checkout.button_text_color || '#FFFFFF',
-              }}
-            >
-              Finalizar Compra - R$ {checkout.product.price.toFixed(2)}
-            </Button>
-
-            <p className="text-xs text-muted-foreground text-center">
-              Ao finalizar a compra, você concorda com nossos termos de uso
-            </p>
-          </form>
-        </div>
+        {/* Componentes do Rodapé */}
+        {checkout.bottom_components && checkout.bottom_components.length > 0 && (
+          <div className="mt-8">
+            {checkout.bottom_components.map((component: any, index: number) => (
+              <CheckoutComponentRenderer key={`bottom-${index}`} component={component} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

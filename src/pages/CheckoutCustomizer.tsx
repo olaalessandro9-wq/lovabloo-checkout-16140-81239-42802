@@ -217,6 +217,11 @@ const CheckoutCustomizer = () => {
 
     setLoading(true);
     try {
+      console.log('Salvando componentes:', {
+        topComponents: customization.topComponents,
+        bottomComponents: customization.bottomComponents
+      });
+
       const { error } = await supabase
         .from("checkouts")
         .update({
@@ -226,9 +231,9 @@ const CheckoutCustomizer = () => {
           primary_color: customization.design.colors.accent,
           button_color: customization.design.colors.button.background,
           button_text_color: customization.design.colors.button.text,
-          components: JSON.parse(JSON.stringify(customization.rows)),
-          top_components: JSON.parse(JSON.stringify(customization.topComponents)),
-          bottom_components: JSON.parse(JSON.stringify(customization.bottomComponents)),
+          components: customization.rows as any,
+          top_components: (customization.topComponents || []) as any,
+          bottom_components: (customization.bottomComponents || []) as any,
         })
         .eq("id", checkoutId);
 

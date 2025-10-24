@@ -508,20 +508,20 @@ const PublicCheckout = () => {
 
             {/* Sidebar - Resumo do Pedido (Direita no Desktop) */}
             <div className="lg:col-span-4">
-              <div className="lg:sticky lg:top-2">
-                {/* Card Único com Todas as Seções */}
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  {/* 1. Cabeçalho "Compra segura" */}
-                  <div className="bg-green-600 px-5 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2.5">
-                      <LockIcon className="w-5 h-5" color="#FFFFFF" />
-                      <span className="font-bold text-white text-sm tracking-tight">Compra segura</span>
-                    </div>
+              <div className="lg:sticky lg:top-2 space-y-3">
+                {/* 1. Card "Compra segura" - Separado no Topo */}
+                <div className="bg-white rounded-xl shadow-sm p-4">
+                  <div className="flex items-center justify-center gap-2">
+                    <LockIcon className="w-4 h-4" color="#10B981" />
+                    <span className="font-semibold text-gray-900 text-sm tracking-tight">Compra 100% segura</span>
                   </div>
+                </div>
 
+                {/* 2-5. Card Principal com Preview, Total e Informações */}
+                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
                   {/* 2. Mini Preview do Produto */}
                   <div className="p-4">
-                    <div className="flex items-center gap-3 mb-2.5">
+                    <div className="flex items-center gap-3">
                       {checkout.product?.image_url ? (
                         <img 
                           src={checkout.product.image_url} 

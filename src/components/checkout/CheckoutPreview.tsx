@@ -617,13 +617,13 @@ export const CheckoutPreview = ({
                 className="text-xl font-bold"
                 style={{ color: customization.design.colors.accent }}
               >
-                1 X de R$ {productData?.price ? Number(productData.price).toFixed(2).replace('.', ',') : '99,00'}
+                R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
               </p>
               <p 
                 className="text-sm mt-1"
                 style={{ color: customization.design.colors.secondaryText }}
               >
-                ou R$ {productData?.price ? Number(productData.price).toFixed(2).replace('.', ',') : '99,00'} à vista
+                à vista
               </p>
             </div>
           </div>

@@ -107,22 +107,55 @@ const CheckoutCustomizer = () => {
   // Load checkout data from Supabase
   useEffect(() => {
     if (checkoutId) {
+      // Force reload by clearing any cache
       loadCheckoutData(checkoutId);
     }
+  }, [checkoutId]);
+
+  // Reload on window focus to ensure data is fresh
+  useEffect(() => {
+    const handleFocus = () => {
+      if (checkoutId) {
+        loadCheckoutData(checkoutId);
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [checkoutId]);
 
   const loadCheckoutData = async (id: string) => {
     setLoading(true);
     try {
+      // Força reload dos dados do banco sem cache
       const { data: checkout, error: checkoutError } = await supabase
         .from("checkouts")
-        .select("*, products(*)")
+        .select(`
+          *,
+          products (
+            id,
+            name,
+            description,
+            price,
+            image_url,
+            status,
+            support_name,
+            support_email,
+            user_id,
+            created_at,
+            updated_at
+          )
+        `)
         .eq("id", id)
         .single();
 
       if (checkoutError) throw checkoutError;
 
       if (checkout) {
+        console.log('Checkout carregado:', checkout);
+        console.log('Produto carregado:', checkout.products);
+        console.log('Preço do produto:', checkout.products?.price);
+        
         const loadedCustomization: CheckoutCustomization = {
           design: {
             font: checkout.font || 'Inter',
@@ -136,6 +169,10 @@ const CheckoutCustomizer = () => {
                 background: checkout.button_color || '#10B981',
                 text: checkout.button_text_color || '#FFFFFF',
               },
+              form: {
+                background: checkout.form_background_color || '#F9FAFB',
+              },
+              selectedPayment: checkout.selected_payment_color || '#10B981',
             },
           },
           rows: parseJsonSafely(checkout.components, []),

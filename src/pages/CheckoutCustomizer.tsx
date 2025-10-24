@@ -137,9 +137,9 @@ const CheckoutCustomizer = () => {
               },
             },
           },
-          rows: customization.rows,
-          topComponents: [],
-          bottomComponents: [],
+          rows: checkout.components || [],
+          topComponents: checkout.top_components || [],
+          bottomComponents: checkout.bottom_components || [],
         };
         setCustomization(loadedCustomization);
         setProductData(checkout.products);
@@ -225,6 +225,9 @@ const CheckoutCustomizer = () => {
           primary_color: customization.design.colors.accent,
           button_color: customization.design.colors.button.background,
           button_text_color: customization.design.colors.button.text,
+          components: JSON.stringify(customization.rows),
+          top_components: JSON.stringify(customization.topComponents),
+          bottom_components: JSON.stringify(customization.bottomComponents),
         })
         .eq("id", checkoutId);
 

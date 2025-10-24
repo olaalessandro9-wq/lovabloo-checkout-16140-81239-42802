@@ -1,10 +1,10 @@
-interface CreditCardIconProps {
+interface CheckCircleIconProps {
   className?: string;
   size?: number;
   color?: string;
 }
 
-export const CreditCardIcon = ({ className, size = 24, color }: CreditCardIconProps) => {
+export const CheckCircleIcon = ({ className, size = 24, color }: CheckCircleIconProps) => {
   return (
     <svg
       width={size}
@@ -18,8 +18,8 @@ export const CreditCardIcon = ({ className, size = 24, color }: CreditCardIconPr
       className={className}
       xmlns="http://www.w3.org/2000/svg"
     >
-      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-      <line x1="1" y1="10" x2="23" y2="10"/>
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+      <polyline points="22 4 12 14.01 9 11.01"/>
     </svg>
   );
 };

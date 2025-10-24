@@ -1,15 +1,16 @@
 interface PixIconProps {
   className?: string;
   size?: number;
+  color?: string;
 }
 
-export const PixIcon = ({ className, size = 24 }: PixIconProps) => {
+export const PixIcon = ({ className, size = 24, color }: PixIconProps) => {
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 512 512"
-      fill="currentColor"
+      fill={color || "currentColor"}
       className={className}
       xmlns="http://www.w3.org/2000/svg"
     >

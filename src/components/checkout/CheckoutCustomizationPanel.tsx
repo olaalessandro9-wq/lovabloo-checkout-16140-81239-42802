@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckoutComponent, CheckoutDesign, CheckoutRow, LayoutType } from "@/pages/CheckoutCustomizer";
 import { ArrowLeft, Trash2, Columns, Columns2, Columns3, LayoutGrid, Copy, MoveUp, MoveDown } from "lucide-react";
+import { CheckoutColorSettingsEssential } from "./CheckoutColorSettingsEssential";
+import { TypeIcon, ImageIcon, CheckCircleIcon, AwardIcon, TimerIcon, QuoteIcon, VideoIcon } from "@/components/icons";
 import { useDraggable } from "@dnd-kit/core";
 
 interface CheckoutCustomizationPanelProps {
@@ -448,13 +450,13 @@ export const CheckoutCustomizationPanel = ({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <DraggableComponent type="text" icon={<span className="text-2xl">T</span>} label="Texto" />
-            <DraggableComponent type="image" icon={<span className="text-2xl">🖼️</span>} label="Imagem" />
-            <DraggableComponent type="advantage" icon={<span className="text-2xl">✓</span>} label="Vantagem" />
-            <DraggableComponent type="seal" icon={<span className="text-2xl">🏅</span>} label="Selo" />
-            <DraggableComponent type="timer" icon={<span className="text-2xl">⏱️</span>} label="Cronômetro" />
-            <DraggableComponent type="testimonial" icon={<span className="text-2xl">💬</span>} label="Depoimento" />
-            <DraggableComponent type="video" icon={<span className="text-2xl">🎥</span>} label="Vídeo" />
+            <DraggableComponent type="text" icon={<TypeIcon size={28} />} label="Texto" />
+            <DraggableComponent type="image" icon={<ImageIcon size={28} />} label="Imagem" />
+            <DraggableComponent type="advantage" icon={<CheckCircleIcon size={28} />} label="Vantagem" />
+            <DraggableComponent type="seal" icon={<AwardIcon size={28} />} label="Selo" />
+            <DraggableComponent type="timer" icon={<TimerIcon size={28} />} label="Cronômetro" />
+            <DraggableComponent type="testimonial" icon={<QuoteIcon size={28} />} label="Depoimento" />
+            <DraggableComponent type="video" icon={<VideoIcon size={28} />} label="Vídeo" />
           </div>
         </TabsContent>
 
@@ -534,246 +536,15 @@ export const CheckoutCustomizationPanel = ({
         <TabsContent value="settings" className="p-6 space-y-6">
           <div>
             <h3 className="font-semibold mb-4">Configurações de Design</h3>
+            <p className="text-sm text-muted-foreground">
+              Personalize as cores e a aparência do seu checkout
+            </p>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <Label>Fonte</Label>
-              <Select
-                value={customization.design.font}
-                onValueChange={(value) =>
-                  onUpdateDesign({
-                    ...customization.design,
-                    font: value,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Inter">Inter</SelectItem>
-                  <SelectItem value="Roboto">Roboto</SelectItem>
-                  <SelectItem value="Poppins">Poppins</SelectItem>
-                  <SelectItem value="Montserrat">Montserrat</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-3">Cores Principais</h4>
-              <div className="space-y-3">
-                <div>
-                  <Label>Cor de Fundo</Label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={customization.design.colors.background}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            background: e.target.value,
-                          },
-                        })
-                      }
-                      className="w-12 h-10 rounded cursor-pointer"
-                    />
-                    <Input
-                      value={customization.design.colors.background}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            background: e.target.value,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Cor do Texto Principal</Label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={customization.design.colors.primaryText}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            primaryText: e.target.value,
-                          },
-                        })
-                      }
-                      className="w-12 h-10 rounded cursor-pointer"
-                    />
-                    <Input
-                      value={customization.design.colors.primaryText}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            primaryText: e.target.value,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Cor do Texto Secundário</Label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={customization.design.colors.secondaryText}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            secondaryText: e.target.value,
-                          },
-                        })
-                      }
-                      className="w-12 h-10 rounded cursor-pointer"
-                    />
-                    <Input
-                      value={customization.design.colors.secondaryText}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            secondaryText: e.target.value,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Cor de Destaque</Label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={customization.design.colors.accent}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            accent: e.target.value,
-                          },
-                        })
-                      }
-                      className="w-12 h-10 rounded cursor-pointer"
-                    />
-                    <Input
-                      value={customization.design.colors.accent}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            accent: e.target.value,
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-3">Botões</h4>
-              <div className="space-y-3">
-                <div>
-                  <Label>Cor do Botão Principal</Label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={customization.design.colors.button.background}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            button: {
-                              ...customization.design.colors.button,
-                              background: e.target.value,
-                            },
-                          },
-                        })
-                      }
-                      className="w-12 h-10 rounded cursor-pointer"
-                    />
-                    <Input
-                      value={customization.design.colors.button.background}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            button: {
-                              ...customization.design.colors.button,
-                              background: e.target.value,
-                            },
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Cor do Texto do Botão</Label>
-                  <div className="flex gap-2">
-                    <input
-                      type="color"
-                      value={customization.design.colors.button.text}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            button: {
-                              ...customization.design.colors.button,
-                              text: e.target.value,
-                            },
-                          },
-                        })
-                      }
-                      className="w-12 h-10 rounded cursor-pointer"
-                    />
-                    <Input
-                      value={customization.design.colors.button.text}
-                      onChange={(e) =>
-                        onUpdateDesign({
-                          ...customization.design,
-                          colors: {
-                            ...customization.design.colors,
-                            button: {
-                              ...customization.design.colors.button,
-                              text: e.target.value,
-                            },
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <CheckoutColorSettingsEssential 
+            design={customization.design}
+            onUpdateDesign={onUpdateDesign}
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { parseJsonSafely } from "@/lib/utils"; // Importando função auxiliar
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Monitor, Smartphone, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -137,9 +138,9 @@ const CheckoutCustomizer = () => {
               },
             },
           },
-          rows: checkout.components || [],
-          topComponents: checkout.top_components || [],
-          bottomComponents: checkout.bottom_components || [],
+          rows: parseJsonSafely(checkout.components, []),
+          topComponents: parseJsonSafely(checkout.top_components, []),
+          bottomComponents: parseJsonSafely(checkout.bottom_components, []),
         };
         setCustomization(loadedCustomization);
         setProductData(checkout.products);
@@ -225,9 +226,9 @@ const CheckoutCustomizer = () => {
           primary_color: customization.design.colors.accent,
           button_color: customization.design.colors.button.background,
           button_text_color: customization.design.colors.button.text,
-          components: JSON.stringify(customization.rows),
-          top_components: JSON.stringify(customization.topComponents),
-          bottom_components: JSON.stringify(customization.bottomComponents),
+          components: customization.rows,
+          top_components: customization.topComponents,
+          bottom_components: customization.bottomComponents,
         })
         .eq("id", checkoutId);
 

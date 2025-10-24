@@ -508,45 +508,60 @@ const PublicCheckout = () => {
 
             {/* Sidebar - Resumo do Pedido (Direita no Desktop) */}
             <div className="lg:col-span-4">
-              <div className="lg:sticky lg:top-2 space-y-3">
-                {/* Mini Preview do Produto */}
-                <div className="bg-white rounded-xl shadow-sm p-4">
-                  <div className="flex items-center gap-3 mb-2.5">
-                    {checkout.product?.image_url ? (
-                      <img 
-                        src={checkout.product.image_url} 
-                        alt={checkout.product?.name || 'Produto'}
-                        className="w-14 h-14 object-cover rounded-lg"
-                      />
-                    ) : (
-                      <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
-                        <ImageIcon className="w-5 h-5 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-gray-900 text-sm leading-tight tracking-tight">{checkout.product?.name}</h4>
-                      <p className="text-base font-bold text-gray-900 mt-0.5">
-                        R$ {(checkout.product?.price / 100)?.toFixed(2).replace('.', ',')}
-                        <span className="text-xs font-normal text-gray-600"> à vista</span>
-                      </p>
-                    </div>
-                  </div>
-                  <button className="text-blue-600 hover:underline text-xs font-medium w-full text-left transition-all">
-                    Precisa de ajuda? Veja o contato do vendedor
-                  </button>
-                </div>
-
-                {/* Card de Informações Legais - Unificado com "Compra segura" */}
+              <div className="lg:sticky lg:top-2">
+                {/* Card Único com Todas as Seções */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                  {/* Cabeçalho "Compra segura" */}
+                  {/* 1. Cabeçalho "Compra segura" */}
                   <div className="bg-green-600 px-5 py-3 text-center">
                     <div className="flex items-center justify-center gap-2.5">
                       <LockIcon className="w-5 h-5" color="#FFFFFF" />
                       <span className="font-bold text-white text-sm tracking-tight">Compra segura</span>
                     </div>
                   </div>
-                  
-                  {/* Conteúdo das Informações Legais */}
+
+                  {/* 2. Mini Preview do Produto */}
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-2.5">
+                      {checkout.product?.image_url ? (
+                        <img 
+                          src={checkout.product.image_url} 
+                          alt={checkout.product?.name || 'Produto'}
+                          className="w-14 h-14 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <ImageIcon className="w-5 h-5 text-gray-400" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 text-sm leading-tight tracking-tight">{checkout.product?.name}</h4>
+                        <p className="text-xs text-gray-600 mt-1 leading-relaxed">Precisa de ajuda?</p>
+                        <button className="text-blue-600 hover:underline text-xs font-medium transition-all">
+                          Veja o contato do vendedor
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Divisória Pontilhada */}
+                  <div className="border-t border-dashed border-gray-300 mx-4"></div>
+
+                  {/* 3. Total */}
+                  <div className="p-4">
+                    <div className="flex justify-between items-baseline mb-1">
+                      <span className="text-base font-semibold text-gray-900 tracking-tight">Total</span>
+                      <p className="text-xl font-bold text-gray-900">
+                        R$ {((checkout.product?.price / 100 || 0) + 0.99).toFixed(2).replace('.', ',')}
+                      </p>
+                    </div>
+                    <p className="text-xs text-gray-600 text-right leading-relaxed">à vista no {selectedPayment === 'pix' ? 'PIX' : 'Cartão de Crédito'}</p>
+                    <p className="text-xs text-gray-600 text-right leading-relaxed mt-0.5">Renovação atual</p>
+                  </div>
+
+                  {/* Divisória Pontilhada */}
+                  <div className="border-t border-dashed border-gray-300 mx-4"></div>
+
+                  {/* 4. Informações Legais */}
                   <div className="p-4 text-center">
                     <div className="space-y-3">
                       {/* Logo/Nome + Processador */}
@@ -572,19 +587,15 @@ const PublicCheckout = () => {
                           Termos de serviço
                         </a>
                       </div>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Total Destacado */}
-                <div className="bg-white rounded-xl shadow-sm p-5">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-base font-semibold text-gray-900 tracking-tight">Total</span>
-                    <div className="text-right">
-                      <p className="text-xl font-bold text-gray-900">
-                        R$ {((checkout.product?.price / 100 || 0) + 0.99).toFixed(2).replace('.', ',')}
+                      {/* Termos de Compra */}
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        * Parcelamento com acréscimo<br />
+                        Ao continuar, você concorda com os{' '}
+                        <a href="#" className="text-blue-600 hover:underline">
+                          Termos de Compra
+                        </a>
                       </p>
-                      <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">à vista no {selectedPayment === 'pix' ? 'PIX' : 'Cartão de Crédito'}</p>
                     </div>
                   </div>
                 </div>

@@ -105,7 +105,7 @@ export const CheckoutCustomizationPanel = ({
                 />
               </div>
               <div>
-                <Label>Cor</Label>
+                <Label>Cor do Texto</Label>
                 <div className="flex gap-2">
                   <input
                     type="color"
@@ -130,35 +130,297 @@ export const CheckoutCustomizationPanel = ({
                   />
                 </div>
               </div>
+              <div>
+                <Label>Cor do Fundo</Label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={selectedComponent.content?.backgroundColor || "#FFFFFF"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        backgroundColor: e.target.value,
+                      })
+                    }
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={selectedComponent.content?.backgroundColor || "#FFFFFF"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        backgroundColor: e.target.value,
+                      })
+                    }
+                    placeholder="#FFFFFF"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Cor da Borda</Label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={selectedComponent.content?.borderColor || "#E5E7EB"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        borderColor: e.target.value,
+                      })
+                    }
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={selectedComponent.content?.borderColor || "#E5E7EB"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        borderColor: e.target.value,
+                      })
+                    }
+                    placeholder="#E5E7EB"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Largura da Borda (px)</Label>
+                <Input
+                  type="number"
+                  value={selectedComponent.content?.borderWidth || 1}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      borderWidth: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  min={0}
+                  max={10}
+                  placeholder="1"
+                />
+              </div>
+              <div>
+                <Label>Raio da Borda (px)</Label>
+                <Input
+                  type="number"
+                  value={selectedComponent.content?.borderRadius || 8}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      borderRadius: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  min={0}
+                  max={50}
+                  placeholder="8"
+                />
+                </div>
+              </div>
             </>
           )}
 
           {selectedComponent.type === "image" && (
-            <div>
-              <Label>URL da Imagem</Label>
-              <Input
-                value={selectedComponent.content?.imageUrl || ""}
-                onChange={(e) =>
-                  onUpdateComponent(selectedComponent.id, {
-                    ...selectedComponent.content,
-                    imageUrl: e.target.value,
-                  })
-                }
-                placeholder="https://exemplo.com/imagem.jpg"
-              />
-            </div>
+            <>
+              <div>
+                <Label>Arraste ou selecione o arquivo</Label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          onUpdateComponent(selectedComponent.id, {
+                            ...selectedComponent.content,
+                            imageUrl: reader.result as string,
+                          });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="hidden"
+                    id="image-upload"
+                  />
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <div className="text-gray-500">
+                      <p className="text-sm">Solte os arquivos aqui ou clique para fazer upload</p>
+                      <p className="text-xs mt-1">Formatos aceitos: JPG ou PNG. Tamanho máximo: 10MB</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              <div>
+                <Label>Alinhamento</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={selectedComponent.content?.alignment === "left" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        alignment: "left",
+                      })
+                    }
+                    className="flex-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="3" y1="6" x2="21" y2="6"/>
+                      <line x1="3" y1="12" x2="15" y2="12"/>
+                      <line x1="3" y1="18" x2="18" y2="18"/>
+                    </svg>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={selectedComponent.content?.alignment === "center" || !selectedComponent.content?.alignment ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        alignment: "center",
+                      })
+                    }
+                    className="flex-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="3" y1="6" x2="21" y2="6"/>
+                      <line x1="6" y1="12" x2="18" y2="12"/>
+                      <line x1="4" y1="18" x2="20" y2="18"/>
+                    </svg>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={selectedComponent.content?.alignment === "right" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        alignment: "right",
+                      })
+                    }
+                    className="flex-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="3" y1="6" x2="21" y2="6"/>
+                      <line x1="9" y1="12" x2="21" y2="12"/>
+                      <line x1="6" y1="18" x2="21" y2="18"/>
+                    </svg>
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label>URL da Imagem (opcional)</Label>
+                <Input
+                  value={selectedComponent.content?.imageUrl || ""}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      imageUrl: e.target.value,
+                    })
+                  }
+                  placeholder="https://exemplo.com/imagem.jpg"
+                />
+              </div>
+            </>
           )}
 
           {selectedComponent.type === "advantage" && (
             <>
               <div>
                 <Label>Ícone</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {[
+                    { value: "at", icon: "@" },
+                    { value: "chart", icon: "📈" },
+                    { value: "message", icon: "💬" },
+                    { value: "cursor", icon: "👆" },
+                    { value: "cloud", icon: "☁️" },
+                    { value: "download", icon: "⬇️" },
+                    { value: "file", icon: "📄" },
+                    { value: "heart", icon: "❤️" },
+                    { value: "users", icon: "👥" },
+                    { value: "play", icon: "▶️" },
+                    { value: "check", icon: "✔️" },
+                    { value: "globe", icon: "🌐" },
+                  ].map((iconOption) => (
+                    <Button
+                      key={iconOption.value}
+                      type="button"
+                      variant={(selectedComponent.content?.icon || "check") === iconOption.value ? "default" : "outline"}
+                      className="h-12 text-xl"
+                      onClick={() =>
+                        onUpdateComponent(selectedComponent.id, {
+                          ...selectedComponent.content,
+                          icon: iconOption.value,
+                        })
+                      }
+                    >
+                      {iconOption.icon}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <Label>Cor principal</Label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={selectedComponent.content?.primaryColor || "#1DB88E"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        primaryColor: e.target.value,
+                      })
+                    }
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={selectedComponent.content?.primaryColor || "#1DB88E"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        primaryColor: e.target.value,
+                      })
+                    }
+                    placeholder="#1DB88E"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Cor do título</Label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={selectedComponent.content?.titleColor || "#000000"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        titleColor: e.target.value,
+                      })
+                    }
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={selectedComponent.content?.titleColor || "#000000"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        titleColor: e.target.value,
+                      })
+                    }
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Tamanho</Label>
                 <Select
-                  value={selectedComponent.content?.icon || "check"}
+                  value={selectedComponent.content?.size || "original"}
                   onValueChange={(value) =>
                     onUpdateComponent(selectedComponent.id, {
                       ...selectedComponent.content,
-                      icon: value,
+                      size: value,
                     })
                   }
                 >
@@ -166,12 +428,39 @@ export const CheckoutCustomizationPanel = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="check">✓ Check</SelectItem>
-                    <SelectItem value="star">★ Estrela</SelectItem>
-                    <SelectItem value="heart">♥ Coração</SelectItem>
-                    <SelectItem value="shield">🛡️ Escudo</SelectItem>
+                    <SelectItem value="small">Pequeno</SelectItem>
+                    <SelectItem value="original">Original</SelectItem>
+                    <SelectItem value="large">Grande</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Modo escuro</Label>
+                <input
+                  type="checkbox"
+                  checked={selectedComponent.content?.darkMode || false}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      darkMode: e.target.checked,
+                    })
+                  }
+                  className="w-4 h-4"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Modo Vertical</Label>
+                <input
+                  type="checkbox"
+                  checked={selectedComponent.content?.verticalMode || false}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      verticalMode: e.target.checked,
+                    })
+                  }
+                  className="w-4 h-4"
+                />
               </div>
               <div>
                 <Label>Título</Label>
@@ -205,37 +494,226 @@ export const CheckoutCustomizationPanel = ({
           {selectedComponent.type === "seal" && (
             <>
               <div>
-                <Label>Ícone</Label>
-                <Select
-                  value={selectedComponent.content?.icon || "star"}
-                  onValueChange={(value) =>
-                    onUpdateComponent(selectedComponent.id, {
-                      ...selectedComponent.content,
-                      icon: value,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="star">★ Estrela</SelectItem>
-                    <SelectItem value="shield">🛡️ Escudo</SelectItem>
-                    <SelectItem value="award">🏆 Prêmio</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Selecione um preset</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <Button
+                    type="button"
+                    variant={(selectedComponent.content?.preset || "privacy") === "privacy" ? "default" : "outline"}
+                    className="h-20 flex flex-col items-center justify-center"
+                    onClick={() =>
+                      onUpdateComponent(selectedComponent.id, {
+                        preset: "privacy",
+                        topText: "7",
+                        title: "Privacidade",
+                        subtitle: "Garantida",
+                        primaryColor: "#4F9EF8",
+                        titleColor: "#FFFFFF",
+                      })
+                    }
+                  >
+                    <div className="text-xs font-bold" style={{ color: "#4F9EF8" }}>Privacidade</div>
+                    <div className="text-xs">Garantida</div>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={(selectedComponent.content?.preset) === "guarantee" ? "default" : "outline"}
+                    className="h-20 flex flex-col items-center justify-center"
+                    onClick={() =>
+                      onUpdateComponent(selectedComponent.id, {
+                        preset: "guarantee",
+                        topText: "7",
+                        title: "100%",
+                        subtitle: "DE GARANTIA",
+                        primaryColor: "#E74C3C",
+                        titleColor: "#FFFFFF",
+                      })
+                    }
+                  >
+                    <div className="text-xs font-bold" style={{ color: "#E74C3C" }}>100%</div>
+                    <div className="text-xs">Garantia</div>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={(selectedComponent.content?.preset) === "days" ? "default" : "outline"}
+                    className="h-20 flex flex-col items-center justify-center"
+                    onClick={() =>
+                      onUpdateComponent(selectedComponent.id, {
+                        preset: "days",
+                        topText: "7",
+                        title: "DIAS",
+                        subtitle: "DE GARANTIA",
+                        primaryColor: "#F1C40F",
+                        titleColor: "#000000",
+                      })
+                    }
+                  >
+                    <div className="text-xs font-bold" style={{ color: "#F1C40F" }}>7 DIAS</div>
+                    <div className="text-xs">Garantia</div>
+                  </Button>
+                </div>
               </div>
               <div>
-                <Label>Texto do Selo</Label>
+                <Label>Texto superior</Label>
                 <Input
-                  value={selectedComponent.content?.sealText || ""}
+                  value={selectedComponent.content?.topText || "7"}
                   onChange={(e) =>
                     onUpdateComponent(selectedComponent.id, {
                       ...selectedComponent.content,
-                      sealText: e.target.value,
+                      topText: e.target.value,
                     })
                   }
-                  placeholder="SELO"
+                  placeholder="7"
+                />
+              </div>
+              <div>
+                <Label>Título</Label>
+                <Input
+                  value={selectedComponent.content?.title || "Privacidade"}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      title: e.target.value,
+                    })
+                  }
+                  placeholder="Privacidade"
+                />
+              </div>
+              <div>
+                <Label>Subtítulo</Label>
+                <Input
+                  value={selectedComponent.content?.subtitle || "Garantida"}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      subtitle: e.target.value,
+                    })
+                  }
+                  placeholder="Garantida"
+                />
+              </div>
+              <div>
+                <Label>Cor principal</Label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={selectedComponent.content?.primaryColor || "#4F9EF8"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        primaryColor: e.target.value,
+                      })
+                    }
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={selectedComponent.content?.primaryColor || "#4F9EF8"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        primaryColor: e.target.value,
+                      })
+                    }
+                    placeholder="#4F9EF8"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Cor do título</Label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={selectedComponent.content?.titleColor || "#FFFFFF"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        titleColor: e.target.value,
+                      })
+                    }
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={selectedComponent.content?.titleColor || "#FFFFFF"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        titleColor: e.target.value,
+                      })
+                    }
+                    placeholder="#FFFFFF"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Alinhamento</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant={selectedComponent.content?.alignment === "left" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        alignment: "left",
+                      })
+                    }
+                    className="flex-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="3" y1="6" x2="21" y2="6"/>
+                      <line x1="3" y1="12" x2="15" y2="12"/>
+                      <line x1="3" y1="18" x2="18" y2="18"/>
+                    </svg>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={selectedComponent.content?.alignment === "center" || !selectedComponent.content?.alignment ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        alignment: "center",
+                      })
+                    }
+                    className="flex-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="3" y1="6" x2="21" y2="6"/>
+                      <line x1="6" y1="12" x2="18" y2="12"/>
+                      <line x1="4" y1="18" x2="20" y2="18"/>
+                    </svg>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={selectedComponent.content?.alignment === "right" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        alignment: "right",
+                      })
+                    }
+                    className="flex-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="3" y1="6" x2="21" y2="6"/>
+                      <line x1="9" y1="12" x2="21" y2="12"/>
+                      <line x1="6" y1="18" x2="21" y2="18"/>
+                    </svg>
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label>Modo escuro</Label>
+                <input
+                  type="checkbox"
+                  checked={selectedComponent.content?.darkMode || false}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      darkMode: e.target.checked,
+                    })
+                  }
+                  className="w-4 h-4"
                 />
               </div>
             </>

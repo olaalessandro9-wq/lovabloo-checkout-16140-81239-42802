@@ -61,15 +61,19 @@ const ComponentRenderer = ({
     case "text":
       return (
         <div 
-          className={`p-4 rounded-lg ${baseClasses}`}
+          className={`p-4 ${baseClasses}`}
           onClick={onClick}
           style={{
-            backgroundColor: customization.design.colors.formBackground || customization.design.colors.form?.background || "#F9FAFB",
+            backgroundColor: component.content?.backgroundColor || "#FFFFFF",
+            borderColor: component.content?.borderColor || "#E5E7EB",
+            borderWidth: `${component.content?.borderWidth || 1}px`,
+            borderStyle: "solid",
+            borderRadius: `${component.content?.borderRadius || 8}px`,
           }}
         >
           <p 
             style={{
-              color: component.content?.color || customization.design.colors.primaryText,
+              color: component.content?.color || customization.design.colors.primaryText || "#000000",
               fontSize: `${component.content?.fontSize || 16}px`,
             }}
           >
@@ -79,13 +83,20 @@ const ComponentRenderer = ({
       );
     
     case "image":
+      const getAlignmentClass = () => {
+        const alignment = component.content?.alignment || "center";
+        if (alignment === "left") return "justify-start";
+        if (alignment === "right") return "justify-end";
+        return "justify-center";
+      };
+      
       return (
         <div 
-          className={`p-4 rounded-lg flex items-center justify-center ${baseClasses}`}
+          className={`p-4 rounded-lg flex items-center ${getAlignmentClass()} ${baseClasses}`}
           onClick={onClick}
           style={{ 
             minHeight: component.content?.imageUrl ? "auto" : "128px",
-            backgroundColor: customization.design.colors.formBackground || customization.design.colors.form?.background || "#F9FAFB",
+            backgroundColor: "transparent",
           }}
         >
           {component.content?.imageUrl ? (
@@ -95,12 +106,14 @@ const ComponentRenderer = ({
               className="max-w-full h-auto rounded"
             />
           ) : (
-            <p 
-              className="text-sm"
-              style={{ color: customization.design.colors.secondaryText }}
-            >
-              Imagem - Clique para adicionar
-            </p>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center w-full">
+              <p 
+                className="text-sm"
+                style={{ color: customization.design.colors.secondaryText }}
+              >
+                Imagem - Clique para adicionar
+              </p>
+            </div>
           )}
         </div>
       );
@@ -108,36 +121,63 @@ const ComponentRenderer = ({
     case "advantage":
       const advantageIcon = component.content?.icon || "check";
       const advantageIcons: Record<string, string> = {
-        check: "✓",
-        star: "★",
-        heart: "♥",
-        shield: "🛡️"
+        at: "@",
+        chart: "📈",
+        message: "💬",
+        cursor: "👆",
+        cloud: "☁️",
+        download: "⬇️",
+        file: "📄",
+        heart: "❤️",
+        users: "👥",
+        play: "▶️",
+        check: "✔️",
+        globe: "🌐",
       };
+      
+      const primaryColor = component.content?.primaryColor || "#1DB88E";
+      const titleColor = component.content?.titleColor || "#000000";
+      const darkMode = component.content?.darkMode || false;
+      const verticalMode = component.content?.verticalMode || false;
+      const size = component.content?.size || "original";
+      
+      const getSizeClass = () => {
+        if (size === "small") return "text-xs";
+        if (size === "large") return "text-lg";
+        return "text-sm";
+      };
+      
+      const getIconSize = () => {
+        if (size === "small") return "w-6 h-6 text-xs";
+        if (size === "large") return "w-12 h-12 text-xl";
+        return "w-8 h-8 text-sm";
+      };
+      
       return (
         <div 
-          className={`p-4 rounded-lg flex items-start gap-3 ${baseClasses}`}
+          className={`p-4 rounded-lg flex ${verticalMode ? 'flex-col items-center text-center' : 'items-start'} gap-3 ${baseClasses}`}
           onClick={onClick}
           style={{
-            backgroundColor: customization.design.colors.formBackground || customization.design.colors.form?.background || "#F9FAFB",
+            backgroundColor: darkMode ? "#1F2937" : "#FFFFFF",
           }}
         >
           <div 
-            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ backgroundColor: customization.design.colors.accent }}
+            className={`${getIconSize()} rounded-full flex items-center justify-center flex-shrink-0`}
+            style={{ backgroundColor: primaryColor }}
           >
-            <span className="text-white text-sm">{advantageIcons[advantageIcon]}</span>
+            <span className="text-white">{advantageIcons[advantageIcon]}</span>
           </div>
           <div className="flex-1">
             <p 
-              className="font-semibold mb-1"
-              style={{ color: customization.design.colors.primaryText }}
+              className={`font-semibold mb-1 ${getSizeClass()}`}
+              style={{ color: darkMode ? "#FFFFFF" : titleColor }}
             >
               {component.content?.title || "Vantagem"}
             </p>
             {component.content?.description && (
               <p 
-                className="text-sm"
-                style={{ color: customization.design.colors.secondaryText }}
+                className={getSizeClass()}
+                style={{ color: darkMode ? "#D1D5DB" : customization.design.colors.secondaryText }}
               >
                 {component.content.description}
               </p>
@@ -147,30 +187,65 @@ const ComponentRenderer = ({
       );
     
     case "seal":
-      const sealIcon = component.content?.icon || "star";
-      const sealIcons: Record<string, string> = {
-        star: "★",
-        shield: "🛡️",
-        award: "🏆"
+      const sealPrimaryColor = component.content?.primaryColor || "#4F9EF8";
+      const sealTitleColor = component.content?.titleColor || "#FFFFFF";
+      const sealDarkMode = component.content?.darkMode || false;
+      const sealAlignment = component.content?.alignment || "center";
+      
+      const getSealAlignmentClass = () => {
+        if (sealAlignment === "left") return "justify-start";
+        if (sealAlignment === "right") return "justify-end";
+        return "justify-center";
       };
+      
       return (
         <div 
-          className={`p-6 rounded-lg flex items-center justify-center ${baseClasses}`}
+          className={`p-6 rounded-lg flex items-center ${getSealAlignmentClass()} ${baseClasses}`}
           onClick={onClick}
           style={{
-            backgroundColor: customization.design.colors.formBackground || customization.design.colors.form?.background || "#F9FAFB",
+            backgroundColor: sealDarkMode ? "#1F2937" : "transparent",
           }}
         >
-          <div 
-            className="w-24 h-24 rounded-full flex flex-col items-center justify-center"
-            style={{ 
-              background: `linear-gradient(135deg, ${customization.design.colors.accent}, ${customization.design.colors.button.background})` 
-            }}
-          >
-            <span className="text-3xl mb-1">{sealIcons[sealIcon]}</span>
-            <span className="text-white text-xs font-bold text-center px-2">
-              {component.content?.sealText || "SELO"}
-            </span>
+          <div className="relative">
+            {/* Escudo superior */}
+            <div 
+              className="relative w-32 h-24 flex flex-col items-center justify-center rounded-t-full"
+              style={{ 
+                backgroundColor: "#FFFFFF",
+                border: `3px solid ${sealPrimaryColor}`,
+                borderBottom: "none",
+              }}
+            >
+              {/* Ícone/Texto superior */}
+              <div className="text-sm font-bold" style={{ color: sealPrimaryColor }}>
+                {component.content?.topText || "7"}
+              </div>
+            </div>
+            
+            {/* Fita central */}
+            <div 
+              className="relative w-32 h-12 flex items-center justify-center"
+              style={{ backgroundColor: sealPrimaryColor }}
+            >
+              <span className="text-lg font-bold text-center px-2" style={{ color: sealTitleColor }}>
+                {component.content?.title || "Privacidade"}
+              </span>
+            </div>
+            
+            {/* Escudo inferior */}
+            <div 
+              className="relative w-32 h-16 flex items-center justify-center"
+              style={{ 
+                backgroundColor: "#FFFFFF",
+                border: `3px solid ${sealPrimaryColor}`,
+                borderTop: "none",
+                clipPath: "polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%)",
+              }}
+            >
+              <span className="text-xs font-semibold text-center px-2" style={{ color: sealPrimaryColor }}>
+                {component.content?.subtitle || "Garantida"}
+              </span>
+            </div>
           </div>
         </div>
       );

@@ -228,14 +228,26 @@ export const CheckoutCustomizationPanel = ({
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
+                      console.log('=== INÍCIO UPLOAD ===');
                       const file = e.target.files?.[0];
-                      if (!file) return;
+                      console.log('1. Arquivo selecionado:', file?.name, file?.size);
+                      console.log('2. selectedComponent (antes):', selectedComponent);
+                      console.log('3. selectedComponent.content (antes):', selectedComponent?.content);
+                      console.log('4. onUpdateComponent typeof:', typeof onUpdateComponent);
+                      
+                      if (!file) {
+                        console.log('❌ Nenhum arquivo selecionado');
+                        return;
+                      }
 
                       // Validar tipo de arquivo
                       if (!file.type.startsWith('image/')) {
+                        console.log('❌ Tipo inválido:', file.type);
                         alert('Por favor, selecione uma imagem válida (JPG/PNG).');
                         return;
                       }
+                      
+                      console.log('5. Tipo válido, prosseguindo...');
 
                       try {
                         // Revogar URL anterior (se for blob) para evitar memory leak
@@ -249,14 +261,25 @@ export const CheckoutCustomizationPanel = ({
 
                       // Usar URL.createObjectURL para preview imediato (mais rápido que base64)
                       const objectUrl = URL.createObjectURL(file);
-
-                      onUpdateComponent(selectedComponent.id, {
+                      console.log('6. URL gerada:', objectUrl);
+                      
+                      const newContent = {
                         ...selectedComponent.content,
                         imageUrl: objectUrl,   // Compatibilidade
                         url: objectUrl,        // Compatibilidade com preview que lê `url`
                         _imageFileName: file.name,
                         _timestamp: Date.now(), // Força re-render se necessário
-                      });
+                      };
+                      console.log('7. Novo content:', newContent);
+
+                      onUpdateComponent(selectedComponent.id, newContent);
+                      console.log('8. onUpdateComponent chamado para id:', selectedComponent.id);
+                      
+                      setTimeout(() => {
+                        console.log('9. Verificando após 100ms...');
+                      }, 100);
+                      
+                      console.log('=== FIM UPLOAD ===');
                     }}
                     className="hidden"
                     id={imageInputId}

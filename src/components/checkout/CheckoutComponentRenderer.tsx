@@ -1,4 +1,5 @@
 import { ImageIcon, VideoIcon, TypeIcon, TimerIcon } from "@/components/icons";
+import { CountdownTimer } from "@/components/CountdownTimer";
 
 interface CheckoutComponentRendererProps {
   component: {
@@ -78,17 +79,15 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
     case 'timer':
       return (
         <div className="w-full mb-6">
-          <div className="flex items-center justify-center gap-4 p-6 bg-muted/50 rounded-lg">
-            <TimerIcon className="w-8 h-8 text-primary" />
-            <div className="text-center">
-              <div className="text-2xl font-bold text-foreground">
-                {component.content?.duration || '10:00'}
-              </div>
-              <div className="text-sm text-muted-foreground">
-                {component.content?.label || 'Tempo restante'}
-              </div>
-            </div>
-          </div>
+          <CountdownTimer
+            initialMinutes={component.content?.minutes || 15}
+            initialSeconds={component.content?.seconds || 0}
+            backgroundColor={component.content?.timerColor || "#10B981"}
+            textColor={component.content?.textColor || "#FFFFFF"}
+            activeText={component.content?.activeText || "Oferta por tempo limitado"}
+            finishedText={component.content?.finishedText || "Oferta finalizada"}
+            fixedTop={component.content?.fixedTop || false}
+          />
         </div>
       );
 

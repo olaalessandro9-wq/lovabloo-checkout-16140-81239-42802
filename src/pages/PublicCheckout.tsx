@@ -482,25 +482,6 @@ const PublicCheckout = () => {
                     <p className="text-xs text-gray-600 leading-relaxed">
                       Este site é protegido pelo reCAPTCHA do Google
                     </p>
-
-                    {/* Links Legais */}
-                    <div className="flex items-center justify-center gap-2 text-xs">
-                      <a href="#" className="text-blue-600 hover:underline">
-                        Política de privacidade
-                      </a>
-                      <span className="text-gray-400">e</span>
-                      <a href="#" className="text-blue-600 hover:underline">
-                        Termos de serviço
-                      </a>
-                    </div>
-
-                    {/* Termos de Compra */}
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      Ao continuar, você concorda com os{' '}
-                      <a href="#" className="text-blue-600 hover:underline">
-                        Termos de Compra
-                      </a>
-                    </p>
                   </div>
                 </div>
               </div>
@@ -575,26 +556,6 @@ const PublicCheckout = () => {
                       {/* reCAPTCHA */}
                       <p className="text-xs text-gray-600 leading-relaxed">
                         Este site é protegido pelo reCAPTCHA do Google
-                      </p>
-
-                      {/* Links Legais */}
-                      <div className="flex items-center justify-center gap-2 text-xs">
-                        <a href="#" className="text-blue-600 hover:underline">
-                          Política de privacidade
-                        </a>
-                        <span className="text-gray-400">e</span>
-                        <a href="#" className="text-blue-600 hover:underline">
-                          Termos de serviço
-                        </a>
-                      </div>
-
-                      {/* Termos de Compra */}
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        * Parcelamento com acréscimo<br />
-                        Ao continuar, você concorda com os{' '}
-                        <a href="#" className="text-blue-600 hover:underline">
-                          Termos de Compra
-                        </a>
                       </p>
                     </div>
                   </div>

@@ -496,6 +496,17 @@ export const CheckoutPreview = ({
   }, 0);
   const totalPrice = productPrice + bumpsTotal;
 
+  // Normaliza cor do botão (suporta string ou objeto)
+  const buttonBackgroundColor =
+    typeof customization.design.colors.button === 'string'
+      ? customization.design.colors.button
+      : customization.design.colors.button?.background || '#10B981';
+
+  const buttonTextColor =
+    typeof customization.design.colors.button === 'string'
+      ? customization.design.colors.buttonText || '#FFFFFF'
+      : customization.design.colors.button?.text || '#FFFFFF';
+
   const toggleBump = (bumpId: string) => {
     setSelectedBumps(prev => {
       const newSet = new Set(prev);
@@ -821,8 +832,8 @@ export const CheckoutPreview = ({
           <button
             className="w-full mt-5 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
             style={{
-              backgroundColor: customization.design.colors.button || '#10B981',
-              color: customization.design.colors.buttonText || '#FFFFFF'
+              backgroundColor: buttonBackgroundColor,
+              color: buttonTextColor
             }}
           >
             {selectedPayment === 'pix' ? 'Pagar com PIX' : 'Pagar com Cartão de Crédito'}

@@ -751,7 +751,7 @@ export const CheckoutCustomizationPanel = ({
                 />
               </div>
               <div>
-                <Label>Cor do Cronômetro</Label>
+                <Label>Cor de fundo</Label>
                 <div className="flex gap-2">
                   <input
                     type="color"
@@ -775,6 +775,73 @@ export const CheckoutCustomizationPanel = ({
                     placeholder="#10B981"
                   />
                 </div>
+              </div>
+              <div>
+                <Label>Cor do texto</Label>
+                <div className="flex gap-2">
+                  <input
+                    type="color"
+                    value={selectedComponent.content?.textColor || "#FFFFFF"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        textColor: e.target.value,
+                      })
+                    }
+                    className="w-12 h-10 rounded cursor-pointer"
+                  />
+                  <Input
+                    value={selectedComponent.content?.textColor || "#FFFFFF"}
+                    onChange={(e) =>
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        textColor: e.target.value,
+                      })
+                    }
+                    placeholder="#FFFFFF"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Texto contagem ativa</Label>
+                <Input
+                  value={selectedComponent.content?.activeText || "Oferta por tempo limitado"}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      activeText: e.target.value,
+                    })
+                  }
+                  placeholder="Oferta por tempo limitado"
+                />
+              </div>
+              <div>
+                <Label>Texto contagem finalizada</Label>
+                <Input
+                  value={selectedComponent.content?.finishedText || "Oferta finalizada"}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      finishedText: e.target.value,
+                    })
+                  }
+                  placeholder="Oferta finalizada"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="fixar-topo"
+                  checked={selectedComponent.content?.fixedTop || false}
+                  onChange={(e) =>
+                    onUpdateComponent(selectedComponent.id, {
+                      ...selectedComponent.content,
+                      fixedTop: e.target.checked,
+                    })
+                  }
+                  className="w-4 h-4 rounded"
+                />
+                <Label htmlFor="fixar-topo" className="cursor-pointer">Fixar no topo</Label>
               </div>
             </>
           )}

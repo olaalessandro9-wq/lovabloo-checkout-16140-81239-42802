@@ -258,6 +258,8 @@ const ComponentRenderer = ({
     case "timer":
       const minutes = component.content?.minutes || 15;
       const seconds = component.content?.seconds || 0;
+      const activeText = component.content?.activeText || "Oferta por tempo limitado";
+      const textColor = component.content?.textColor || "#FFFFFF";
       return (
         <div 
           className={`p-4 rounded-lg ${baseClasses}`}
@@ -267,11 +269,11 @@ const ComponentRenderer = ({
           }}
         >
           <div className="flex items-center justify-center gap-2">
-            <span className="text-2xl font-bold text-white">
-              {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}:00
+            <span className="text-2xl font-bold" style={{ color: textColor }}>
+              {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
             </span>
           </div>
-          <p className="text-sm text-center mt-1 text-white/90">Oferta expira em</p>
+          <p className="text-sm text-center mt-1" style={{ color: textColor, opacity: 0.9 }}>{activeText}</p>
         </div>
       );
     

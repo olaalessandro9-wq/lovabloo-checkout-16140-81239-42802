@@ -617,12 +617,10 @@ export const CheckoutPreview = ({
 
           {/* Customer Data Form */}
           <div className="space-y-3">
-          <h4 className="font-semibold flex items-center gap-2 text-gray-900 text-sm">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 tracking-tight">
+            <User className="w-5 h-5" />
             Seus dados
-          </h4>
+          </h2>
           
           <div className="space-y-3">
             <div>

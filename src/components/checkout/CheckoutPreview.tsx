@@ -776,7 +776,7 @@ export const CheckoutPreview = ({
               </div>
             </div>
 
-            {/* Botão de Pagamento - PIX */}
+            {/* Botão de Pagamento - PIX - ATUALIZADO 25/10/2025 14:20 */}
             <button
               className="w-full mt-5 mb-4 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
               style={{

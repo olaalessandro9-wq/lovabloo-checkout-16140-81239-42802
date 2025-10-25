@@ -82,7 +82,54 @@ export function ProductsTable() {
 
       if (productError) throw productError;
 
-      // 2. Criar novo produto com todos os dados (exceto id e timestamps)
+      // 2. Copiar imagem se existir
+      let newImageUrl = null;
+      if (originalProduct.image_url) {
+        try {
+          // Extrair o caminho da imagem original
+          let originalImagePath = originalProduct.image_url;
+          
+          // Se for URL completa, extrair apenas o caminho
+          if (originalImagePath.includes('supabase.co/storage/v1/object/public/product-images/')) {
+            originalImagePath = originalImagePath.split('product-images/')[1];
+          }
+
+          // Baixar a imagem original
+          const { data: imageData, error: downloadError } = await supabase.storage
+            .from('product-images')
+            .download(originalImagePath);
+
+          if (downloadError) {
+            console.warn('Erro ao baixar imagem original:', downloadError);
+            // Continuar sem imagem se houver erro
+          } else if (imageData) {
+            // Gerar novo nome para a imagem
+            const fileExt = originalImagePath.split('.').pop();
+            const newFileName = `${user.id}/${Date.now()}_copy.${fileExt}`;
+
+            // Fazer upload da cópia
+            const { error: uploadError } = await supabase.storage
+              .from('product-images')
+              .upload(newFileName, imageData, { upsert: true });
+
+            if (uploadError) {
+              console.warn('Erro ao fazer upload da cópia da imagem:', uploadError);
+            } else {
+              // Obter URL pública da nova imagem
+              const { data: urlData } = supabase.storage
+                .from('product-images')
+                .getPublicUrl(newFileName);
+              
+              newImageUrl = urlData.publicUrl;
+            }
+          }
+        } catch (error) {
+          console.warn('Erro ao copiar imagem:', error);
+          // Continuar sem imagem se houver erro
+        }
+      }
+
+      // 3. Criar novo produto com todos os dados (exceto id e timestamps)
       const { data: newProduct, error: insertError } = await supabase
         .from("products")
         .insert({
@@ -90,7 +137,7 @@ export function ProductsTable() {
           description: originalProduct.description,
           price: originalProduct.price,
           status: originalProduct.status,
-          image_url: originalProduct.image_url,
+          image_url: newImageUrl, // Usar a nova URL da imagem copiada
           support_email: originalProduct.support_email,
           support_name: originalProduct.support_name,
           user_id: user.id,
@@ -100,7 +147,7 @@ export function ProductsTable() {
 
       if (insertError) throw insertError;
 
-      // 3. Copiar ofertas adicionais (não copiar a oferta padrão pois será criada automaticamente)
+      // 4. Copiar ofertas adicionais (não copiar a oferta padrão pois será criada automaticamente)
       const { data: originalOffers, error: offersError } = await supabase
         .from("offers")
         .select("*")
@@ -124,7 +171,7 @@ export function ProductsTable() {
         if (offersInsertError) throw offersInsertError;
       }
 
-      // 4. Copiar checkouts (exceto o padrão que será criado automaticamente)
+      // 5. Copiar checkouts (exceto o padrão que será criado automaticamente)
       const { data: originalCheckouts, error: checkoutsError } = await supabase
         .from("checkouts")
         .select("*")

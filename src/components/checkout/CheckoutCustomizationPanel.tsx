@@ -229,21 +229,34 @@ export const CheckoutCustomizationPanel = ({
                     accept="image/*"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) {
-                        // Validar tipo de arquivo
-                        if (!file.type.startsWith('image/')) {
-                          alert('Por favor, selecione uma imagem válida (JPG ou PNG)');
-                          return;
-                        }
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            imageUrl: reader.result as string,
-                          });
-                        };
-                        reader.readAsDataURL(file);
+                      if (!file) return;
+
+                      // Validar tipo de arquivo
+                      if (!file.type.startsWith('image/')) {
+                        alert('Por favor, selecione uma imagem válida (JPG/PNG).');
+                        return;
                       }
+
+                      try {
+                        // Revogar URL anterior (se for blob) para evitar memory leak
+                        const prev = selectedComponent.content?.imageUrl || selectedComponent.content?.url;
+                        if (prev && typeof prev === 'string' && prev.startsWith('blob:')) {
+                          try { URL.revokeObjectURL(prev); } catch (err) { /* ignore */ }
+                        }
+                      } catch (err) {
+                        console.warn('Erro ao revogar URL anterior:', err);
+                      }
+
+                      // Usar URL.createObjectURL para preview imediato (mais rápido que base64)
+                      const objectUrl = URL.createObjectURL(file);
+
+                      onUpdateComponent(selectedComponent.id, {
+                        ...selectedComponent.content,
+                        imageUrl: objectUrl,   // Compatibilidade
+                        url: objectUrl,        // Compatibilidade com preview que lê `url`
+                        _imageFileName: file.name,
+                        _timestamp: Date.now(), // Força re-render se necessário
+                      });
                     }}
                     className="hidden"
                     id={imageInputId}

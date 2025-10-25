@@ -15,13 +15,13 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
     case 'image':
       return (
         <div className="w-full flex justify-center mb-6">
-          {component.content?.url ? (
+          {component.content?.imageUrl || component.content?.url ? (
             <img
-              src={component.content.url}
-              alt={component.content.alt || 'Imagem'}
+              src={component.content?.imageUrl || component.content?.url}
+              alt={component.content?.alt || 'Imagem'}
               className="max-w-full h-auto rounded-lg"
               style={{
-                maxHeight: component.content.height || 'auto',
+                maxHeight: component.content?.height || 'auto',
               }}
             />
           ) : (

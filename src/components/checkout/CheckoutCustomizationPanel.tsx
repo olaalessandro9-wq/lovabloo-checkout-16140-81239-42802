@@ -217,7 +217,9 @@ export const CheckoutCustomizationPanel = ({
             </>
           )}
 
-          {selectedComponent.type === "image" && (
+          {selectedComponent.type === "image" && (() => {
+            const imageInputId = `image-upload-${selectedComponent.id}`;
+            return (
             <>
               <div>
                 <Label>Arraste ou selecione o arquivo</Label>
@@ -228,6 +230,11 @@ export const CheckoutCustomizationPanel = ({
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
+                        // Validar tipo de arquivo
+                        if (!file.type.startsWith('image/')) {
+                          alert('Por favor, selecione uma imagem válida (JPG ou PNG)');
+                          return;
+                        }
                         const reader = new FileReader();
                         reader.onloadend = () => {
                           onUpdateComponent(selectedComponent.id, {
@@ -239,9 +246,9 @@ export const CheckoutCustomizationPanel = ({
                       }
                     }}
                     className="hidden"
-                    id="image-upload"
+                    id={imageInputId}
                   />
-                  <label htmlFor="image-upload" className="cursor-pointer">
+                  <label htmlFor={imageInputId} className="cursor-pointer">
                     <div className="text-gray-500">
                       <p className="text-sm">Solte os arquivos aqui ou clique para fazer upload</p>
                       <p className="text-xs mt-1">Formatos aceitos: JPG ou PNG. Tamanho máximo: 10MB</p>
@@ -322,7 +329,8 @@ export const CheckoutCustomizationPanel = ({
                 />
               </div>
             </>
-          )}
+            );
+          })()}
 
           {selectedComponent.type === "advantage" && (
             <>

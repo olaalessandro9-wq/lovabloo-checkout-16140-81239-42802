@@ -78,17 +78,16 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
 
     case 'timer':
       return (
-        <div className="w-full mb-6">
-          <CountdownTimer
-            initialMinutes={component.content?.minutes || 15}
-            initialSeconds={component.content?.seconds || 0}
-            backgroundColor={component.content?.timerColor || "#10B981"}
-            textColor={component.content?.textColor || "#FFFFFF"}
-            activeText={component.content?.activeText || "Oferta por tempo limitado"}
-            finishedText={component.content?.finishedText || "Oferta finalizada"}
-            fixedTop={component.content?.fixedTop || false}
-          />
-        </div>
+        <CountdownTimer
+          initialMinutes={component.content?.minutes || 15}
+          initialSeconds={component.content?.seconds || 0}
+          backgroundColor={component.content?.timerColor || "#10B981"}
+          textColor={component.content?.textColor || "#FFFFFF"}
+          activeText={component.content?.activeText || "Oferta por tempo limitado"}
+          finishedText={component.content?.finishedText || "Oferta finalizada"}
+          fixedTop={component.content?.fixedTop || false}
+          className="w-full"
+        />
       );
 
     case 'guarantee':

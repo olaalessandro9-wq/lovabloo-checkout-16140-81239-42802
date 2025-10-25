@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Bell } from 'lucide-react';
 
 interface CountdownTimerProps {
   initialMinutes: number;
@@ -56,14 +57,18 @@ export const CountdownTimer = ({
         backgroundColor,
       }}
     >
-      <div className="flex items-center justify-center gap-2">
-        <span className="text-2xl font-bold" style={{ color: textColor }}>
-          {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-        </span>
+      {/* Ícone fixo + tempo — alinhado e com cor dinâmica */}
+      <div className="flex items-center justify-center gap-3">
+        <Bell size={28} style={{ color: textColor }} aria-hidden="true" />
+        <div className="text-center">
+          <div className="text-2xl font-bold" style={{ color: textColor }}>
+            {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+          </div>
+          <p className="text-sm mt-1" style={{ color: textColor, opacity: 0.9 }}>
+            {isFinished ? finishedText : activeText}
+          </p>
+        </div>
       </div>
-      <p className="text-sm text-center mt-1" style={{ color: textColor, opacity: 0.9 }}>
-        {isFinished ? finishedText : activeText}
-      </p>
     </div>
   );
 };

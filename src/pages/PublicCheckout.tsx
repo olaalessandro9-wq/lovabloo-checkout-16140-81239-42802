@@ -458,7 +458,7 @@ const PublicCheckout = () => {
                     color: checkout.button_text_color || '#FFFFFF'
                   }}
                 >
-                  {selectedPayment === 'pix' ? 'Pagar com PIX' : 'Continuar para Pagamento'}
+                  {selectedPayment === 'pix' ? 'Pagar com PIX' : 'Pagar com Cartão de Crédito'}
                 </button>
 
                 {/* Card de Informações Legais - Unificado sem divisórias */}

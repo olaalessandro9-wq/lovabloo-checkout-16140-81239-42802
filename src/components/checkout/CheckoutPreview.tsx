@@ -907,7 +907,7 @@ export const CheckoutPreview = ({
             color: customization.design.colors.buttonText || '#FFFFFF'
           }}
         >
-          {selectedPayment === 'pix' ? 'Pagar com PIX' : 'Continuar para Pagamento'}
+          {selectedPayment === 'pix' ? 'Pagar com PIX' : 'Pagar com Cartão de Crédito'}
         </button>
 
         {/* Footer com Informações Legais */}

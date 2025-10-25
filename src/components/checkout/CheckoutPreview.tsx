@@ -1,6 +1,6 @@
 import { CheckoutCustomization, CheckoutComponent, CheckoutRow, ViewMode } from "@/pages/CheckoutCustomizer";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Wallet, Lock as LockIconLucide } from "lucide-react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { PixIcon, CreditCardIcon, LockIcon } from "@/components/icons";
 import { CheckIconCakto } from "@/components/icons/CheckIconCakto";
@@ -674,183 +674,185 @@ export const CheckoutPreview = ({
 
         {/* Payment Method */}
         <div className="bg-white rounded-xl shadow-sm p-5">
-          <h4 className="font-semibold flex items-center gap-2 text-gray-900 text-sm">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-            </svg>
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 tracking-tight">
+            <Wallet className="w-5 h-5" />
             Pagamento
-          </h4>
-
-          <div className="space-y-2">
+          </h2>
+          
+          <div className="space-y-2.5 mb-4">
             <button
-              onClick={() => setSelectedPayment("pix")}
-              className={`w-full p-3 rounded-lg border-2 transition-all flex items-center gap-3 ${
-                selectedPayment === "pix"
-                  ? "bg-green-50 border-green-500"
-                  : "bg-white border-gray-300 hover:border-gray-400"
+              type="button"
+              onClick={() => setSelectedPayment('pix')}
+              className={`w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 text-left ${
+                selectedPayment === 'pix' 
+                  ? 'border-green-500 bg-green-50' 
+                  : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <PixIcon 
-                size={20} 
-                color={selectedPayment === "pix" ? "#10B981" : "#6B7280"}
-              />
-              <span className={`text-sm font-medium ${
-                selectedPayment === "pix" ? "text-green-700" : "text-gray-700"
-              }`}>
-                PIX
-              </span>
+              <div className="flex items-center gap-3">
+                <PixIcon className="w-5 h-5" color="#00A868" />
+                <span className="font-semibold text-gray-900 text-sm">PIX</span>
+              </div>
             </button>
 
             <button
-              onClick={() => setSelectedPayment("credit_card")}
-              className={`w-full p-3 rounded-lg border-2 transition-all flex items-center gap-3 ${
-                selectedPayment === "credit_card"
-                  ? "bg-blue-50 border-blue-500"
-                  : "bg-white border-gray-300 hover:border-gray-400"
+              type="button"
+              onClick={() => setSelectedPayment('credit_card')}
+              className={`w-full px-4 py-3 rounded-lg border-2 transition-all duration-200 text-left ${
+                selectedPayment === 'credit_card' 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-200 hover:border-gray-300'
               }`}
             >
-              <CreditCardIcon 
-                size={20}
-                color={selectedPayment === "credit_card" ? "#3B82F6" : "#6B7280"}
-              />
-              <span className={`text-sm font-medium ${
-                selectedPayment === "credit_card" ? "text-blue-700" : "text-gray-700"
-              }`}>
-                Cartão de Crédito
-              </span>
+              <div className="flex items-center gap-3">
+                <CreditCardIcon className="w-5 h-5" color="#3B82F6" />
+                <span className="font-semibold text-gray-900 text-sm">Cartão de Crédito</span>
+              </div>
             </button>
+          </div>
+
+          {selectedPayment === 'pix' && (
+            <>
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-2 mb-4">
+                <div className="flex items-start gap-2.5">
+                  <CheckCircleFilledIcon size={18} color="#10B981" className="flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-green-800 leading-relaxed font-medium">Liberação imediata</span>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <CheckCircleFilledIcon size={18} color="#10B981" className="flex-shrink-0 mt-0.5" />
+                  <span className="text-xs text-green-800 leading-relaxed font-medium">É simples, só usar o aplicativo de seu banco para pagar Pix</span>
+                </div>
+              </div>
+
+              {/* Resumo do Pedido - PIX */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm tracking-tight">Resumo do pedido</h4>
+                
+                <div className="flex items-start gap-3 mb-3">
+                  {productData?.image_url ? (
+                    <img 
+                      src={productData.image_url} 
+                      alt={productData?.name || 'Produto'}
+                      className="w-14 h-14 object-cover rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <ImageIcon className="w-5 h-5 text-gray-400" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h5 className="text-sm font-medium text-gray-900 leading-tight">{productData?.name || "Nome do Produto"}</h5>
+                    <p className="text-base font-bold text-gray-900 mt-0.5">
+                      R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-sm border-t border-gray-300 pt-2.5">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Produto</span>
+                    <span className="text-gray-900 font-medium">
+                      R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Taxa de serviço</span>
+                    <span className="text-gray-900 font-medium">R$ 0,99</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold pt-1.5 border-t border-gray-300">
+                    <span className="text-gray-900">Total</span>
+                    <span className="text-gray-900">
+                      R$ {totalPrice.toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {selectedPayment === 'credit_card' && (
+            <>
+              {/* Resumo do Pedido - Cartão de Crédito */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm tracking-tight">Resumo do pedido</h4>
+                
+                <div className="flex items-start gap-3 mb-3">
+                  {productData?.image_url ? (
+                    <img 
+                      src={productData.image_url} 
+                      alt={productData?.name || 'Produto'}
+                      className="w-14 h-14 object-cover rounded-lg"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <ImageIcon className="w-5 h-5 text-gray-400" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h5 className="text-sm font-medium text-gray-900 leading-tight">{productData?.name || "Nome do Produto"}</h5>
+                    <p className="text-base font-bold text-gray-900 mt-0.5">
+                      R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 text-sm border-t border-gray-300 pt-2.5">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Produto</span>
+                    <span className="text-gray-900 font-medium">
+                      R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Taxa de serviço</span>
+                    <span className="text-gray-900 font-medium">R$ 0,99</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold pt-1.5 border-t border-gray-300">
+                    <span className="text-gray-900">Total</span>
+                    <span className="text-gray-900">
+                      R$ {totalPrice.toFixed(2).replace('.', ',')}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-gray-600 mt-2">à vista no Cartão de Crédito</p>
+              </div>
+            </>
+          )}
+
+          <button
+            className="w-full mt-5 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
+            style={{
+              backgroundColor: customization.design.colors.button || '#10B981',
+              color: customization.design.colors.buttonText || '#FFFFFF'
+            }}
+          >
+            {selectedPayment === 'pix' ? 'Pagar com PIX' : 'Pagar com Cartão de Crédito'}
+          </button>
+
+          {/* Card de Informações Legais - Unificado sem divisórias */}
+          <div className="bg-white rounded-xl shadow-sm p-5 mt-5 text-center">
+            <div className="space-y-3">
+              {/* Logo/Nome + Processador */}
+              <p className="text-xs text-gray-700 leading-relaxed">
+                <span className="font-bold text-gray-900">Rise Checkout</span> está processando este pagamento para o vendedor{' '}
+                <span className="font-semibold text-gray-900">{productData?.seller_name || "Risecommunity"}</span>
+              </p>
+
+              {/* Compra Segura */}
+              <div className="flex items-center justify-center gap-1.5 text-xs text-gray-700">
+                <LockIconLucide className="w-3.5 h-3.5 text-green-600" />
+                <span className="font-semibold">Compra 100% segura</span>
+              </div>
+
+              {/* reCAPTCHA */}
+              <p className="text-[10px] text-gray-500 leading-relaxed">
+                Este site é protegido pelo reCAPTCHA do Google
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Liberação imediata + Resumo do pedido - PIX */}
-        {selectedPayment === "pix" && (
-          <>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-2 mb-4">
-              <div className="flex items-start gap-2.5">
-                <CheckCircleFilledIcon size={18} color="#10B981" className="flex-shrink-0 mt-0.5" />
-                <span className="text-xs text-green-800 leading-relaxed font-medium">Liberação imediata</span>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <CheckCircleFilledIcon size={18} color="#10B981" className="flex-shrink-0 mt-0.5" />
-                <span className="text-xs text-green-800 leading-relaxed font-medium">É simples, só usar o aplicativo de seu banco para pagar Pix</span>
-              </div>
-            </div>
-
-            {/* Resumo do Pedido - PIX */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 mb-3 text-sm tracking-tight">Resumo do pedido</h4>
-              
-              <div className="flex items-start gap-3 mb-3">
-                {productData?.image_url ? (
-                  <img 
-                    src={productData.image_url} 
-                    alt={productData?.name || 'Produto'}
-                    className="w-14 h-14 object-cover rounded-lg"
-                  />
-                ) : (
-                  <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <ImageIcon className="w-5 h-5 text-gray-400" />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <h5 className="text-sm font-medium text-gray-900 leading-tight">{productData?.name || "Nome do Produto"}</h5>
-                  <p className="text-base font-bold text-gray-900 mt-0.5">
-                    R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-1.5 text-sm border-t border-gray-300 pt-2.5">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Produto</span>
-                  <span className="text-gray-900 font-medium">
-                    R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Taxa de serviço</span>
-                  <span className="text-gray-900 font-medium">R$ 0,99</span>
-                </div>
-                <div className="flex justify-between text-sm font-bold pt-1.5 border-t border-gray-300">
-                  <span className="text-gray-900">Total</span>
-                  <span className="text-gray-900">
-                    R$ {totalPrice.toFixed(2).replace('.', ',')}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Botão de Pagamento - PIX - ATUALIZADO 25/10/2025 14:20 */}
-            <button
-              className="w-full mt-5 mb-4 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
-              style={{
-                backgroundColor: customization.design.colors.button || '#10B981',
-                color: customization.design.colors.buttonText || '#FFFFFF'
-              }}
-            >
-              Pagar com PIX
-            </button>
-          </>
-        )}
-
-        {/* Resumo do pedido - Cartão de Crédito */}
-        {selectedPayment === 'credit_card' && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h4 className="font-semibold text-gray-900 mb-3 text-sm tracking-tight">Resumo do pedido</h4>
-            
-            <div className="flex items-start gap-3 mb-3">
-              {productData?.image_url ? (
-                <img 
-                  src={productData.image_url} 
-                  alt={productData?.name || 'Produto'}
-                  className="w-14 h-14 object-cover rounded-lg"
-                />
-              ) : (
-                <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
-                  <ImageIcon className="w-5 h-5 text-gray-400" />
-                </div>
-              )}
-              <div className="flex-1">
-                <h5 className="text-sm font-medium text-gray-900 leading-tight">{productData?.name || "Nome do Produto"}</h5>
-                <p className="text-base font-bold text-gray-900 mt-0.5">
-                  R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-1.5 text-sm border-t border-gray-300 pt-2.5">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Produto</span>
-                <span className="text-gray-900 font-medium">
-                  R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Taxa de serviço</span>
-                <span className="text-gray-900 font-medium">R$ 0,99</span>
-              </div>
-              <div className="flex justify-between text-sm font-bold pt-1.5 border-t border-gray-300">
-                <span className="text-gray-900">Total</span>
-                <span className="text-gray-900">
-                  R$ {totalPrice.toFixed(2).replace('.', ',')}
-                </span>
-              </div>
-            </div>
-
-            <p className="text-xs text-gray-600 mt-2">à vista no Cartão de Crédito</p>
-
-            {/* Botão de Pagamento - Cartão */}
-            <button
-              className="w-full mt-5 mb-4 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
-              style={{
-                backgroundColor: customization.design.colors.button || '#10B981',
-                color: customization.design.colors.buttonText || '#FFFFFF'
-              }}
-            >
-              Pagar com Cartão de Crédito
-            </button>
-          </div>
-        )}
 
         {/* Order Bumps */}
         {orderBumps.length > 0 && (

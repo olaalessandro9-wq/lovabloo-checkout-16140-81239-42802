@@ -4,6 +4,8 @@ import { Plus } from "lucide-react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { PixIcon, CreditCardIcon, LockIcon } from "@/components/icons";
 import { CheckIconCakto } from "@/components/icons/CheckIconCakto";
+import { CheckCircleFilledIcon } from "@/components/icons/CheckCircleFilledIcon";
+import { ImageIcon } from "@/components/icons/ImageIcon";
 
 interface CheckoutPreviewProps {
   customization: CheckoutCustomization;
@@ -716,6 +718,68 @@ export const CheckoutPreview = ({
           </div>
         </div>
 
+        {/* Liberação imediata - PIX */}
+        {selectedPayment === "pix" && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 space-y-2">
+            <div className="flex items-start gap-2.5">
+              <CheckCircleFilledIcon size={18} color="#10B981" className="flex-shrink-0 mt-0.5" />
+              <span className="text-xs text-green-800 leading-relaxed font-medium">Liberação imediata</span>
+            </div>
+            <div className="flex items-start gap-2.5">
+              <CheckCircleFilledIcon size={18} color="#10B981" className="flex-shrink-0 mt-0.5" />
+              <span className="text-xs text-green-800 leading-relaxed font-medium">É simples, só usar o aplicativo de seu banco para pagar Pix</span>
+            </div>
+          </div>
+        )}
+
+        {/* Resumo do pedido */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 className="font-semibold text-gray-900 mb-3 text-sm tracking-tight">Resumo do pedido</h4>
+          
+          <div className="flex items-start gap-3 mb-3">
+            {productData?.image_url ? (
+              <img 
+                src={productData.image_url} 
+                alt={productData?.name || 'Produto'}
+                className="w-14 h-14 object-cover rounded-lg"
+              />
+            ) : (
+              <div className="w-14 h-14 bg-gray-200 rounded-lg flex items-center justify-center">
+                <ImageIcon className="w-5 h-5 text-gray-400" />
+              </div>
+            )}
+            <div className="flex-1">
+              <h5 className="text-sm font-medium text-gray-900 leading-tight">{productData?.name || "Nome do Produto"}</h5>
+              <p className="text-base font-bold text-gray-900 mt-0.5">
+                R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-1.5 text-sm border-t border-gray-300 pt-2.5">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Produto</span>
+              <span className="text-gray-900 font-medium">
+                R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Taxa de serviço</span>
+              <span className="text-gray-900 font-medium">R$ 0,99</span>
+            </div>
+            <div className="flex justify-between text-sm font-bold pt-1.5 border-t border-gray-300">
+              <span className="text-gray-900">Total</span>
+              <span className="text-gray-900">
+                R$ {totalPrice.toFixed(2).replace('.', ',')}
+              </span>
+            </div>
+          </div>
+
+          {selectedPayment === 'credit_card' && (
+            <p className="text-xs text-gray-600 mt-2">à vista no Cartão de Crédito</p>
+          )}
+        </div>
+
         {/* Order Bumps */}
         {orderBumps.length > 0 && (
           <div className="space-y-3">
@@ -835,7 +899,40 @@ export const CheckoutPreview = ({
           </div>
         )}
 
+        {/* Botão de Pagamento */}
+        <button
+          className="w-full mt-5 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
+          style={{
+            backgroundColor: customization.design.colors.button || '#10B981',
+            color: customization.design.colors.buttonText || '#FFFFFF'
+          }}
+        >
+          {selectedPayment === 'pix' ? 'Pagar com PIX' : 'Continuar para Pagamento'}
+        </button>
 
+        {/* Footer com Informações Legais */}
+        <div className="bg-white rounded-xl shadow-sm p-5 mt-5 text-center">
+          <div className="space-y-3">
+            {/* Logo/Nome + Processador */}
+            <p className="text-xs text-gray-700 leading-relaxed">
+              <span className="font-bold text-gray-900">Rise Checkout</span> está processando este pagamento para o vendedor{' '}
+              <span className="font-semibold text-gray-900">
+                {productData?.support_name || 'Vendedor'}
+              </span>
+            </p>
+
+            {/* Compra Segura com Check */}
+            <div className="flex items-center justify-center gap-2">
+              <CheckCircleFilledIcon size={16} color="#10B981" />
+              <span className="text-xs font-semibold text-gray-900">Compra 100% segura</span>
+            </div>
+
+            {/* reCAPTCHA */}
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Este site é protegido pelo reCAPTCHA do Google
+            </p>
+          </div>
+        </div>
 
         {/* Bottom Drop Zone */}
         {!isPreviewMode && (

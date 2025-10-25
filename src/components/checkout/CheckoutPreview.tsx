@@ -484,7 +484,7 @@ export const CheckoutPreview = ({
   productData,
   orderBumps = [],
 }: CheckoutPreviewProps) => {
-  const [selectedPayment, setSelectedPayment] = useState<"pix" | "card">("pix");
+  const [selectedPayment, setSelectedPayment] = useState<"pix" | "credit_card">("pix");
   const [selectedBumps, setSelectedBumps] = useState<Set<string>>(new Set());
   const { setNodeRef: setTopRef, isOver: isTopOver } = useDroppable({ id: "top-drop-zone" });
   const { setNodeRef: setBottomRef, isOver: isBottomOver } = useDroppable({ id: "bottom-drop-zone" });
@@ -586,9 +586,10 @@ export const CheckoutPreview = ({
           </div>
         )}
 
-        {/* Product Header Integrado */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-start gap-3">
+        {/* Product Header + Customer Data Form - UNIFICADOS */}
+        <div className="bg-white rounded-xl shadow-sm p-5 mb-4">
+          {/* Product Header */}
+          <div className="flex items-center gap-3 mb-5">
             {productData?.image_url ? (
               <img
                 src={productData.image_url}
@@ -610,10 +611,12 @@ export const CheckoutPreview = ({
               <p className="text-xs text-gray-600 mt-0.5">à vista</p>
             </div>
           </div>
-        </div>
 
-        {/* Customer Data Form */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
+          {/* Divider */}
+          <div className="border-t border-gray-200 my-5"></div>
+
+          {/* Customer Data Form */}
+          <div className="space-y-3">
           <h4 className="font-semibold flex items-center gap-2 text-gray-900 text-sm">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -666,10 +669,11 @@ export const CheckoutPreview = ({
               />
             </div>
           </div>
+          </div>
         </div>
 
         {/* Payment Method */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 space-y-3">
+        <div className="bg-white rounded-xl shadow-sm p-5">
           <h4 className="font-semibold flex items-center gap-2 text-gray-900 text-sm">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
@@ -698,19 +702,19 @@ export const CheckoutPreview = ({
             </button>
 
             <button
-              onClick={() => setSelectedPayment("card")}
+              onClick={() => setSelectedPayment("credit_card")}
               className={`w-full p-3 rounded-lg border-2 transition-all flex items-center gap-3 ${
-                selectedPayment === "card"
+                selectedPayment === "credit_card"
                   ? "bg-blue-50 border-blue-500"
                   : "bg-white border-gray-300 hover:border-gray-400"
               }`}
             >
               <CreditCardIcon 
                 size={20}
-                color={selectedPayment === "card" ? "#3B82F6" : "#6B7280"}
+                color={selectedPayment === "credit_card" ? "#3B82F6" : "#6B7280"}
               />
               <span className={`text-sm font-medium ${
-                selectedPayment === "card" ? "text-blue-700" : "text-gray-700"
+                selectedPayment === "credit_card" ? "text-blue-700" : "text-gray-700"
               }`}>
                 Cartão de Crédito
               </span>

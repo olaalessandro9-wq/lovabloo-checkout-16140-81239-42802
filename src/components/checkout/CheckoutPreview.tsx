@@ -840,28 +840,6 @@ export const CheckoutPreview = ({
           </button>
         </div>
 
-        {/* Card de Informações Legais - Unificado sem divisórias */}
-        <div className="bg-white rounded-xl shadow-sm p-5 text-center">
-          <div className="space-y-3">
-            {/* Logo/Nome + Processador */}
-            <p className="text-xs text-gray-700 leading-relaxed">
-              <span className="font-bold text-gray-900">Rise Checkout</span> está processando este pagamento para o vendedor{' '}
-              <span className="font-semibold text-gray-900">{productData?.seller_name || "Risecommunity"}</span>
-            </p>
-
-            {/* Compra Segura */}
-            <div className="flex items-center justify-center gap-1.5 text-xs text-gray-700">
-              <LockIconLucide className="w-3.5 h-3.5 text-green-600" />
-              <span className="font-semibold">Compra 100% segura</span>
-            </div>
-
-            {/* reCAPTCHA */}
-            <p className="text-[10px] text-gray-500 leading-relaxed">
-              Este site é protegido pelo reCAPTCHA do Google
-            </p>
-          </div>
-        </div>
-
 
         {/* Order Bumps */}
         {orderBumps.length > 0 && (
@@ -989,7 +967,7 @@ export const CheckoutPreview = ({
             <p className="text-xs text-gray-700 leading-relaxed">
               <span className="font-bold text-gray-900">Rise Checkout</span> está processando este pagamento para o vendedor{' '}
               <span className="font-semibold text-gray-900">
-                {productData?.support_name || 'Vendedor'}
+                {productData?.seller_name || productData?.support_name || 'Vendedor'}
               </span>
             </p>
 

@@ -90,7 +90,7 @@ const ComponentRenderer = ({
         </div>
       );
     
-    case "image":
+    case "image": {
       const getAlignmentClass = () => {
         const alignment = component.content?.alignment || "center";
         if (alignment === "left") return "justify-start";
@@ -98,18 +98,22 @@ const ComponentRenderer = ({
         return "justify-center";
       };
       
+      const src = component.content?.imageUrl || component.content?.url;
+      console.log('[ComponentRenderer:image] src:', src, 'component:', component.id);
+      
       return (
         <div 
           className={`p-4 rounded-lg flex items-center ${getAlignmentClass()} ${baseClasses}`}
           onClick={onClick}
           style={{ 
-            minHeight: component.content?.imageUrl ? "auto" : "128px",
+            minHeight: src ? "auto" : "128px",
             backgroundColor: "transparent",
           }}
         >
-          {component.content?.imageUrl ? (
+          {src ? (
             <img 
-              src={component.content.imageUrl} 
+              key={`${component.id}-${component.content?._stamp ?? '0'}`}
+              src={src} 
               alt="Componente" 
               className="max-w-full h-auto rounded"
             />

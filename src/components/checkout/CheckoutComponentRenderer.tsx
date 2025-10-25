@@ -12,12 +12,15 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
   if (!component || !component.type) return null;
 
   switch (component.type) {
-    case 'image':
+    case 'image': {
+      const src = component.content?.imageUrl || component.content?.url;
+      console.log('[Renderer:image] src:', src, 'component:', component.id);
       return (
         <div className="w-full flex justify-center mb-6">
-          {component.content?.imageUrl || component.content?.url ? (
+          {src ? (
             <img
-              src={component.content?.imageUrl || component.content?.url}
+              key={`${component.id}-${component.content?._stamp ?? '0'}`}
+              src={src}
               alt={component.content?.alt || 'Imagem'}
               className="max-w-full h-auto rounded-lg"
               style={{
@@ -32,6 +35,7 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
           )}
         </div>
       );
+    }
 
     case 'video':
       return (

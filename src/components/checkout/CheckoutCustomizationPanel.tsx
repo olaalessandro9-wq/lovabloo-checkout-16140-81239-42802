@@ -228,58 +228,42 @@ export const CheckoutCustomizationPanel = ({
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
-                      console.log('=== INÍCIO UPLOAD ===');
+                      console.log('[Upload] Início');
                       const file = e.target.files?.[0];
-                      console.log('1. Arquivo selecionado:', file?.name, file?.size);
-                      console.log('2. selectedComponent (antes):', selectedComponent);
-                      console.log('3. selectedComponent.content (antes):', selectedComponent?.content);
-                      console.log('4. onUpdateComponent typeof:', typeof onUpdateComponent);
                       
                       if (!file) {
-                        console.log('❌ Nenhum arquivo selecionado');
+                        console.log('[Upload] Nenhum arquivo selecionado');
                         return;
                       }
 
                       // Validar tipo de arquivo
                       if (!file.type.startsWith('image/')) {
-                        console.log('❌ Tipo inválido:', file.type);
+                        console.log('[Upload] Tipo inválido:', file.type);
                         alert('Por favor, selecione uma imagem válida (JPG/PNG).');
                         return;
                       }
                       
-                      console.log('5. Tipo válido, prosseguindo...');
-
-                      try {
-                        // Revogar URL anterior (se for blob) para evitar memory leak
-                        const prev = selectedComponent.content?.imageUrl || selectedComponent.content?.url;
-                        if (prev && typeof prev === 'string' && prev.startsWith('blob:')) {
-                          try { URL.revokeObjectURL(prev); } catch (err) { /* ignore */ }
-                        }
-                      } catch (err) {
-                        console.warn('Erro ao revogar URL anterior:', err);
+                      // Validar tamanho (10MB máximo)
+                      if (file.size > 10 * 1024 * 1024) {
+                        console.log('[Upload] Arquivo muito grande:', file.size);
+                        alert('Imagem muito grande (máx. 10MB).');
+                        return;
                       }
 
-                      // Usar URL.createObjectURL para preview imediato (mais rápido que base64)
+                      // Criar URL temporária (NÃO revogar agora!)
                       const objectUrl = URL.createObjectURL(file);
-                      console.log('6. URL gerada:', objectUrl);
-                      
-                      const newContent = {
-                        ...selectedComponent.content,
-                        imageUrl: objectUrl,   // Compatibilidade
-                        url: objectUrl,        // Compatibilidade com preview que lê `url`
-                        _imageFileName: file.name,
-                        _timestamp: Date.now(), // Força re-render se necessário
-                      };
-                      console.log('7. Novo content:', newContent);
+                      console.log('[Upload] objectUrl:', objectUrl);
+                      console.log('[Upload] componentId:', selectedComponent.id);
 
-                      onUpdateComponent(selectedComponent.id, newContent);
-                      console.log('8. onUpdateComponent chamado para id:', selectedComponent.id);
+                      // Enviar APENAS o delta (handleUpdateComponent já faz o merge)
+                      onUpdateComponent(selectedComponent.id, {
+                        imageUrl: objectUrl,
+                        url: objectUrl,
+                        _stamp: Date.now(),      // Força re-render
+                        _fileName: file.name,
+                      });
                       
-                      setTimeout(() => {
-                        console.log('9. Verificando após 100ms...');
-                      }, 100);
-                      
-                      console.log('=== FIM UPLOAD ===');
+                      console.log('[Upload] Fim');
                     }}
                     className="hidden"
                     id={imageInputId}

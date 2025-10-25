@@ -439,57 +439,54 @@ const CheckoutCustomizer = () => {
     }
   };
 
-  const handleUpdateComponent = (componentId: string, content: any) => {
-    console.log('handleUpdateComponent chamado:', componentId, content);
+  const handleUpdateComponent = (componentId: string, partialContent: any) => {
+    console.log('[handleUpdateComponent] id:', componentId, 'content:', partialContent);
     setCustomization((prev) => {
-      const newCustomization = { ...prev };
+      // Clone profundo para evitar mutação
+      const next = structuredClone(prev) as typeof prev;
+
+      const mergeComp = (comp: any) => {
+        if (comp.id !== componentId) return false;
+        comp.content = { ...(comp.content ?? {}), ...(partialContent ?? {}) };
+        return true;
+      };
+
       let found = false;
 
-      // Check top components
-      const topIndex = prev.topComponents.findIndex((c) => c.id === componentId);
-      if (topIndex !== -1) {
-        found = true;
-        newCustomization.topComponents = [...prev.topComponents];
-        newCustomization.topComponents[topIndex] = {
-          ...newCustomization.topComponents[topIndex],
-          content: { ...newCustomization.topComponents[topIndex].content, ...content },
-        };
-        return newCustomization;
-      }
+      // 1) topComponents
+      next.topComponents = next.topComponents.map((c) => {
+        if (mergeComp(c)) found = true;
+        return c;
+      });
 
-      // Check bottom components
-      const bottomIndex = prev.bottomComponents.findIndex((c) => c.id === componentId);
-      if (bottomIndex !== -1) {
-        found = true;
-        newCustomization.bottomComponents = [...prev.bottomComponents];
-        newCustomization.bottomComponents[bottomIndex] = {
-          ...newCustomization.bottomComponents[bottomIndex],
-          content: { ...newCustomization.bottomComponents[bottomIndex].content, ...content },
-        };
-        return newCustomization;
-      }
-
-      // Check rows
-      const updatedRows = prev.rows.map((row) => ({
-        ...row,
-        columns: row.columns.map((column) =>
-          column.map((component) => {
-            if (component.id === componentId) {
-              found = true;
-              return { ...component, content: { ...component.content, ...content } };
-            }
-            return component;
-          })
-        ),
-      }));
-
-      newCustomization.rows = updatedRows;
-      
+      // 2) bottomComponents
       if (!found) {
-        console.warn('handleUpdateComponent: componente não encontrado:', componentId);
+        next.bottomComponents = next.bottomComponents.map((c) => {
+          if (mergeComp(c)) found = true;
+          return c;
+        });
       }
-      
-      return newCustomization;
+
+      // 3) rows/columns
+      if (!found) {
+        next.rows = next.rows.map((r) => ({
+          ...r,
+          columns: r.columns.map((col) =>
+            col.map((c) => {
+              if (mergeComp(c)) found = true;
+              return c;
+            })
+          ),
+        }));
+      }
+
+      if (!found) {
+        console.warn('[handleUpdateComponent] componente não encontrado:', componentId);
+        return prev; // Não altera estado
+      }
+
+      console.log('[handleUpdateComponent] componente atualizado com sucesso');
+      return next;
     });
   };
 

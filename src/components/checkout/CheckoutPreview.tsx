@@ -141,8 +141,9 @@ const ComponentRenderer = ({
           )}
         </div>
       );
+    }
     
-    case "advantage":
+    case "advantage": {
       const advantageIcon = component.content?.icon || "check";
       const primaryColor = component.content?.primaryColor || "#1DB88E";
       const titleColor = component.content?.titleColor || "#000000";
@@ -195,8 +196,9 @@ const ComponentRenderer = ({
           </div>
         </div>
       );
+    }
     
-    case "seal":
+    case "seal": {
       const sealPrimaryColor = component.content?.primaryColor || "#4F9EF8";
       const sealTitleColor = component.content?.titleColor || "#FFFFFF";
       const sealDarkMode = component.content?.darkMode || false;
@@ -259,8 +261,9 @@ const ComponentRenderer = ({
           </div>
         </div>
       );
+    }
     
-    case "timer":
+    case "timer": {
       return (
         <CountdownTimer
           initialMinutes={component.content?.minutes || 15}
@@ -274,8 +277,9 @@ const ComponentRenderer = ({
           className={baseClasses}
         />
       );
+    }
     
-    case "testimonial":
+    case "testimonial": {
       return (
         <div 
           className={`p-6 rounded-lg ${baseClasses}`}
@@ -309,8 +313,9 @@ const ComponentRenderer = ({
           </div>
         </div>
       );
+    }
     
-    case "video":
+    case "video": {
       const getEmbedUrl = (url: string, type: string) => {
         if (!url) return "";
         
@@ -360,6 +365,7 @@ const ComponentRenderer = ({
           )}
         </div>
       );
+    }
     
     default:
       return null;
@@ -504,7 +510,7 @@ export const CheckoutPreview = ({
 
   const buttonTextColor =
     typeof customization.design.colors.button === 'string'
-      ? customization.design.colors.buttonText || '#FFFFFF'
+      ? '#FFFFFF'
       : customization.design.colors.button?.text || '#FFFFFF';
 
   const toggleBump = (bumpId: string) => {

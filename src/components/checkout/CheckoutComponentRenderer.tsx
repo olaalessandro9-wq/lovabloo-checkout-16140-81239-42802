@@ -3,6 +3,7 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 
 interface CheckoutComponentRendererProps {
   component: {
+    id?: string;
     type: string;
     content: any;
   };

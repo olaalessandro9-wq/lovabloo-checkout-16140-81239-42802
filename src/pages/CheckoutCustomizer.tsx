@@ -442,51 +442,60 @@ const CheckoutCustomizer = () => {
   const handleUpdateComponent = (componentId: string, partialContent: any) => {
     console.log('[handleUpdateComponent] id:', componentId, 'content:', partialContent);
     setCustomization((prev) => {
-      // Clone profundo para evitar mutação
-      const next = structuredClone(prev) as typeof prev;
-
-      const mergeComp = (comp: any) => {
-        if (comp.id !== componentId) return false;
-        comp.content = { ...(comp.content ?? {}), ...(partialContent ?? {}) };
-        return true;
-      };
-
       let found = false;
 
-      // 1) topComponents
-      next.topComponents = next.topComponents.map((c) => {
-        if (mergeComp(c)) found = true;
-        return c;
+      // 1) topComponents - criar NOVO objeto ao invés de mutar
+      const newTopComponents = prev.topComponents.map((c) => {
+        if (c.id !== componentId) return c;
+        found = true;
+        return {
+          ...c,
+          content: { ...(c.content ?? {}), ...(partialContent ?? {}) }
+        };
       });
 
-      // 2) bottomComponents
-      if (!found) {
-        next.bottomComponents = next.bottomComponents.map((c) => {
-          if (mergeComp(c)) found = true;
-          return c;
-        });
+      if (found) {
+        console.log('[handleUpdateComponent] componente atualizado em topComponents');
+        return { ...prev, topComponents: newTopComponents };
       }
 
-      // 3) rows/columns
-      if (!found) {
-        next.rows = next.rows.map((r) => ({
-          ...r,
-          columns: r.columns.map((col) =>
-            col.map((c) => {
-              if (mergeComp(c)) found = true;
-              return c;
-            })
-          ),
-        }));
+      // 2) bottomComponents - criar NOVO objeto ao invés de mutar
+      const newBottomComponents = prev.bottomComponents.map((c) => {
+        if (c.id !== componentId) return c;
+        found = true;
+        return {
+          ...c,
+          content: { ...(c.content ?? {}), ...(partialContent ?? {}) }
+        };
+      });
+
+      if (found) {
+        console.log('[handleUpdateComponent] componente atualizado em bottomComponents');
+        return { ...prev, bottomComponents: newBottomComponents };
       }
 
-      if (!found) {
-        console.warn('[handleUpdateComponent] componente não encontrado:', componentId);
-        return prev; // Não altera estado
+      // 3) rows/columns - criar NOVO objeto ao invés de mutar
+      const newRows = prev.rows.map((r) => ({
+        ...r,
+        columns: r.columns.map((col) =>
+          col.map((c) => {
+            if (c.id !== componentId) return c;
+            found = true;
+            return {
+              ...c,
+              content: { ...(c.content ?? {}), ...(partialContent ?? {}) }
+            };
+          })
+        ),
+      }));
+
+      if (found) {
+        console.log('[handleUpdateComponent] componente atualizado em rows');
+        return { ...prev, rows: newRows };
       }
 
-      console.log('[handleUpdateComponent] componente atualizado com sucesso');
-      return next;
+      console.warn('[handleUpdateComponent] componente não encontrado:', componentId);
+      return prev; // Não altera estado
     });
   };
 

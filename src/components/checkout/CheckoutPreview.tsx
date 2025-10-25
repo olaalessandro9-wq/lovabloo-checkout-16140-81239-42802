@@ -775,6 +775,17 @@ export const CheckoutPreview = ({
                 </div>
               </div>
             </div>
+
+            {/* Botão de Pagamento - PIX */}
+            <button
+              className="w-full mt-5 mb-4 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
+              style={{
+                backgroundColor: customization.design.colors.button || '#10B981',
+                color: customization.design.colors.buttonText || '#FFFFFF'
+              }}
+            >
+              Pagar com PIX
+            </button>
           </>
         )}
 
@@ -823,6 +834,17 @@ export const CheckoutPreview = ({
             </div>
 
             <p className="text-xs text-gray-600 mt-2">à vista no Cartão de Crédito</p>
+
+            {/* Botão de Pagamento - Cartão */}
+            <button
+              className="w-full mt-5 mb-4 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
+              style={{
+                backgroundColor: customization.design.colors.button || '#10B981',
+                color: customization.design.colors.buttonText || '#FFFFFF'
+              }}
+            >
+              Pagar com Cartão de Crédito
+            </button>
           </div>
         )}
 
@@ -944,17 +966,6 @@ export const CheckoutPreview = ({
             ))}
           </div>
         )}
-
-        {/* Botão de Pagamento */}
-        <button
-          className="w-full mt-5 mb-4 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
-          style={{
-            backgroundColor: customization.design.colors.button || '#10B981',
-            color: customization.design.colors.buttonText || '#FFFFFF'
-          }}
-        >
-          {selectedPayment === 'pix' ? 'Pagar com PIX' : 'Pagar com Cartão de Crédito'}
-        </button>
 
         {/* Footer com Informações Legais */}
         <div className="bg-white rounded-xl shadow-sm p-5 mt-5 text-center">

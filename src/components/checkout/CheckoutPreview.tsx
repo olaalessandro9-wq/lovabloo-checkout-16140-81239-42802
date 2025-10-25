@@ -1,6 +1,6 @@
 import { CheckoutCustomization, CheckoutComponent, CheckoutRow, ViewMode } from "@/pages/CheckoutCustomizer";
 import { useState } from "react";
-import { Plus, Wallet, Lock as LockIconLucide } from "lucide-react";
+import { Plus, Wallet, Lock as LockIconLucide, User } from "lucide-react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { PixIcon, CreditCardIcon, LockIcon } from "@/components/icons";
 import { CheckIconCakto } from "@/components/icons/CheckIconCakto";

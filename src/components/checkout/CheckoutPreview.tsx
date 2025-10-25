@@ -899,6 +899,41 @@ export const CheckoutPreview = ({
           </div>
         )}
 
+        {/* Botão de Pagamento */}
+        <button
+          className="w-full mt-5 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
+          style={{
+            backgroundColor: customization.design.colors.button || '#10B981',
+            color: customization.design.colors.buttonText || '#FFFFFF'
+          }}
+        >
+          {selectedPayment === 'pix' ? 'Pagar com PIX' : 'Continuar para Pagamento'}
+        </button>
+
+        {/* Footer com Informações Legais */}
+        <div className="bg-white rounded-xl shadow-sm p-5 mt-5 text-center">
+          <div className="space-y-3">
+            {/* Logo/Nome + Processador */}
+            <p className="text-xs text-gray-700 leading-relaxed">
+              <span className="font-bold text-gray-900">Rise Checkout</span> está processando este pagamento para o vendedor{' '}
+              <span className="font-semibold text-gray-900">
+                {productData?.support_name || 'Vendedor'}
+              </span>
+            </p>
+
+            {/* Compra Segura com Check */}
+            <div className="flex items-center justify-center gap-2">
+              <CheckCircleFilledIcon size={16} color="#10B981" />
+              <span className="text-xs font-semibold text-gray-900">Compra 100% segura</span>
+            </div>
+
+            {/* reCAPTCHA */}
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Este site é protegido pelo reCAPTCHA do Google
+            </p>
+          </div>
+        </div>
+
         {/* Bottom Drop Zone */}
         {!isPreviewMode && (
           <div
@@ -942,41 +977,6 @@ export const CheckoutPreview = ({
             ))}
           </div>
         )}
-
-        {/* Botão de Pagamento */}
-        <button
-          className="w-full mt-5 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
-          style={{
-            backgroundColor: customization.design.colors.button || '#10B981',
-            color: customization.design.colors.buttonText || '#FFFFFF'
-          }}
-        >
-          {selectedPayment === 'pix' ? 'Pagar com PIX' : 'Continuar para Pagamento'}
-        </button>
-
-        {/* Footer com Informações Legais */}
-        <div className="bg-white rounded-xl shadow-sm p-5 mt-5 text-center">
-          <div className="space-y-3">
-            {/* Logo/Nome + Processador */}
-            <p className="text-xs text-gray-700 leading-relaxed">
-              <span className="font-bold text-gray-900">Rise Checkout</span> está processando este pagamento para o vendedor{' '}
-              <span className="font-semibold text-gray-900">
-                {productData?.support_name || 'Vendedor'}
-              </span>
-            </p>
-
-            {/* Compra Segura com Check */}
-            <div className="flex items-center justify-center gap-2">
-              <CheckCircleFilledIcon size={16} color="#10B981" />
-              <span className="text-xs font-semibold text-gray-900">Compra 100% segura</span>
-            </div>
-
-            {/* reCAPTCHA */}
-            <p className="text-xs text-gray-600 leading-relaxed">
-              Este site é protegido pelo reCAPTCHA do Google
-            </p>
-          </div>
-        </div>
           </div>
 
           {/* Coluna Direita - Sidebar (apenas desktop) */}

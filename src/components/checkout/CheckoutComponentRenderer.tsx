@@ -14,13 +14,16 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
 
   switch (component.type) {
     case 'image': {
-      const src = component.content?.imageUrl || component.content?.url;
+      // Ler src com fallback seguro
+      const src = typeof component.content?.imageUrl === 'string'
+        ? component.content.imageUrl
+        : (typeof component.content?.url === 'string' ? component.content.url : '');
       console.log('[Renderer:image] src:', src, 'component:', component.id);
       return (
         <div className="w-full flex justify-center mb-6">
           {src ? (
             <img
-              key={`${component.id}-${component.content?._stamp ?? '0'}`}
+              key={component.id}
               src={src}
               alt={component.content?.alt || 'Imagem'}
               className="max-w-full h-auto rounded-lg"

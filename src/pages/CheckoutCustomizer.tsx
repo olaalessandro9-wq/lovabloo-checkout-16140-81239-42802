@@ -103,6 +103,16 @@ const CheckoutCustomizer = () => {
   const [selectedColumn, setSelectedColumn] = useState<number>(0);
   const [productData, setProductData] = useState<any>(null);
   const [orderBumps, setOrderBumps] = useState<any[]>([]);
+  
+  // Flags para controlar resync/auto-save
+  const [isDirty, setIsDirty] = useState(false);
+  const [lastLocalRev, setLastLocalRev] = useState<number>(Date.now());
+  
+  // Função para marcar estado como modificado
+  const touch = () => {
+    setIsDirty(true);
+    setLastLocalRev(Date.now());
+  };
 
   // Load checkout data from Supabase
   useEffect(() => {
@@ -112,17 +122,21 @@ const CheckoutCustomizer = () => {
     }
   }, [checkoutId]);
 
-  // Reload on window focus to ensure data is fresh
+  // Reload on window focus to ensure data is fresh (APENAS se não houver edições locais)
   useEffect(() => {
     const handleFocus = () => {
-      if (checkoutId) {
+      // NÃO recarregar se houver edições não salvas
+      if (checkoutId && !isDirty) {
+        console.log('[Focus] Recarregando dados do servidor (sem edições locais)');
         loadCheckoutData(checkoutId);
+      } else if (isDirty) {
+        console.log('[Focus] Ignorando reload (há edições locais não salvas)');
       }
     };
     
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [checkoutId]);
+  }, [checkoutId, isDirty]);
 
   const loadCheckoutData = async (id: string) => {
     setLoading(true);
@@ -276,6 +290,10 @@ const CheckoutCustomizer = () => {
 
       if (error) throw error;
 
+      // Resetar flag de modificação após salvar
+      setIsDirty(false);
+      console.log('[Save] Estado salvo, isDirty resetado');
+
       toast({
         title: "Sucesso!",
         description: "Checkout salvo com sucesso",
@@ -366,6 +384,7 @@ const CheckoutCustomizer = () => {
           }
         }
 
+        touch(); // Marcar como modificado
         return newCustomization;
       });
     } else {
@@ -399,6 +418,7 @@ const CheckoutCustomizer = () => {
           }
         }
 
+        touch(); // Marcar como modificado
         return newCustomization;
       });
 
@@ -424,6 +444,7 @@ const CheckoutCustomizer = () => {
       ...prev,
       rows: [...prev.rows, newRow],
     }));
+    touch(); // Marcar como modificado
 
     setSelectedRow(newRow.id);
   };
@@ -433,6 +454,7 @@ const CheckoutCustomizer = () => {
       ...prev,
       rows: prev.rows.filter((row) => row.id !== rowId),
     }));
+    touch(); // Marcar como modificado
 
     if (selectedRow === rowId) {
       setSelectedRow(null);
@@ -454,10 +476,11 @@ const CheckoutCustomizer = () => {
         };
       });
 
-      if (found) {
-        console.log('[handleUpdateComponent] componente atualizado em topComponents');
-        return { ...prev, topComponents: newTopComponents };
-      }
+    if (found) {
+      console.log('[handleUpdateComponent] componente atualizado em topComponents');
+      touch(); // Marcar como modificado
+      return { ...prev, topComponents: newTopComponents };
+    }
 
       // 2) bottomComponents - criar NOVO objeto ao invés de mutar
       const newBottomComponents = prev.bottomComponents.map((c) => {
@@ -469,10 +492,11 @@ const CheckoutCustomizer = () => {
         };
       });
 
-      if (found) {
-        console.log('[handleUpdateComponent] componente atualizado em bottomComponents');
-        return { ...prev, bottomComponents: newBottomComponents };
-      }
+    if (found) {
+      console.log('[handleUpdateComponent] componente atualizado em bottomComponents');
+      touch(); // Marcar como modificado
+      return { ...prev, bottomComponents: newBottomComponents };
+    }
 
       // 3) rows/columns - criar NOVO objeto ao invés de mutar
       const newRows = prev.rows.map((r) => ({
@@ -489,10 +513,11 @@ const CheckoutCustomizer = () => {
         ),
       }));
 
-      if (found) {
-        console.log('[handleUpdateComponent] componente atualizado em rows');
-        return { ...prev, rows: newRows };
-      }
+    if (found) {
+      console.log('[handleUpdateComponent] componente atualizado em rows');
+      touch(); // Marcar como modificado
+      return { ...prev, rows: newRows };
+    }
 
       console.warn('[handleUpdateComponent] componente não encontrado:', componentId);
       return prev; // Não altera estado
@@ -517,6 +542,7 @@ const CheckoutCustomizer = () => {
         ),
       }));
 
+      touch(); // Marcar como modificado
       return newCustomization;
     });
 
@@ -666,6 +692,7 @@ const CheckoutCustomizer = () => {
       ...prev,
       design,
     }));
+    touch(); // Marcar como modificado
   };
 
   const getSelectedComponentData = () => {

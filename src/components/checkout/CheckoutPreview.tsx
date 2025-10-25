@@ -98,7 +98,10 @@ const ComponentRenderer = ({
         return "justify-center";
       };
       
-      const src = component.content?.imageUrl || component.content?.url;
+      // Ler src com fallback seguro
+      const src = typeof component.content?.imageUrl === 'string'
+        ? component.content.imageUrl
+        : (typeof component.content?.url === 'string' ? component.content.url : '');
       console.log('[ComponentRenderer:image] src:', src, 'component:', component.id);
       
       return (
@@ -112,7 +115,7 @@ const ComponentRenderer = ({
         >
           {src ? (
             <img 
-              key={`${component.id}-${component.content?._stamp ?? '0'}`}
+              key={component.id}
               src={src} 
               alt="Componente" 
               className="max-w-full h-auto rounded"

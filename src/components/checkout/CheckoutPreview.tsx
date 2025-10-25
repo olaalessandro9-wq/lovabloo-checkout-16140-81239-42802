@@ -6,6 +6,7 @@ import { PixIcon, CreditCardIcon, LockIcon } from "@/components/icons";
 import { CheckIconCakto } from "@/components/icons/CheckIconCakto";
 import { CheckCircleFilledIcon } from "@/components/icons/CheckCircleFilledIcon";
 import { ImageIcon } from "@/components/icons/ImageIcon";
+import { CountdownTimer } from "@/components/CountdownTimer";
 
 interface CheckoutPreviewProps {
   customization: CheckoutCustomization;
@@ -256,25 +257,18 @@ const ComponentRenderer = ({
       );
     
     case "timer":
-      const minutes = component.content?.minutes || 15;
-      const seconds = component.content?.seconds || 0;
-      const activeText = component.content?.activeText || "Oferta por tempo limitado";
-      const textColor = component.content?.textColor || "#FFFFFF";
       return (
-        <div 
-          className={`p-4 rounded-lg ${baseClasses}`}
+        <CountdownTimer
+          initialMinutes={component.content?.minutes || 15}
+          initialSeconds={component.content?.seconds || 0}
+          backgroundColor={component.content?.timerColor || customization.design.colors.accent}
+          textColor={component.content?.textColor || "#FFFFFF"}
+          activeText={component.content?.activeText || "Oferta por tempo limitado"}
+          finishedText={component.content?.finishedText || "Oferta finalizada"}
+          fixedTop={component.content?.fixedTop || false}
           onClick={onClick}
-          style={{ 
-            backgroundColor: component.content?.timerColor || customization.design.colors.accent,
-          }}
-        >
-          <div className="flex items-center justify-center gap-2">
-            <span className="text-2xl font-bold" style={{ color: textColor }}>
-              {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-            </span>
-          </div>
-          <p className="text-sm text-center mt-1" style={{ color: textColor, opacity: 0.9 }}>{activeText}</p>
-        </div>
+          className={baseClasses}
+        />
       );
     
     case "testimonial":

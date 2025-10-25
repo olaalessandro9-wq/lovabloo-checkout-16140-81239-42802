@@ -621,59 +621,46 @@ export const CheckoutPreview = ({
           
           <div className="space-y-3">
             <div>
-              <label 
-                className="text-sm mb-1 block"
-                style={{ color: customization.design.colors.secondaryText }}
-              >
+              <label className="text-sm mb-1 block text-gray-700">
                 Nome completo
               </label>
               <input
                 type="text"
                 placeholder="Digite seu nome completo"
-                className="w-full px-4 py-3 rounded-lg border"
-                style={{
-                  backgroundColor: customization.design.colors.background,
-                  borderColor: customization.design.colors.secondaryText + "40",
-                  color: customization.design.colors.primaryText,
-                }}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>
             
             <div>
-              <label 
-                className="text-sm mb-1 block"
-                style={{ color: customization.design.colors.secondaryText }}
-              >
+              <label className="text-sm mb-1 block text-gray-700">
                 Email
               </label>
               <input
                 type="email"
                 placeholder="Digite seu email"
-                className="w-full px-4 py-3 rounded-lg border"
-                style={{
-                  backgroundColor: customization.design.colors.background,
-                  borderColor: customization.design.colors.secondaryText + "40",
-                  color: customization.design.colors.primaryText,
-                }}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>
 
             <div>
-              <label 
-                className="text-sm mb-1 block"
-                style={{ color: customization.design.colors.secondaryText }}
-              >
+              <label className="text-sm mb-1 block text-gray-700">
+                CPF/CNPJ
+              </label>
+              <input
+                type="text"
+                placeholder="000.000.000-00"
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm mb-1 block text-gray-700">
                 Celular
               </label>
               <input
                 type="tel"
                 placeholder="+55 (00) 00000-0000"
-                className="w-full px-4 py-3 rounded-lg border"
-                style={{
-                  backgroundColor: customization.design.colors.background,
-                  borderColor: customization.design.colors.secondaryText + "40",
-                  color: customization.design.colors.primaryText,
-                }}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
               />
             </div>
           </div>
@@ -688,59 +675,43 @@ export const CheckoutPreview = ({
             Pagamento
           </h4>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
             <button
               onClick={() => setSelectedPayment("pix")}
-              className="p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105"
-              style={{
-                borderColor: selectedPayment === "pix" 
-                  ? customization.design.colors.accent
-                  : "#E5E7EB",
-                backgroundColor: selectedPayment === "pix"
-                  ? customization.design.colors.accent
-                  : customization.design.colors.background,
-                color: selectedPayment === "pix" 
-                  ? "#FFFFFF" 
-                  : customization.design.colors.primaryText,
-              }}
+              className={`w-full p-3 rounded-lg border-2 transition-all flex items-center gap-3 ${
+                selectedPayment === "pix"
+                  ? "bg-green-50 border-green-500"
+                  : "bg-white border-gray-300 hover:border-gray-400"
+              }`}
             >
-              <div className="flex items-center justify-center mb-1">
-                <PixIcon 
-                  size={28} 
-                  color={selectedPayment === "pix" 
-                    ? "#FFFFFF" 
-                    : customization.design.colors.primaryText
-                  }
-                />
-              </div>
-              <div className="text-sm font-semibold">PIX</div>
+              <PixIcon 
+                size={20} 
+                color={selectedPayment === "pix" ? "#10B981" : "#6B7280"}
+              />
+              <span className={`text-sm font-medium ${
+                selectedPayment === "pix" ? "text-green-700" : "text-gray-700"
+              }`}>
+                PIX
+              </span>
             </button>
 
             <button
               onClick={() => setSelectedPayment("card")}
-              className="p-4 rounded-lg border-2 transition-all duration-200 hover:scale-105"
-              style={{
-                borderColor: selectedPayment === "card" 
-                  ? customization.design.colors.accent
-                  : "#E5E7EB",
-                backgroundColor: selectedPayment === "card"
-                  ? customization.design.colors.accent
-                  : customization.design.colors.background,
-                color: selectedPayment === "card" 
-                  ? "#FFFFFF" 
-                  : customization.design.colors.primaryText,
-              }}
+              className={`w-full p-3 rounded-lg border-2 transition-all flex items-center gap-3 ${
+                selectedPayment === "card"
+                  ? "bg-blue-50 border-blue-500"
+                  : "bg-white border-gray-300 hover:border-gray-400"
+              }`}
             >
-              <div className="flex items-center justify-center mb-1">
-                <CreditCardIcon 
-                  size={28}
-                  color={selectedPayment === "card" 
-                    ? "#FFFFFF" 
-                    : customization.design.colors.primaryText
-                  }
-                />
-              </div>
-              <div className="text-sm font-semibold">Cartão de Crédito</div>
+              <CreditCardIcon 
+                size={20}
+                color={selectedPayment === "card" ? "#3B82F6" : "#6B7280"}
+              />
+              <span className={`text-sm font-medium ${
+                selectedPayment === "card" ? "text-blue-700" : "text-gray-700"
+              }`}>
+                Cartão de Crédito
+              </span>
             </button>
           </div>
         </div>

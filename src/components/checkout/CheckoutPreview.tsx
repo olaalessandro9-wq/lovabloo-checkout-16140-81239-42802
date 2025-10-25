@@ -947,7 +947,7 @@ export const CheckoutPreview = ({
 
         {/* Botão de Pagamento */}
         <button
-          className="w-full mt-5 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
+          className="w-full mt-5 mb-4 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
           style={{
             backgroundColor: customization.design.colors.button || '#10B981',
             color: customization.design.colors.buttonText || '#FFFFFF'
@@ -1029,14 +1029,6 @@ export const CheckoutPreview = ({
           {viewMode !== "mobile" && (
             <div className="lg:col-span-4">
               <div className="sticky top-6 space-y-3">
-                {/* Card Compra Segura */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                  <div className="flex items-center gap-2">
-                    <LockIcon size={16} color="#10B981" />
-                    <span className="text-sm font-semibold text-gray-900">Compra 100% segura</span>
-                  </div>
-                </div>
-
                 {/* Card Principal */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                   {/* Cabeçalho Verde */}

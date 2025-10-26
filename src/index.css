@@ -57,6 +57,20 @@ All colors MUST be HSL.
     --shadow-glow: 0 0 30px hsl(217 91% 60% / 0.15);
     --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.08);
     --shadow-subtle: 0 2px 12px hsl(0 0% 0% / 0.05);
+
+    /* Eagle Vision Theme - Light (default) */
+    --bg: #F6F7FB;
+    --text: #0A2540;
+    --subtext: #475569;
+    --brand: #0A2540;
+    --brand-fg: #FFFFFF;
+    --brand-subtle: #C8A951;
+
+    --sidebar-bg: #F9FAFB;
+    --sidebar-text: #1E293B;
+    --sidebar-muted: #64748B;
+    --sidebar-active: #E5E7EB;
+    --sidebar-hover: #EEF2FF;
   }
 
   .dark {
@@ -104,6 +118,38 @@ All colors MUST be HSL.
     --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.4);
     --shadow-subtle: 0 2px 12px hsl(0 0% 0% / 0.2);
   }
+
+  /* Eagle Vision Theme - Dark */
+  [data-theme="dark"] {
+    --bg: #0B1220;
+    --card: #0F172A;
+    --muted: #1F2937;
+    --text: #E5E7EB;
+    --subtext: #94A3B8;
+    --brand: #C8A951;
+    --brand-fg: #0B1220;
+    --brand-subtle: #2F3D57;
+
+    --sidebar-bg: #111827;
+    --sidebar-border: #1F2937;
+    --sidebar-text: #F3F4F6;
+    --sidebar-muted: #9CA3AF;
+    --sidebar-active: #1F2937;
+    --sidebar-hover: #0A2540;
+  }
+
+  /* Paletas */
+  :root[data-palette="eagle"] {}
+  :root[data-palette="sky"] {
+    --brand: #1E90FF;
+    --brand-subtle: #9FC9FF;
+    --sidebar-hover: rgba(30,144,255,0.08);
+  }
+  :root[data-palette="horizon"] {
+    --brand: #243B53;
+    --brand-subtle: #B87333;
+    --sidebar-hover: rgba(36,59,83,0.08);
+  }
 }
 
 @layer base {
@@ -113,5 +159,19 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground transition-colors duration-300;
+  }
+
+  /* Scrollbar customizado */
+  * { 
+    scrollbar-width: thin; 
+    scrollbar-color: var(--sidebar-active) transparent; 
+  }
+  *::-webkit-scrollbar { 
+    height: 8px; 
+    width: 8px; 
+  }
+  *::-webkit-scrollbar-thumb { 
+    background: var(--sidebar-active); 
+    border-radius: 999px; 
   }
 }

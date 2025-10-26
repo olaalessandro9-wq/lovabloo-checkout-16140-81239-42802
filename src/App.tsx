@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ThemeProvider } from "@/contexts/ThemeProvider";
 import Index from "./pages/Index";
 import Produtos from "./pages/Produtos";
 import ProductEdit from "./pages/ProductEdit";
@@ -21,8 +22,9 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <TooltipProvider>
+    <ThemeProvider>
+      <BrowserRouter>
+        <TooltipProvider>
         <Toaster />
         <Sonner />
         <Routes>
@@ -39,8 +41,9 @@ const App = () => (
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </TooltipProvider>
-    </BrowserRouter>
+        </TooltipProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

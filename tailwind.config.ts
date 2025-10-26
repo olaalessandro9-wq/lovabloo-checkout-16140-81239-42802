@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["class"],
+  darkMode: ["class", '[data-theme="dark"]'],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
@@ -14,6 +14,15 @@ export default {
     },
     extend: {
       colors: {
+        // Eagle Vision Theme
+        bg: 'var(--bg)',
+        text: 'var(--text)',
+        subtext: 'var(--subtext)',
+        brand: { 
+          DEFAULT: 'var(--brand)', 
+          fg: 'var(--brand-fg)', 
+          subtle: 'var(--brand-subtle)' 
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -56,6 +65,12 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+          // Eagle Vision
+          bg: 'var(--sidebar-bg)',
+          text: 'var(--sidebar-text)',
+          muted: 'var(--sidebar-muted)',
+          active: 'var(--sidebar-active)',
+          hover: 'var(--sidebar-hover)'
         },
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
@@ -68,11 +83,13 @@ export default {
       boxShadow: {
         'glow': 'var(--shadow-glow)',
         'card': 'var(--shadow-card)',
+        'soft': '0 6px 24px rgba(0,0,0,0.06)',
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl2: '1rem',
       },
       keyframes: {
         "accordion-down": {

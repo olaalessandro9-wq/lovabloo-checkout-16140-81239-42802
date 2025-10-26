@@ -28,20 +28,26 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
         );
       }
       
+      // Valores padrão (pode ler do customization depois)
+      const maxW = component.content?.maxWidth ?? 720; // px
+      
       return (
-        <div className="flex justify-center items-center w-full mb-6">
-          <img
-            key={component.id}
-            src={src}
-            alt={component.content?.alt || 'Imagem'}
-            className="rounded-lg object-contain"
-            style={{
-              maxWidth: '400px',      // largura máxima
-              maxHeight: '350px',     // altura máxima
-              width: '100%',          // responsivo
-              height: 'auto',         // mantém proporção
-            }}
-          />
+        <div className="w-full flex justify-center mb-6">
+          <div
+            className="relative w-full rounded-xl overflow-hidden bg-[#0B0B0D]"
+            style={{ maxWidth: `${maxW}px` }}
+          >
+            {/* Proporção responsiva: 4/3 no mobile, 16/9 no desktop */}
+            <div className="aspect-[4/3] lg:aspect-[16/9]">
+              <img
+                key={component.id}
+                src={src}
+                alt={component.content?.alt || 'Imagem'}
+                className="absolute inset-0 w-full h-full object-contain"
+                loading="lazy"
+              />
+            </div>
+          </div>
         </div>
       );
     }

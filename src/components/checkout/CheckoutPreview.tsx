@@ -534,8 +534,6 @@ export const CheckoutPreview = ({
     });
   };
 
-  const maxWidth = viewMode === "mobile" ? "max-w-md" : "max-w-7xl";
-
   return (
     <div 
       className="min-h-screen flex items-start justify-center p-6"
@@ -544,10 +542,11 @@ export const CheckoutPreview = ({
         fontFamily: 'Inter, system-ui, sans-serif',
       }}
     >
-      <div className={`w-full ${maxWidth}`}>
-        <div className={viewMode === "mobile" ? "space-y-4" : "grid grid-cols-1 lg:grid-cols-12 gap-6"}>
-          {/* Coluna Esquerda - Formulário */}
-          <div className={viewMode === "mobile" ? "" : "lg:col-span-8 space-y-4"}>
+      <div className="w-full">
+        <div className={viewMode === "mobile" ? "max-w-md mx-auto space-y-4" : "max-w-[1120px] mx-auto px-4 lg:px-6"}>
+          <div className={viewMode === "mobile" ? "space-y-4" : "grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]"}>
+            {/* Coluna Esquerda - Formulário */}
+            <div className="space-y-4 min-w-0">
         {/* Top Drop Zone */}
         {!isPreviewMode && (
           <div
@@ -1042,11 +1041,11 @@ export const CheckoutPreview = ({
             ))}
           </div>
         )}
-          </div>
+            </div>
 
-          {/* Coluna Direita - Sidebar (apenas desktop) */}
-          {viewMode !== "mobile" && (
-            <div className="lg:col-span-4">
+            {/* Coluna Direita - Sidebar (apenas desktop) */}
+            {viewMode !== "mobile" && (
+              <aside className="min-w-0">
               <div className="sticky top-6 space-y-3">
                 {/* Card Principal */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -1112,8 +1111,9 @@ export const CheckoutPreview = ({
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+              </aside>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
+import { AlarmClock } from 'lucide-react';
 
 interface CountdownTimerProps {
   initialMinutes: number;
@@ -50,23 +50,22 @@ export const CountdownTimer = ({
   const seconds = timeLeft % 60;
 
   return (
-    <div
-      className={`p-4 rounded-lg ${className} ${fixedTop ? 'sticky top-0 z-50' : ''}`}
-      onClick={onClick}
-      style={{
-        backgroundColor,
-      }}
-    >
-      {/* Ícone fixo + tempo — alinhado e com cor dinâmica */}
-      <div className="flex items-center justify-center gap-3">
-        <Bell size={28} style={{ color: textColor }} aria-hidden="true" />
-        <div className="text-center">
-          <div className="text-2xl font-bold" style={{ color: textColor }}>
+    <div className={`w-full bg-transparent ${fixedTop ? 'sticky top-0 z-50' : ''}`}>
+      <div className="max-w-[1120px] mx-auto px-4 lg:px-6">
+        <div
+          className={`mt-4 mb-6 rounded-xl min-h-[56px] px-4 py-3 flex items-center justify-center gap-3 ${className}`}
+          onClick={onClick}
+          style={{ backgroundColor, color: textColor }}
+        >
+          <AlarmClock size={22} style={{ color: textColor }} />
+          <span className="text-lg font-semibold tabular-nums">
             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-          </div>
-          <p className="text-sm mt-1" style={{ color: textColor, opacity: 0.9 }}>
-            {isFinished ? finishedText : activeText}
-          </p>
+          </span>
+          {(isFinished ? finishedText : activeText) && (
+            <span className="text-sm opacity-90">
+              {isFinished ? finishedText : activeText}
+            </span>
+          )}
         </div>
       </div>
     </div>

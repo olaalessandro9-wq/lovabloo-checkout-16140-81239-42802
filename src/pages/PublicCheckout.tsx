@@ -214,10 +214,10 @@ const PublicCheckout = () => {
       )}
 
       <div className="min-h-screen bg-gray-50" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="max-w-[1120px] mx-auto px-4 lg:px-6 py-4 lg:py-8">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             {/* Coluna Principal - Formulário (Esquerda no Desktop) */}
-            <div className="lg:col-span-8">
+            <div className="space-y-4 min-w-0">
               {/* Header do Produto - Integrado com "Seus dados" */}
               <div className="bg-white rounded-xl shadow-sm p-5 mb-4">
                 {/* Cabeçalho do Produto */}
@@ -488,7 +488,7 @@ const PublicCheckout = () => {
             </div>
 
             {/* Sidebar - Resumo do Pedido (Direita no Desktop) */}
-            <div className="lg:col-span-4">
+            <aside className="min-w-0">
               <div className="lg:sticky lg:top-2">
                 {/* Card Principal Único com Cabeçalho Verde */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -561,7 +561,7 @@ const PublicCheckout = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </aside>
           </div>
         </div>
 

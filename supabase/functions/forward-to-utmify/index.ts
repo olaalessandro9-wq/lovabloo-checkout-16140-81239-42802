@@ -58,7 +58,7 @@ serve(async (req) => {
       .select('*')
       .eq('vendor_id', order.vendor_id)
       .eq('integration_type', 'utmify')
-      .eq('active', true)
+      .eq('is_active', true)
       .single();
 
     if (integrationError || !integration) {

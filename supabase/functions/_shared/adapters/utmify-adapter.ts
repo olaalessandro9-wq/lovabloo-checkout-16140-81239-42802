@@ -143,8 +143,11 @@ export function convertOrderToUtmify(order: {
   }
 
   // Calcular comissões
+  // Por enquanto, comissão sempre 0 (produtor recebe 100%)
+  // No futuro: buscar commission_rate do produto quando houver afiliado (src)
   const gatewayFee = order.gateway_fee_cents || 0;
-  const userCommission = order.amount_cents - gatewayFee;
+  const hasAffiliate = !!order.tracking_params?.src;
+  const userCommission = 0; // TODO: implementar taxa configurável por produto
 
   return {
     orderId: order.id,

@@ -122,8 +122,25 @@ Deno.serve(async (req: Request) => {
       console.log('[Webhook] No status transition needed');
     }
 
-    // 8) TODO: Publicar evento para n8n/webhooks (Fase 5 e 6)
+    // 8) Publicar evento para n8n (se configurado)
     // await publishToN8n({ orderId: order.id, eventType: normalized.eventType });
+
+    // 9) Enviar para Utmify (se integração ativa)
+    try {
+      const utmifyUrl = `${supabaseUrl}/functions/v1/forward-to-utmify`;
+      await fetch(utmifyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({ orderId: order.id }),
+      });
+      console.log('[Webhook] Utmify notification sent');
+    } catch (utmifyError) {
+      // Não quebrar o fluxo se Utmify falhar
+      console.error('[Webhook] Utmify error:', utmifyError);
+    }
 
     return new Response(
       JSON.stringify({ message: 'ok', orderId: order.id }),

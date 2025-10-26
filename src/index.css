@@ -226,5 +226,20 @@ All colors MUST be HSL.
   * { 
     transition: background-color 160ms, border-color 160ms, color 160ms; 
   }
+
+  /* Placeholders com contraste adequado */
+  input::placeholder,
+  textarea::placeholder,
+  select::placeholder {
+    color: var(--subtext);
+    opacity: 0.8;
+  }
+
+  /* Garantir contraste em inputs */
+  input,
+  textarea,
+  select {
+    color: var(--text);
+  }
 }
 

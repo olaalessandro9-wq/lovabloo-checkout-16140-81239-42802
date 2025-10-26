@@ -1,0 +1,69 @@
+/* =========================================================
+   HOTFIX – Força contraste no DARK para qualquer texto/ícone
+   Cobre casos de classes hardcoded (text-gray-900, black, etc.)
+   ========================================================= */
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* 1) Texto genérico (pega cabeçalhos, labels, spans, etc.) */
+html[data-theme="dark"] :is(
+  h1,h2,h3,h4,h5,h6,p,span,small,em,strong,code,pre,blockquote,
+  label,legend,caption,summary,dt,dd,li,div,section,article,aside,
+  th,td,figcaption,button,.btn,[role="button"]
+) { color: var(--text) !important; }
+
+/* 2) Classes comuns que vêm "pretas" das libs */
+html[data-theme="dark"] :is(
+  .text-black,.text-gray-900,.text-zinc-900,.text-slate-900,.text-neutral-900,
+  .text-[#000],.text-[#111],.text-[#0a0a0a]
+) { color: var(--text) !important; }
+
+/* 3) Botões secundários/ghost/outline não podem ficar com texto preto */
+html[data-theme="dark"] :is(.btn-ghost,.btn-outline,.btn-secondary,.button-ghost,.button-outline) {
+  color: var(--text) !important;
+  /* opcional: borda sutil no outline */
+  border-color: color-mix(in oklab, var(--text) 25%, transparent) !important;
+}
+
+/* 4) Inputs / selects / textareas + placeholder */
+html[data-theme="dark"] :is(input,select,textarea) {
+  color: var(--text) !important;
+  caret-color: var(--brand) !important;
+}
+html[data-theme="dark"] ::placeholder {
+  color: color-mix(in oklab, var(--text) 60%, transparent) !important;
+}
+
+/* 5) Menus / dropdowns / context menus */
+html[data-theme="dark"] :is(.menu,.dropdown,.select,.context-menu,.rc-select,.radix-select,.radix-dropdown) * {
+  color: var(--text) !important;
+}
+
+/* 6) Tabelas */
+html[data-theme="dark"] table :is(th,td) { color: var(--text) !important; }
+
+/* 7) Badges, tags, pills, paginação (número) */
+html[data-theme="dark"] :is(.badge,.tag,.pill,.chip,.pagination button,.pagination .page) {
+  color: var(--text) !important;
+}
+
+/* 8) Títulos de modal/dialog – muitas libs usam gray-900 */
+html[data-theme="dark"] :is([class*="DialogTitle"], [class*="ModalTitle"], .dialog-title, .modal-title) {
+  color: var(--text) !important;
+}
+
+/* 9) Recharts (eixo, legenda, tooltip) */
+html[data-theme="dark"] .recharts-cartesian-axis-tick tspan,
+html[data-theme="dark"] .recharts-legend-item-text {
+  fill: var(--text) !important;
+  color: var(--text) !important;
+}
+html[data-theme="dark"] .recharts-tooltip-wrapper { color: var(--text) !important; }
+
+/* 10) "text-secondary" muito escuro em dark → aproxima do --text */
+html[data-theme="dark"] :is(.text-gray-700,.text-zinc-700,.text-slate-700,.text-neutral-700) {
+  color: color-mix(in oklab, var(--text) 85%, transparent) !important;
+}
+

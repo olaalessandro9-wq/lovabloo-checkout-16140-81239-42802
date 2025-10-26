@@ -25,6 +25,9 @@ export const ThemeProvider: React.FC<{children: React.ReactNode}> = ({ children 
   });
 
   React.useEffect(() => {
+    // Usa data-mode para o sistema Eagle Vision
+    document.documentElement.setAttribute('data-mode', theme);
+    // Mantém data-theme para compatibilidade
     document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
     // Também atualiza a classe 'dark' para compatibilidade com componentes existentes
     if (theme === 'dark') {

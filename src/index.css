@@ -7,9 +7,8 @@ All colors MUST be HSL.
 */
 
 @layer base {
-  /* ===== BASE LIGHT (Eagle Vision) ===== */
+  /* ===== SISTEMA ANTIGO (HSL) - Mantido para compatibilidade ===== */
   :root {
-    /* Sistema antigo (HSL) - mantido para compatibilidade */
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
@@ -46,26 +45,8 @@ All colors MUST be HSL.
     --shadow-glow: 0 0 30px hsl(217 91% 60% / 0.15);
     --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.08);
     --shadow-subtle: 0 2px 12px hsl(0 0% 0% / 0.05);
-
-    /* Eagle Vision Theme - Light (padrão) */
-    --bg: #F6F7FB;
-    --card: #FFFFFF;
-    --muted: #E5E7EB;
-    --text: #0A2540;
-    --subtext: #475569;
-    --brand: #0A2540;
-    --brand-fg: #FFFFFF;
-    --brand-subtle: #C8A951;
-
-    --sidebar-bg: #F9FAFB;
-    --sidebar-text: #1E293B;
-    --sidebar-muted: #64748B;
-    --sidebar-active: #E5E7EB;
-    --sidebar-hover: #EEF2FF;
-    --sidebar-border: #E5E7EB;
   }
 
-  /* ===== BASE DARK ===== */
   .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
@@ -101,35 +82,52 @@ All colors MUST be HSL.
     --shadow-subtle: 0 2px 12px hsl(0 0% 0% / 0.2);
   }
 
-  /* Eagle Vision Theme - Dark */
+  /* ============== 1) BASE LIGHT (padrão) ============== */
+  :root {
+    --bg: #F6F7FB;
+    --card: #FFFFFF;
+    --text: #0A2540;
+    --subtext: #475569;
+
+    --brand: #0A2540;       /* Eagle Vision */
+    --brand-fg: #FFFFFF;
+    --brand-subtle: #C8A951;
+
+    --sidebar-bg: #F9FAFB;
+    --sidebar-text: #1E293B;
+    --sidebar-muted: #64748B;
+    --sidebar-active: #E5E7EB;
+    --sidebar-hover: #EEF2FF;
+    --sidebar-border: #E5E7EB;
+  }
+
+  /* ============== 2) BASE DARK (padrão) ============== */
   [data-theme="dark"] {
     --bg: #0B1220;
     --card: #0F172A;
-    --muted: #1F2937;
     --text: #E5E7EB;
     --subtext: #94A3B8;
-    --brand: #C8A951;
+
+    --brand: #C8A951;       /* Eagle destaca no dark */
     --brand-fg: #0B1220;
     --brand-subtle: #2F3D57;
 
     --sidebar-bg: #111827;
-    --sidebar-border: #1F2937;
     --sidebar-text: #F3F4F6;
     --sidebar-muted: #9CA3AF;
     --sidebar-active: #1F2937;
     --sidebar-hover: #0A2540;
+    --sidebar-border: #1F2937;
   }
 
-  /* ===== PALETA EAGLE VISION (padrão, sem mudanças) ===== */
-  :root[data-palette="eagle"] {}
-
-  /* ===== PALETA SKY COMMANDER (LIGHT) ===== */
+  /* ============== 3) PALETAS — LIGHT ============== */
+  /* SKY COMMANDER (já era perceptível; mantemos) */
   :root[data-palette="sky"] {
     --brand: #1E90FF;
     --brand-subtle: #9FC9FF;
+
     --bg: #F7FAFF;
     --card: #FFFFFF;
-    --muted: #E6EEF9;
     --text: #0F172A;
     --subtext: #475569;
 
@@ -141,13 +139,50 @@ All colors MUST be HSL.
     --sidebar-border: #E6EEF9;
   }
 
-  /* SKY COMMANDER (DARK) */
+  /* EAGLE VISION (agora MUITO mais visível no claro) */
+  :root[data-palette="eagle"] {
+    --brand: #0A2540;
+    --brand-subtle: #C8A951;
+
+    /* ⇩ contraste mais "petróleo" no layout: */
+    --bg: #F2F5FA;           /* antes #F6F7FB */
+    --card: #FFFFFF;
+    --text: #0A2540;
+    --subtext: #445065;
+
+    --sidebar-bg: #EFF3F8;   /* mais frio */
+    --sidebar-text: #0A2540;
+    --sidebar-muted: #5D6B80;
+    --sidebar-active: #DEE6F0;
+    --sidebar-hover: rgba(10,37,64,0.06);
+    --sidebar-border: #DEE6F0;
+  }
+
+  /* HORIZON (claramente diferente da Eagle no claro) */
+  :root[data-palette="horizon"] {
+    --brand: #243B53;
+    --brand-subtle: #B87333;
+
+    --bg: #F3F6FA;           /* toque "acinzentado" */
+    --card: #FFFFFF;
+    --text: #0E1A26;
+    --subtext: #3F5468;
+
+    --sidebar-bg: #F1F5F9;
+    --sidebar-text: #0E1A26;
+    --sidebar-muted: #5A7288;
+    --sidebar-active: #E4EAF1;
+    --sidebar-hover: rgba(36,59,83,0.07);
+    --sidebar-border: #E4EAF1;
+  }
+
+  /* ============== 4) PALETAS — DARK (coerência geral) ============== */
   [data-theme="dark"][data-palette="sky"] {
     --brand: #9FC9FF;
     --brand-subtle: #1E90FF;
+
     --bg: #0A1020;
     --card: #0D1428;
-    --muted: #182447;
     --text: #E6ECFE;
     --subtext: #A6B3D9;
 
@@ -159,31 +194,16 @@ All colors MUST be HSL.
     --sidebar-border: #182447;
   }
 
-  /* ===== PALETA HORIZON (LIGHT) ===== */
-  :root[data-palette="horizon"] {
-    --brand: #243B53;
-    --brand-subtle: #B87333;
-    --bg: #F6F8FB;
-    --card: #FFFFFF;
-    --muted: #E7ECF3;
-    --text: #0F172A;
-    --subtext: #475569;
-
-    --sidebar-bg: #F7F9FB;
-    --sidebar-text: #0F172A;
-    --sidebar-muted: #64748B;
-    --sidebar-active: #E7ECF3;
-    --sidebar-hover: rgba(36,59,83,0.08);
-    --sidebar-border: #E7ECF3;
+  [data-theme="dark"][data-palette="eagle"] {
+    /* base dark já é eagle-friendly; opcional fine-tune */
   }
 
-  /* HORIZON (DARK) */
   [data-theme="dark"][data-palette="horizon"] {
     --brand: #B87333;
     --brand-subtle: #243B53;
+
     --bg: #0B1119;
     --card: #0E1621;
-    --muted: #1A2637;
     --text: #E6ECF5;
     --subtext: #9BB0C8;
 
@@ -226,20 +246,51 @@ All colors MUST be HSL.
   * { 
     transition: background-color 160ms, border-color 160ms, color 160ms; 
   }
+}
 
-  /* Placeholders com contraste adequado */
-  input::placeholder,
-  textarea::placeholder,
-  select::placeholder {
-    color: var(--subtext);
-    opacity: 0.8;
-  }
+/* ============== 5) HOTFIX FINAL — CAMPOS NO DARK ============== */
+/* deixe este bloco NO FIM do arquivo p/ ganhar da cascata */
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  color: var(--text) !important;
+  background-color: var(--card) !important;
+  border-color: var(--sidebar-border) !important;
+  caret-color: var(--text) !important;
+}
 
-  /* Garantir contraste em inputs */
-  input,
-  textarea,
-  select {
-    color: var(--text);
-  }
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: var(--subtext) !important;
+  opacity: 0.9;
+}
+
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] select:focus,
+html[data-theme="dark"] textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--brand) inset, 0 0 0 3px color-mix(in srgb, var(--brand) 30%, transparent);
+  border-color: var(--brand) !important;
+}
+
+/* Autofill (Chromium) */
+html[data-theme="dark"] input:-webkit-autofill,
+html[data-theme="dark"] textarea:-webkit-autofill,
+html[data-theme="dark"] select:-webkit-autofill {
+  -webkit-text-fill-color: var(--text) !important;
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px var(--card) inset !important;
+  caret-color: var(--text) !important;
+}
+
+/* Neutraliza utilitários hardcoded no dark */
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] .bg-neutral-50 { 
+  background-color: var(--card) !important; 
+}
+
+html[data-theme="dark"] .text-black,
+html[data-theme="dark"] .text-zinc-900 { 
+  color: var(--text) !important; 
 }
 

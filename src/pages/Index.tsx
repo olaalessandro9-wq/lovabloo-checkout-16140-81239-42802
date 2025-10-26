@@ -1,6 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
+import { RecentCustomersTable } from "@/components/dashboard/RecentCustomersTable";
 import { Calendar } from "lucide-react";
 
 const Index = () => {
@@ -49,6 +50,8 @@ const Index = () => {
           <RevenueChart title="Taxas" data={emptyChartData} />
           <RevenueChart title="E-mails" data={emptyChartData} />
         </div>
+
+        <RecentCustomersTable />
       </div>
     </MainLayout>
   );

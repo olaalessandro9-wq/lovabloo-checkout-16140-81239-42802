@@ -118,7 +118,13 @@ const ComponentRenderer = ({
               key={component.id}
               src={src} 
               alt="Componente" 
-              className="max-w-full h-auto rounded"
+              className="rounded object-contain"
+              style={{
+                maxWidth: '400px',      // largura máxima
+                maxHeight: '350px',     // altura máxima
+                width: '100%',          // responsivo
+                height: 'auto',         // mantém proporção
+              }}
             />
           ) : (
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center w-full flex flex-col items-center gap-2">

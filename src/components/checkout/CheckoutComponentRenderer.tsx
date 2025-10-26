@@ -19,24 +19,29 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
         ? component.content.imageUrl
         : (typeof component.content?.url === 'string' ? component.content.url : '');
       console.log('[Renderer:image] src:', src, 'component:', component.id);
+      
+      if (!src) {
+        return (
+          <div className="w-full border border-dashed rounded-lg p-6 text-center text-sm opacity-70 mb-6">
+            Imagem – clique para adicionar
+          </div>
+        );
+      }
+      
       return (
-        <div className="w-full flex justify-center mb-6">
-          {src ? (
-            <img
-              key={component.id}
-              src={src}
-              alt={component.content?.alt || 'Imagem'}
-              className="max-w-full h-auto rounded-lg"
-              style={{
-                maxHeight: component.content?.height || 'auto',
-              }}
-            />
-          ) : (
-            <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center">
-              <ImageIcon className="w-16 h-16 text-muted-foreground" />
-              <span className="ml-2 text-muted-foreground">Imagem não configurada</span>
-            </div>
-          )}
+        <div className="flex justify-center items-center w-full mb-6">
+          <img
+            key={component.id}
+            src={src}
+            alt={component.content?.alt || 'Imagem'}
+            className="rounded-lg object-contain"
+            style={{
+              maxWidth: '400px',      // largura máxima
+              maxHeight: '350px',     // altura máxima
+              width: '100%',          // responsivo
+              height: 'auto',         // mantém proporção
+            }}
+          />
         </div>
       );
     }

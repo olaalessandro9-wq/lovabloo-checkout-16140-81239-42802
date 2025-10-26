@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { convertOrderToUtmify, sendOrderToUtmify } from '../_shared/adapters/utmify-adapter.ts';
+import { convertToUtmifyFormat, sendOrderToUtmify, type OrderEvent } from '../_shared/adapters/utmify-adapter.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -64,13 +64,13 @@ serve(async (req) => {
     if (integrationError || !integration) {
       console.log('[Utmify] No active integration for vendor:', order.vendor_id);
       return new Response(
-        JSON.stringify({ error: 'No active Utmify integration found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ message: 'No active Utmify integration found' }),
+        { status: 204, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Pegar API token do config
-    const apiToken = integration.config?.apiToken;
+    const apiToken = integration.config?.api_token;
     if (!apiToken) {
       console.error('[Utmify] API token not configured');
       return new Response(
@@ -79,39 +79,43 @@ serve(async (req) => {
       );
     }
 
-    // Converter pedido para formato Utmify
-    const utmifyOrder = convertOrderToUtmify({
-      id: order.id,
-      vendor_id: order.vendor_id,
-      product_id: order.product_id,
-      product_name: order.products?.name || 'Produto',
-      customer_name: order.customer_name,
-      customer_email: order.customer_email,
-      customer_phone: order.customer_phone,
-      customer_document: order.customer_document,
-      customer_country: order.customer_country,
-      customer_ip: order.customer_ip,
-      amount_cents: order.amount_cents,
-      gateway_fee_cents: order.gateway_fee_cents,
-      payment_method: order.payment_method,
-      status: order.status,
-      created_at: order.created_at,
-      approved_at: order.approved_at,
-      refunded_at: order.refunded_at,
+    // Montar evento para o adapter
+    const event: OrderEvent = {
+      order: {
+        id: order.id,
+        vendor_id: order.vendor_id,
+        product_id: order.product_id,
+        product_name: order.products?.name || 'Produto',
+        amount_cents: order.amount_cents,
+        status: order.status,
+        payment_method: order.payment_method,
+        customer_name: order.customer_name,
+        customer_email: order.customer_email,
+        customer_phone: order.customer_phone,
+        customer_document: order.customer_document,
+        created_at: order.created_at,
+        paid_at: order.paid_at,
+        refunded_at: order.refunded_at,
+        is_test: order.is_test,
+        tracking_params: order.tracking_params,
+      },
+      type: 'PAYMENT_APPROVED',
       tracking_params: order.tracking_params,
-      is_test: order.is_test,
-    });
+    };
 
-    if (!utmifyOrder) {
+    // Converter pedido para formato Utmify
+    const utmifyPayload = convertToUtmifyFormat(event);
+
+    if (!utmifyPayload) {
       console.log('[Utmify] Order not eligible for Utmify:', order.status);
       return new Response(
-        JSON.stringify({ message: 'Order not eligible for Utmify' }),
+        JSON.stringify({ message: 'Order not eligible for Utmify (e.g., abandoned)' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     // Enviar para Utmify
-    const result = await sendOrderToUtmify(utmifyOrder, apiToken);
+    const result = await sendOrderToUtmify(utmifyPayload, apiToken);
 
     if (!result.success) {
       console.error('[Utmify] Failed to send order:', result.error);

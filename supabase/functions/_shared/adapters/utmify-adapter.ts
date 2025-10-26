@@ -1,196 +1,162 @@
 /**
- * Adapter para Utmify
+ * Adapter para Utmify v2
  * 
  * Converte eventos internos para o formato esperado pela API da Utmify.
+ * - Valores em REAIS (não cents)
+ * - Comissão sempre 0 (produtor recebe 100% até implementar configurável)
+ * - Datas em UTC formato 'YYYY-MM-DD HH:MM:SS'
  * 
  * Documentação: https://api.utmify.com.br/api-credentials/orders
  */
 
-export interface UtmifyOrder {
+export interface Order {
+  id: string;
+  vendor_id: string;
+  product_id?: string;
+  product_name?: string;
+  amount_cents: number;
+  status: string;
+  payment_method?: string;
+  customer_name?: string | null;
+  customer_email?: string | null;
+  customer_phone?: string | null;
+  customer_document?: string | null;
+  created_at: string; // ISO
+  paid_at?: string | null; // ISO
+  refunded_at?: string | null; // ISO
+  is_test?: boolean;
+  tracking_params?: Record<string, any> | null;
+}
+
+export interface OrderEvent {
+  order: Order;
+  type: string; // PAYMENT_APPROVED, etc.
+  tracking_params?: Record<string, any> | null;
+}
+
+export interface UtmifyPayload {
   orderId: string;
   platform: string;
-  paymentMethod: 'pix' | 'credit_card' | 'boleto' | 'paypal' | 'free_price';
-  status: 'waiting_payment' | 'paid' | 'refused' | 'refunded' | 'chargedback';
-  createdAt: string; // 'YYYY-MM-DD HH:MM:SS' UTC
-  approvedDate: string | null; // 'YYYY-MM-DD HH:MM:SS' UTC
-  refundedAt: string | null; // 'YYYY-MM-DD HH:MM:SS' UTC
-  customer: {
-    name: string;
-    email: string;
+  paymentMethod?: string | null;
+  status: string;
+  createdAt: string;            // 'YYYY-MM-DD HH:MM:SS' (UTC)
+  approvedDate?: string | null; // UTC
+  refundedAt?: string | null;   // UTC
+  customer?: {
+    email?: string | null;
+    name?: string | null;
     phone?: string | null;
     document?: string | null;
-    country?: string;
-    ip?: string;
   };
-  products: Array<{
-    id: string;
-    name: string;
-    planId?: string | null;
-    planName?: string | null;
-    quantity: number;
-    priceInCents: number;
+  products?: Array<{
+    id?: string;
+    name?: string;
+    quantity?: number;
+    price: number; // em REAIS
   }>;
-  trackingParameters: {
-    src?: string | null;
-    sck?: string | null;
-    utm_source?: string | null;
-    utm_campaign?: string | null;
-    utm_medium?: string | null;
-    utm_content?: string | null;
-    utm_term?: string | null;
-  };
-  commission: {
-    totalPriceInCents: number;
-    gatewayFeeInCents: number;
-    userCommissionInCents: number;
-    currency?: 'BRL' | 'USD' | 'EUR' | 'GBP' | 'ARS' | 'CAD';
-  };
+  trackingParameters?: Record<string, any>;
+  valor: number;     // total em REAIS
+  comissao: number;  // sempre 0 por enquanto
   isTest?: boolean;
+  src?: string | null; // afiliado (também em trackingParameters)
+}
+
+/**
+ * Converte data ISO para formato UTC 'YYYY-MM-DD HH:MM:SS'
+ */
+function toUtcYMDHMS(dateIso?: string | null): string | null {
+  if (!dateIso) return null;
+  const d = new Date(dateIso);
+  if (isNaN(d.getTime())) return null;
+  
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+}
+
+/**
+ * Converte cents para reais (decimal)
+ */
+function centsToReais(cents?: number | null): number {
+  if (!cents) return 0;
+  return Math.round(cents) / 100;
 }
 
 /**
  * Mapeia status interno para status Utmify
  */
-export function mapStatusToUtmify(internalStatus: string): UtmifyOrder['status'] | null {
-  const mapping: Record<string, UtmifyOrder['status']> = {
-    'initiated': 'waiting_payment',
-    'pix_pending': 'waiting_payment',
-    'authorized': 'waiting_payment',
-    'paid': 'paid',
-    'declined': 'refused',
-    'canceled': 'refused',
-    'refunded': 'refunded',
-    'chargeback': 'chargedback',
-  };
-
-  return mapping[internalStatus] || null;
-}
-
-/**
- * Mapeia método de pagamento interno para Utmify
- */
-export function mapPaymentMethodToUtmify(
-  internalMethod: string
-): UtmifyOrder['paymentMethod'] {
-  const mapping: Record<string, UtmifyOrder['paymentMethod']> = {
-    'pix': 'pix',
-    'credit_card': 'credit_card',
-    'boleto': 'boleto',
-    'paypal': 'paypal',
-    'free': 'free_price',
-  };
-
-  return mapping[internalMethod] || 'pix';
-}
-
-/**
- * Formata data para o formato Utmify (YYYY-MM-DD HH:MM:SS UTC)
- * 
- * IMPORTANTE: Utmify NÃO aceita ISO 8601 com "T" e "Z"!
- */
-export function formatDateForUtmify(date: Date | string | null): string | null {
-  if (!date) return null;
-
-  const d = typeof date === 'string' ? new Date(date) : date;
-  
-  if (isNaN(d.getTime())) return null;
-
-  // Formatar como 'YYYY-MM-DD HH:MM:SS' em UTC
-  const year = d.getUTCFullYear();
-  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(d.getUTCDate()).padStart(2, '0');
-  const hours = String(d.getUTCHours()).padStart(2, '0');
-  const minutes = String(d.getUTCMinutes()).padStart(2, '0');
-  const seconds = String(d.getUTCSeconds()).padStart(2, '0');
-
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+function mapStatus(s: string): string {
+  switch (s) {
+    case 'pix_pending':
+    case 'initiated':
+    case 'authorized':
+      return 'waiting_payment';
+    case 'paid':
+      return 'paid';
+    case 'declined':
+      return 'refused';
+    case 'refunded':
+      return 'refunded';
+    case 'chargeback':
+      return 'chargedback';
+    case 'canceled':
+      return 'refused'; // decisão: mapear como refused
+    case 'abandoned':
+      return 'abandoned'; // não será enviado
+    default:
+      return 'paid';
+  }
 }
 
 /**
  * Converte pedido interno para formato Utmify
+ * 
+ * REGRAS:
+ * - Venda direta (sem src): comissao=0, produtor recebe 100%
+ * - Venda com afiliado (com src): comissao=0 por enquanto (TODO: configurável)
+ * - Valores em REAIS (não cents)
+ * - Datas em UTC 'YYYY-MM-DD HH:MM:SS'
  */
-export function convertOrderToUtmify(order: {
-  id: string;
-  vendor_id: string;
-  product_id: string;
-  product_name: string;
-  customer_name: string | null;
-  customer_email: string | null;
-  customer_phone: string | null;
-  customer_document: string | null;
-  customer_country?: string | null;
-  customer_ip?: string | null;
-  amount_cents: number;
-  gateway_fee_cents?: number;
-  payment_method: string;
-  status: string;
-  created_at: string;
-  approved_at?: string | null;
-  refunded_at?: string | null;
-  tracking_params?: Record<string, string | null>;
-  is_test?: boolean;
-}): UtmifyOrder | null {
-  // Mapear status
-  const utmifyStatus = mapStatusToUtmify(order.status);
-  if (!utmifyStatus) {
-    console.log('[Utmify] Status não mapeável:', order.status);
-    return null;
-  }
-
-  // Não enviar eventos de abandono para Utmify
+export function convertToUtmifyFormat(event: OrderEvent): UtmifyPayload | null {
+  const order = event.order;
+  
+  // Não enviar eventos de abandono
   if (order.status === 'abandoned') {
     return null;
   }
+  
+  const total = centsToReais(order.amount_cents);
+  const tracking = event.tracking_params ?? order.tracking_params ?? {};
+  const src = (tracking?.src ?? null) as string | null;
 
-  // Calcular comissões
-  // Por enquanto, comissão sempre 0 (produtor recebe 100%)
-  // No futuro: buscar commission_rate do produto quando houver afiliado (src)
-  const gatewayFee = order.gateway_fee_cents || 0;
-  const hasAffiliate = !!order.tracking_params?.src;
-  const userCommission = 0; // TODO: implementar taxa configurável por produto
+  // Comissão atual: sempre 0 (direta e afiliado)
+  // Futuro: usar taxa do produto quando existir e houver afiliado
+  const commission = 0;
 
   return {
     orderId: order.id,
-    platform: 'RiseCheckout',
-    paymentMethod: mapPaymentMethodToUtmify(order.payment_method),
-    status: utmifyStatus,
-    createdAt: formatDateForUtmify(order.created_at)!,
-    approvedDate: formatDateForUtmify(order.approved_at),
-    refundedAt: formatDateForUtmify(order.refunded_at),
+    platform: 'checkout-builder',
+    paymentMethod: order.payment_method ?? null,
+    status: mapStatus(order.status),
+    createdAt: toUtcYMDHMS(order.created_at)!,
+    approvedDate: toUtcYMDHMS(order.paid_at),
+    refundedAt: toUtcYMDHMS(order.refunded_at),
     customer: {
-      name: order.customer_name || 'Cliente',
-      email: order.customer_email || 'nao-informado@example.com',
-      phone: order.customer_phone,
-      document: order.customer_document,
-      country: order.customer_country || 'BR',
-      ip: order.customer_ip,
+      email: order.customer_email ?? null,
+      name: order.customer_name ?? null,
+      phone: order.customer_phone ?? null,
+      document: order.customer_document ?? null,
     },
-    products: [
-      {
-        id: order.product_id,
-        name: order.product_name,
-        planId: null,
-        planName: null,
-        quantity: 1,
-        priceInCents: order.amount_cents,
-      },
-    ],
-    trackingParameters: {
-      src: order.tracking_params?.src,
-      sck: order.tracking_params?.sck,
-      utm_source: order.tracking_params?.utm_source,
-      utm_campaign: order.tracking_params?.utm_campaign,
-      utm_medium: order.tracking_params?.utm_medium,
-      utm_content: order.tracking_params?.utm_content,
-      utm_term: order.tracking_params?.utm_term,
-    },
-    commission: {
-      totalPriceInCents: order.amount_cents,
-      gatewayFeeInCents: gatewayFee,
-      userCommissionInCents: userCommission,
-      currency: 'BRL',
-    },
-    isTest: order.is_test || false,
+    products: order.product_id ? [{
+      id: order.product_id,
+      name: order.product_name ?? 'Produto',
+      quantity: 1,
+      price: Number(total.toFixed(2)), // em REAIS
+    }] : undefined,
+    trackingParameters: tracking,
+    valor: Number(total.toFixed(2)),      // total em REAIS
+    comissao: Number(commission.toFixed(2)), // sempre 0
+    isTest: !!order.is_test,
+    src, // afiliado no root também
   };
 }
 
@@ -198,17 +164,21 @@ export function convertOrderToUtmify(order: {
  * Envia pedido para Utmify
  */
 export async function sendOrderToUtmify(
-  order: UtmifyOrder,
+  payload: UtmifyPayload,
   apiToken: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // Idempotency-Key para evitar duplicidade
+    const idempotencyKey = `${payload.orderId}-${payload.status}-${payload.approvedDate ?? 'na'}`;
+    
     const response = await fetch('https://api.utmify.com.br/api-credentials/orders', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-token': apiToken,
+        'Idempotency-Key': idempotencyKey,
       },
-      body: JSON.stringify(order),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -217,7 +187,7 @@ export async function sendOrderToUtmify(
       return { success: false, error: errorText };
     }
 
-    console.log('[Utmify] Order sent successfully:', order.orderId);
+    console.log('[Utmify] Order sent successfully:', payload.orderId);
     return { success: true };
   } catch (error) {
     console.error('[Utmify] Exception:', error);

@@ -1,11 +1,10 @@
 import { 
   LayoutDashboard, 
   Package, 
-  ShoppingCart, 
-  DollarSign,
   Users,
+  DollarSign,
   Settings,
-  Zap,
+  TrendingUp,
   LogOut
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
@@ -20,6 +19,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 
 const menuItems = [
@@ -34,20 +34,23 @@ export function AppSidebar() {
   const { signOut } = useAuth();
 
   return (
-    <Sidebar className="border-r border-sidebar-border">
-      <SidebarHeader className="p-6 border-b border-sidebar-border">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Zap className="w-5 h-5 text-primary-foreground" />
+    <Sidebar className="border-r border-sidebar-border bg-sidebar-background">
+      <SidebarHeader className="p-6 border-b border-sidebar-border/50">
+        <div className="flex items-center gap-3">
+          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
+            <TrendingUp className="w-5 h-5 text-white" strokeWidth={2.5} />
           </div>
-          <span className="text-xl font-bold text-foreground">PayFlow</span>
+          <div className="flex flex-col">
+            <span className="text-lg font-bold text-foreground tracking-tight">RiseCheckout</span>
+            <span className="text-xs text-muted-foreground">Sistema de Vendas</span>
+          </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="px-3 py-4">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
@@ -55,15 +58,15 @@ export function AppSidebar() {
                       to={item.url}
                       end={item.url === "/"}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                        `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                           isActive
-                            ? "bg-sidebar-accent text-primary font-medium"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/50"
+                            ? "bg-primary/10 text-primary font-semibold shadow-sm border border-primary/20"
+                            : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
                         }`
                       }
                     >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.title}</span>
+                      <item.icon className="w-5 h-5" strokeWidth={2} />
+                      <span className="text-sm">{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -71,20 +74,18 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupContent>
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent/50"
-              onClick={signOut}
-            >
-              <LogOut className="w-5 h-5" />
-              <span>Sair</span>
-            </Button>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="p-3 border-t border-sidebar-border/50">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 rounded-xl py-3 transition-all duration-200"
+          onClick={signOut}
+        >
+          <LogOut className="w-5 h-5" strokeWidth={2} />
+          <span className="text-sm font-medium">Sair</span>
+        </Button>
+      </SidebarFooter>
     </Sidebar>
   );
 }

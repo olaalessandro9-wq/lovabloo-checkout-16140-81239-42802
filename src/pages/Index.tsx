@@ -19,12 +19,15 @@ const Index = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border rounded-lg text-foreground hover:bg-muted transition-colors">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-1">Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Visão geral das suas vendas e métricas</p>
+          </div>
+          <button className="flex items-center gap-2 px-5 py-2.5 bg-card/50 border border-border/50 rounded-xl text-foreground hover:bg-card hover:border-primary/30 transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-primary/5">
             <Calendar className="w-4 h-4" />
-            <span className="text-sm">Selecionar período</span>
+            <span className="text-sm font-medium">Selecionar período</span>
           </button>
         </div>
 

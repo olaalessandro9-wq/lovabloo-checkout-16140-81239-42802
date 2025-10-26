@@ -4,8 +4,8 @@ import {
   Users,
   DollarSign,
   Settings,
-  TrendingUp,
-  LogOut
+  LogOut,
+  ChevronRight
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +15,7 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -34,21 +35,40 @@ export function AppSidebar() {
   const { signOut } = useAuth();
 
   return (
-    <Sidebar className="border-r border-sidebar-border bg-sidebar-background">
-      <SidebarHeader className="p-6 border-b border-sidebar-border/50">
+    <Sidebar className="border-r border-border/40 bg-[hsl(220,20%,6%)]">
+      <SidebarHeader className="p-5 border-b border-border/30">
         <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
-            <TrendingUp className="w-5 h-5 text-white" strokeWidth={2.5} />
+          <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/90 via-primary to-accent shadow-lg shadow-primary/30 flex items-center justify-center">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="text-white"
+            >
+              <path
+                d="M13 2L3 14H12L11 22L21 10H12L13 2Z"
+                fill="currentColor"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
           <div className="flex flex-col">
-            <span className="text-lg font-bold text-foreground tracking-tight">RiseCheckout</span>
-            <span className="text-xs text-muted-foreground">Sistema de Vendas</span>
+            <span className="text-base font-bold text-white tracking-tight">RiseCheckout</span>
+            <span className="text-[11px] text-muted-foreground/80">Sistema de Vendas</span>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-3 py-4">
+      <SidebarContent className="px-3 py-6">
         <SidebarGroup>
+          <SidebarGroupLabel className="px-3 mb-3 text-[11px] uppercase tracking-wider text-muted-foreground/70 font-semibold">
+            Navegação
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-1">
               {menuItems.map((item) => (
@@ -58,15 +78,24 @@ export function AppSidebar() {
                       to={item.url}
                       end={item.url === "/"}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                        `group flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 ${
                           isActive
-                            ? "bg-primary/10 text-primary font-semibold shadow-sm border border-primary/20"
-                            : "text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-foreground"
+                            ? "bg-primary/15 text-primary font-medium border border-primary/20"
+                            : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                         }`
                       }
                     >
-                      <item.icon className="w-5 h-5" strokeWidth={2} />
-                      <span className="text-sm">{item.title}</span>
+                      {({ isActive }) => (
+                        <>
+                          <div className="flex items-center gap-3">
+                            <item.icon className="w-[18px] h-[18px]" strokeWidth={2.2} />
+                            <span className="text-sm font-medium">{item.title}</span>
+                          </div>
+                          {isActive && (
+                            <ChevronRight className="w-4 h-4 text-primary" strokeWidth={2.5} />
+                          )}
+                        </>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -76,13 +105,17 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 border-t border-sidebar-border/50">
+      <SidebarFooter className="p-3 border-t border-border/30">
+        <div className="px-3 py-2 mb-2">
+          <p className="text-xs text-muted-foreground/70">Usuário</p>
+          <p className="text-sm text-foreground font-medium">usuario@risecheckout.com</p>
+        </div>
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60 rounded-xl py-3 transition-all duration-200"
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-xl h-10 transition-all duration-200"
           onClick={signOut}
         >
-          <LogOut className="w-5 h-5" strokeWidth={2} />
+          <LogOut className="w-[18px] h-[18px]" strokeWidth={2.2} />
           <span className="text-sm font-medium">Sair</span>
         </Button>
       </SidebarFooter>

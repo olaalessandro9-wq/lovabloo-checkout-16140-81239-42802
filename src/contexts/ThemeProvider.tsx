@@ -15,8 +15,14 @@ type ThemeContextState = {
 const ThemeContext = React.createContext<ThemeContextState | null>(null);
 
 export const ThemeProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
-  const [theme, setTheme] = React.useState<ThemeName>('light');
-  const [palette, setPalette] = React.useState<Palette>('eagle');
+  const [theme, setTheme] = React.useState<ThemeName>(() => {
+    const saved = localStorage.getItem('theme') as ThemeName | null;
+    return saved || 'light';
+  });
+  const [palette, setPalette] = React.useState<Palette>(() => {
+    const saved = localStorage.getItem('palette') as Palette | null;
+    return saved || 'eagle';
+  });
 
   React.useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
@@ -26,10 +32,14 @@ export const ThemeProvider: React.FC<{children: React.ReactNode}> = ({ children 
     } else {
       document.documentElement.classList.remove('dark');
     }
+    // Persiste no localStorage
+    localStorage.setItem('theme', theme);
   }, [theme]);
 
   React.useEffect(() => {
     document.documentElement.setAttribute('data-palette', palette);
+    // Persiste no localStorage
+    localStorage.setItem('palette', palette);
   }, [palette]);
 
   const toggleTheme = () => setTheme(t => (t === 'light' ? 'dark' : 'light'));

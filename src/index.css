@@ -7,37 +7,29 @@ All colors MUST be HSL.
 */
 
 @layer base {
+  /* ===== BASE LIGHT (Eagle Vision) ===== */
   :root {
+    /* Sistema antigo (HSL) - mantido para compatibilidade */
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
-
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-
     --secondary: 214 32% 91%;
     --secondary-foreground: 222 47% 11%;
-
     --muted: 214 32% 91%;
     --muted-foreground: 215 16% 47%;
-
     --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 217 91% 60%;
-
     --radius: 0.75rem;
-
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 217 91% 60%;
@@ -46,20 +38,19 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 214 32% 91%;
     --sidebar-ring: 217 91% 60%;
-
     --success: 142 76% 36%;
     --warning: 38 92% 50%;
     --info: 217 91% 60%;
-
     --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
     --gradient-card: linear-gradient(180deg, hsl(0 0% 99%), hsl(0 0% 97%));
-    
     --shadow-glow: 0 0 30px hsl(217 91% 60% / 0.15);
     --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.08);
     --shadow-subtle: 0 2px 12px hsl(0 0% 0% / 0.05);
 
-    /* Eagle Vision Theme - Light (default) */
+    /* Eagle Vision Theme - Light (padrão) */
     --bg: #F6F7FB;
+    --card: #FFFFFF;
+    --muted: #E5E7EB;
     --text: #0A2540;
     --subtext: #475569;
     --brand: #0A2540;
@@ -71,37 +62,30 @@ All colors MUST be HSL.
     --sidebar-muted: #64748B;
     --sidebar-active: #E5E7EB;
     --sidebar-hover: #EEF2FF;
+    --sidebar-border: #E5E7EB;
   }
 
+  /* ===== BASE DARK ===== */
   .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
-
     --card: 222 47% 13%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222 47% 15%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-
     --secondary: 222 47% 17%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 222 47% 17%;
     --muted-foreground: 215 20% 65%;
-
     --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
-
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
     --border: 222 47% 20%;
     --input: 222 47% 20%;
     --ring: 217 91% 60%;
-
     --sidebar-background: 222 47% 9%;
     --sidebar-foreground: 210 40% 90%;
     --sidebar-primary: 217 91% 60%;
@@ -110,10 +94,8 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 222 47% 17%;
     --sidebar-ring: 217 91% 60%;
-
     --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 70%));
     --gradient-card: linear-gradient(180deg, hsl(222 47% 14%), hsl(222 47% 12%));
-    
     --shadow-glow: 0 0 30px hsl(217 91% 60% / 0.25);
     --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.4);
     --shadow-subtle: 0 2px 12px hsl(0 0% 0% / 0.2);
@@ -138,17 +120,79 @@ All colors MUST be HSL.
     --sidebar-hover: #0A2540;
   }
 
-  /* Paletas */
+  /* ===== PALETA EAGLE VISION (padrão, sem mudanças) ===== */
   :root[data-palette="eagle"] {}
+
+  /* ===== PALETA SKY COMMANDER (LIGHT) ===== */
   :root[data-palette="sky"] {
     --brand: #1E90FF;
     --brand-subtle: #9FC9FF;
+    --bg: #F7FAFF;
+    --card: #FFFFFF;
+    --muted: #E6EEF9;
+    --text: #0F172A;
+    --subtext: #475569;
+
+    --sidebar-bg: #F8FAFF;
+    --sidebar-text: #0F172A;
+    --sidebar-muted: #64748B;
+    --sidebar-active: #E6EEF9;
     --sidebar-hover: rgba(30,144,255,0.08);
+    --sidebar-border: #E6EEF9;
   }
+
+  /* SKY COMMANDER (DARK) */
+  [data-theme="dark"][data-palette="sky"] {
+    --brand: #9FC9FF;
+    --brand-subtle: #1E90FF;
+    --bg: #0A1020;
+    --card: #0D1428;
+    --muted: #182447;
+    --text: #E6ECFE;
+    --subtext: #A6B3D9;
+
+    --sidebar-bg: #0E162B;
+    --sidebar-text: #E6ECFE;
+    --sidebar-muted: #A6B3D9;
+    --sidebar-active: #182447;
+    --sidebar-hover: rgba(30,144,255,0.15);
+    --sidebar-border: #182447;
+  }
+
+  /* ===== PALETA HORIZON (LIGHT) ===== */
   :root[data-palette="horizon"] {
     --brand: #243B53;
     --brand-subtle: #B87333;
+    --bg: #F6F8FB;
+    --card: #FFFFFF;
+    --muted: #E7ECF3;
+    --text: #0F172A;
+    --subtext: #475569;
+
+    --sidebar-bg: #F7F9FB;
+    --sidebar-text: #0F172A;
+    --sidebar-muted: #64748B;
+    --sidebar-active: #E7ECF3;
     --sidebar-hover: rgba(36,59,83,0.08);
+    --sidebar-border: #E7ECF3;
+  }
+
+  /* HORIZON (DARK) */
+  [data-theme="dark"][data-palette="horizon"] {
+    --brand: #B87333;
+    --brand-subtle: #243B53;
+    --bg: #0B1119;
+    --card: #0E1621;
+    --muted: #1A2637;
+    --text: #E6ECF5;
+    --subtext: #9BB0C8;
+
+    --sidebar-bg: #0F1926;
+    --sidebar-text: #E6ECF5;
+    --sidebar-muted: #9BB0C8;
+    --sidebar-active: #1A2637;
+    --sidebar-hover: rgba(36,59,83,0.18);
+    --sidebar-border: #1A2637;
   }
 }
 
@@ -174,4 +218,13 @@ All colors MUST be HSL.
     background: var(--sidebar-active); 
     border-radius: 999px; 
   }
+
+  /* Transições suaves entre temas/paletas */
+  html { 
+    transition: color 160ms, background-color 160ms; 
+  }
+  * { 
+    transition: background-color 160ms, border-color 160ms, color 160ms; 
+  }
 }
+

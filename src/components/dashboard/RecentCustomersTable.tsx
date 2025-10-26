@@ -11,53 +11,16 @@ import { Button } from "@/components/ui/button";
 import { Search, RefreshCw, Download, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-const mockCustomers = [
-  {
-    id: "c#6c9a7...",
-    offer: "RATEIO COMMUNITY",
-    client: "gabrielovariol029@gmail.com",
-    phone: "+5593991495709",
-    createdAt: "05/09/2025, 10:22",
-    value: "R$ 19,9",
-    status: "Pago",
-  },
-  {
-    id: "c#6cjp...",
-    offer: "RATEIO COMMUNITY",
-    client: "alessanderlasm@gmail.com",
-    phone: "+5591994501825",
-    createdAt: "05/09/2025, 09:39",
-    value: "R$ 19,9",
-    status: "Pendente",
-  },
-  {
-    id: "c#6c9ec...",
-    offer: "RATEIO COMMUNITY",
-    client: "gabrielovariol029@gmail.com",
-    phone: "+5593991495709",
-    createdAt: "05/09/2025, 09:27",
-    value: "R$ 19,9",
-    status: "Pendente",
-  },
-  {
-    id: "c#6crs1...",
-    offer: "RATEIO COMMUNITY",
-    client: "codadedouzadaniel94@gmail.com",
-    phone: "+5591985056279",
-    createdAt: "05/09/2025, 09:14",
-    value: "R$ 29,89",
-    status: "Pago",
-  },
-  {
-    id: "c#6cnjk...",
-    offer: "RATEIO COMMUNITY",
-    client: "oliveiralsa_1@hotmail.com",
-    phone: "+5561980000041",
-    createdAt: "05/09/2025, 09:13",
-    value: "R$ 29,89",
-    status: "Pendente",
-  },
-];
+// Dados zerados - aguardando dados reais do banco
+const mockCustomers: Array<{
+  id: string;
+  offer: string;
+  client: string;
+  phone: string;
+  createdAt: string;
+  value: string;
+  status: "Pago" | "Pendente";
+}> = [];
 
 export function RecentCustomersTable() {
   return (
@@ -100,7 +63,20 @@ export function RecentCustomersTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockCustomers.map((customer) => (
+              {mockCustomers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <svg className="w-12 h-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                      </svg>
+                      <p className="text-base font-medium">Nenhum cliente ainda</p>
+                      <p className="text-sm">Quando você tiver clientes, eles aparecerão aqui com suas compras.</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                mockCustomers.map((customer) => (
                 <TableRow key={customer.id} className="hover:bg-muted/30">
                   <TableCell className="font-mono text-sm text-foreground">{customer.id}</TableCell>
                   <TableCell className="text-sm text-foreground">{customer.offer}</TableCell>
@@ -123,13 +99,15 @@ export function RecentCustomersTable() {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Mostrando 41 de 41 registros — Período: 01/06/2025 - 20/10/2025</span>
+        {mockCustomers.length > 0 && (
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>Mostrando {mockCustomers.length} de {mockCustomers.length} registros</span>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" disabled>
               Previous
@@ -148,7 +126,8 @@ export function RecentCustomersTable() {
               Next
             </Button>
           </div>
-        </div>
+          </div>
+        )}
       </div>
     </Card>
   );

@@ -1,0 +1,112 @@
+/* =========================================================
+   THEME COMPONENTS - Estilos para Componentes
+   Corrige inputs, botões, badges no dark mode
+   ========================================================= */
+
+/* ============== SHADCN/UI COMPATIBILITY ============== */
+:root, html[data-mode="light"], html[data-mode="dark"] {
+  /* campos */
+  --input: var(--input-bg);
+  --input-foreground: var(--input-fg);
+  --muted-foreground: var(--muted);
+  --card: var(--card-bg);
+  --card-foreground: var(--fg);
+
+  /* botões */
+  --primary-foreground: #ffffff;
+  --secondary: var(--panel);
+  --secondary-foreground: var(--fg);
+
+  /* bordas, outline */
+  --border: var(--border);
+  --ring: var(--ring);
+  
+  /* backgrounds */
+  --background: var(--bg);
+  --foreground: var(--fg);
+}
+
+/* ============== INPUTS/SELECT/TEXTAREA ============== */
+/* Força cor no dark para evitar texto preto */
+html[data-mode="dark"] input,
+html[data-mode="dark"] select,
+html[data-mode="dark"] textarea {
+  color: var(--input-foreground) !important;
+  background: var(--input) !important;
+  border-color: var(--input-border) !important;
+}
+
+html[data-mode="dark"] input::placeholder,
+html[data-mode="dark"] select::placeholder,
+html[data-mode="dark"] textarea::placeholder {
+  color: var(--muted) !important;
+  opacity: 0.8;
+}
+
+/* ============== BADGES/CHIPS/LABELS ============== */
+.badge, .chip, .label {
+  color: var(--fg);
+}
+
+html[data-mode="dark"] .badge,
+html[data-mode="dark"] .chip,
+html[data-mode="dark"] .label {
+  color: var(--fg) !important;
+}
+
+/* ============== BOTÕES ============== */
+/* Botão primário */
+button.btn-primary, .btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+button.btn-primary:hover, .btn-primary:hover {
+  background: var(--primary-600);
+}
+
+/* Botão ghost */
+button.btn-ghost, .btn-ghost {
+  color: var(--primary);
+  background: transparent;
+}
+button.btn-ghost:hover, .btn-ghost:hover {
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+/* Botão outline */
+button.btn-outline, .btn-outline {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: transparent;
+}
+button.btn-outline:hover, .btn-outline:hover {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Botão secundário */
+button.btn-secondary, .btn-secondary {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+/* ============== TABELAS ============== */
+html[data-mode="dark"] table th,
+html[data-mode="dark"] table td {
+  color: var(--fg) !important;
+}
+
+/* ============== CARDS ============== */
+.card {
+  background: var(--card);
+  color: var(--card-foreground);
+  border-color: var(--border);
+}
+
+/* ============== PANELS ============== */
+.panel {
+  background: var(--panel);
+  color: var(--fg);
+  border-color: var(--border);
+}
+

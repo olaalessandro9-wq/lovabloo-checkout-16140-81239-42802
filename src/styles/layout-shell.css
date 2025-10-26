@@ -1,0 +1,45 @@
+/* =========================================================
+   LAYOUT SHELL - Grid com Sidebar Sticky
+   Garante sidebar sempre visível ao rolar
+   ========================================================= */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px 1fr; /* largura do sidebar */
+  min-height: 100vh;
+}
+
+.app-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+}
+
+.app-main {
+  min-width: 0;           /* evita overflow horizontal */
+  overflow: clip;         /* evita barras internas indevidas */
+  background: var(--bg);
+}
+
+/* ============== RESPONSIVO ============== */
+@media (max-width: 768px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+  
+  .app-sidebar {
+    position: fixed;
+    left: -260px;
+    transition: left 0.3s ease;
+    z-index: 50;
+  }
+  
+  .app-sidebar.open {
+    left: 0;
+  }
+}
+

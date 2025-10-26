@@ -53,7 +53,7 @@ export const CountdownTimer = ({
     <div className={`w-full bg-transparent ${fixedTop ? 'sticky top-0 z-50' : ''}`}>
       <div className="max-w-[1120px] mx-auto px-4 lg:px-6">
         <div
-          className={`mt-4 mb-6 rounded-xl min-h-[56px] px-4 py-3 flex items-center justify-center gap-3 ${className}`}
+          className={`mt-4 mb-6 rounded-xl min-h-[56px] px-5 py-3 flex items-center justify-center gap-3 shadow-sm ${className}`}
           onClick={onClick}
           style={{ backgroundColor, color: textColor }}
         >

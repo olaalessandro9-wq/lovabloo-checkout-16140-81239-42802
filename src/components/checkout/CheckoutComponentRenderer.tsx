@@ -29,23 +29,28 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
       }
       
       // Valores padrão (pode ler do customization depois)
-      const maxW = component.content?.maxWidth ?? 720; // px
+      const maxW = component.content?.maxWidth ?? 620; // px (igual à Cakto)
+      const fit = component.content?.fit ?? "contain"; // contain padrão
+      const rounded = component.content?.rounded ?? true;
+      const canvasBg = component.content?.canvasBg ?? "transparent"; // sem fundo preto
       
       return (
         <div className="w-full flex justify-center mb-6">
-          <div
-            className="relative w-full rounded-xl overflow-hidden bg-[#0B0B0D]"
-            style={{ maxWidth: `${maxW}px` }}
-          >
-            {/* Proporção responsiva: 4/3 no mobile, 16/9 no desktop */}
-            <div className="aspect-[4/3] lg:aspect-[16/9]">
-              <img
-                key={component.id}
-                src={src}
-                alt={component.content?.alt || 'Imagem'}
-                className="absolute inset-0 w-full h-full object-contain"
-                loading="lazy"
-              />
+          <div className="w-full" style={{ maxWidth: `${maxW}px` }}>
+            <div
+              className={`${rounded ? "rounded-xl" : ""} overflow-hidden`}
+              style={{ backgroundColor: canvasBg }}
+            >
+              {/* Proporção responsiva: 4/3 no mobile, 16/9 no desktop */}
+              <div className="aspect-[4/3] lg:aspect-[16/9] relative">
+                <img
+                  key={component.id}
+                  src={src}
+                  alt={component.content?.alt || 'Imagem'}
+                  className={`absolute inset-0 w-full h-full object-${fit}`}
+                  loading="lazy"
+                />
+              </div>
             </div>
           </div>
         </div>

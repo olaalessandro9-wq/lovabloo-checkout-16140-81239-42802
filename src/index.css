@@ -409,3 +409,101 @@ html[data-mode="dark"] textarea {
   background: var(--bg);
 }
 
+
+/* ===== Dark-mode compatibility overrides ===== */
+html[data-mode="dark"] {
+  /* Variáveis de compatibilidade */
+  --fix-fg: var(--fg);
+  --fix-panel: var(--panel);
+  --fix-border: var(--border);
+}
+
+/* Textos muito escuros herdados de utilitários */
+html[data-mode="dark"] .text-black,
+html[data-mode="dark"] .text-gray-900,
+html[data-mode="dark"] .text-slate-900,
+html[data-mode="dark"] .text-zinc-900,
+html[data-mode="dark"] .text-neutral-900,
+html[data-mode="dark"] .text-gray-800,
+html[data-mode="dark"] .text-slate-800 {
+  color: var(--fix-fg) !important;
+}
+
+/* Fundos claros "fixos" que quebram no dark */
+html[data-mode="dark"] .bg-white,
+html[data-mode="dark"] .bg-gray-50,
+html[data-mode="dark"] .bg-slate-50,
+html[data-mode="dark"] .bg-neutral-50 {
+  background-color: var(--fix-panel) !important;
+}
+
+/* Bordas claras demais no dark */
+html[data-mode="dark"] .border-gray-200,
+html[data-mode="dark"] .border-slate-200,
+html[data-mode="dark"] .border-neutral-200 {
+  border-color: var(--fix-border) !important;
+}
+
+/* Placeholder legível no dark */
+html[data-mode="dark"] ::placeholder {
+  color: rgba(230, 237, 247, 0.5) !important;
+}
+
+/* ===== Inputs, selects e botões – contraste e estados ===== */
+:root {
+  --input-bg: var(--panel);
+  --input-fg: var(--fg);
+  --input-border: var(--border);
+  --input-ring: var(--primary);
+}
+
+input, select, textarea {
+  background-color: var(--input-bg);
+  color: var(--input-fg);
+  border-color: var(--input-border);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(43, 112, 255, 0.35);
+  border-color: var(--input-ring);
+}
+
+html[data-mode="dark"] input:focus,
+html[data-mode="dark"] select:focus,
+html[data-mode="dark"] textarea:focus {
+  box-shadow: 0 0 0 3px rgba(122, 162, 255, 0.35);
+}
+
+/* Botões primários */
+.btn-primary,
+button[data-variant="primary"] {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+.btn-primary:hover,
+button[data-variant="primary"]:hover {
+  filter: brightness(1.05);
+}
+
+/* ===== Normalização para páginas de edição ===== */
+.edit-page,
+[data-edit-page="true"] {
+  transform: none !important;
+  zoom: 1 !important;
+}
+
+.edit-page .container,
+[data-edit-page="true"] .container {
+  max-width: 1200px;
+}
+
+.edit-page .card,
+[data-edit-page="true"] .card {
+  overflow: hidden;
+  border-color: var(--border);
+  background: var(--panel);
+}
+

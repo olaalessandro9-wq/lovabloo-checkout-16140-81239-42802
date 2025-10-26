@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { EagleSidebar } from "./EagleSidebar";
-import { useThemeStore } from "@/contexts/ThemeProvider";
-import { Sun, Moon, Palette, Bell, User } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeProvider";
+import { Sun, Moon, Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MainLayoutProps {
@@ -9,65 +9,52 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { theme, toggleTheme, palette, cyclePalette } = useThemeStore();
-
-  const getPaletteName = () => {
-    switch (palette) {
-      case 'eagle':
-        return 'Eagle Vision';
-      case 'sky':
-        return 'Sky Commander';
-      case 'horizon':
-        return 'Horizon';
-      default:
-        return palette;
-    }
-  };
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="min-h-screen flex w-full bg-bg">
-      <EagleSidebar />
-      <div className="flex-1 flex flex-col">
+    <div className="app-shell grid grid-cols-[264px_1fr] min-h-screen bg-bg">
+      {/* Sidebar sticky */}
+      <aside className="app-sidebar sticky top-0 h-screen overflow-y-auto border-r border-sidebar-border">
+        <EagleSidebar />
+      </aside>
+
+      {/* Conteúdo principal */}
+      <main className="app-main min-h-screen overflow-x-hidden">
+        {/* Header */}
         <header className="sticky top-0 z-20 border-b border-sidebar-border bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-          <div className="px-6 h-14 flex items-center justify-between">
-            <div></div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={cyclePalette}
-                className="rounded-xl hover:bg-sidebar-hover transition-all duration-200 flex items-center gap-2 text-subtext hover:text-text"
-                title="Trocar paleta de cores"
-              >
-                <Palette className="w-4 h-4" />
-                <span className="hidden sm:inline text-xs">{getPaletteName()}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleTheme}
-                className="rounded-xl hover:bg-sidebar-hover transition-all duration-200"
-                title={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
-              >
-                {theme === "light" ? (
-                  <Moon className="w-5 h-5 text-subtext" />
-                ) : (
-                  <Sun className="w-5 h-5 text-subtext" />
-                )}
-              </Button>
-              <button className="p-2.5 rounded-xl hover:bg-sidebar-hover transition-all duration-200 hover:scale-105 group">
-                <Bell className="w-5 h-5 text-subtext group-hover:text-text transition-colors" />
-              </button>
-              <button className="p-2.5 rounded-xl hover:bg-sidebar-hover transition-all duration-200 hover:scale-105 group">
-                <User className="w-5 h-5 text-subtext group-hover:text-text transition-colors" />
-              </button>
-            </div>
+          <div className="px-6 h-14 flex items-center justify-end gap-2">
+            {/* Botão Light/Dark */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-xl hover:bg-sidebar-hover transition-all duration-200"
+              title={theme === 'light' ? 'Ativar modo escuro' : 'Ativar modo claro'}
+            >
+              {theme === "light" ? (
+                <Moon className="w-5 h-5 text-subtext" />
+              ) : (
+                <Sun className="w-5 h-5 text-subtext" />
+              )}
+            </Button>
+            
+            {/* Notificações */}
+            <button className="p-2.5 rounded-xl hover:bg-sidebar-hover transition-all duration-200 hover:scale-105 group">
+              <Bell className="w-5 h-5 text-subtext group-hover:text-text transition-colors" />
+            </button>
+            
+            {/* Perfil */}
+            <button className="p-2.5 rounded-xl hover:bg-sidebar-hover transition-all duration-200 hover:scale-105 group">
+              <User className="w-5 h-5 text-subtext group-hover:text-text transition-colors" />
+            </button>
           </div>
         </header>
-        <main className="flex-1 p-8 bg-bg">
+
+        {/* Conteúdo da página */}
+        <div className="p-8">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

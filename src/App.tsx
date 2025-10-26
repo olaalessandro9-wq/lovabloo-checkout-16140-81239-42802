@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import PublicCheckout from "./pages/PublicCheckout";
 import PaymentLinkRedirect from "./pages/PaymentLinkRedirect";
 import NotFound from "./pages/NotFound";
+import EmBreve from "./pages/EmBreve";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,8 @@ const App = () => (
           <Route path="/produtos/editar" element={<ProtectedRoute><ProductEdit /></ProtectedRoute>} />
           <Route path="/produtos/checkout/personalizar" element={<ProtectedRoute><CheckoutCustomizer /></ProtectedRoute>} />
           <Route path="/afiliados" element={<ProtectedRoute><Afiliados /></ProtectedRoute>} />
+          <Route path="/financeiro" element={<ProtectedRoute><EmBreve titulo="Financeiro" /></ProtectedRoute>} />
+          <Route path="/integracoes" element={<ProtectedRoute><EmBreve titulo="Integrações" /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -1,11 +1,10 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
-import { RecentCustomersTable } from "@/components/dashboard/RecentCustomersTable";
 import { Calendar } from "lucide-react";
 
 const Index = () => {
-  // Dados zerados - aguardando dados reais do banco
+  // Dados zerados - aguardando integração real com banco de dados
   const emptyChartData = [
     { date: "01/01", value: 0 },
     { date: "15/01", value: 0 },
@@ -50,8 +49,6 @@ const Index = () => {
           <RevenueChart title="Taxas" data={emptyChartData} />
           <RevenueChart title="E-mails" data={emptyChartData} />
         </div>
-
-        <RecentCustomersTable />
       </div>
     </MainLayout>
   );

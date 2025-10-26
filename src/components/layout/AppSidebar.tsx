@@ -35,10 +35,10 @@ export function AppSidebar() {
   const { signOut } = useAuth();
 
   return (
-    <Sidebar className="border-r border-border/40 bg-[hsl(220,20%,6%)]">
+    <Sidebar className="border-r border-border/40 bg-sidebar-background">
       <SidebarHeader className="p-5 border-b border-border/30">
         <div className="flex items-center gap-3">
-          <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-primary/90 via-primary to-accent shadow-lg shadow-primary/30 flex items-center justify-center">
+          <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80 shadow-lg shadow-primary/30 flex items-center justify-center">
             <svg
               width="24"
               height="24"
@@ -58,7 +58,7 @@ export function AppSidebar() {
             </svg>
           </div>
           <div className="flex flex-col">
-            <span className="text-base font-bold text-white tracking-tight">RiseCheckout</span>
+            <span className="text-base font-bold text-sidebar-foreground tracking-tight">RiseCheckout</span>
             <span className="text-[11px] text-muted-foreground/80">Sistema de Vendas</span>
           </div>
         </div>
@@ -70,7 +70,7 @@ export function AppSidebar() {
             Navegação
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="space-y-1.5">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
@@ -78,24 +78,15 @@ export function AppSidebar() {
                       to={item.url}
                       end={item.url === "/"}
                       className={({ isActive }) =>
-                        `group flex items-center justify-between px-3 py-2.5 rounded-xl transition-all duration-200 ${
+                        `group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                           isActive
-                            ? "bg-primary/15 text-primary font-medium border border-primary/20"
-                            : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                            ? "bg-primary text-primary-foreground font-medium shadow-lg shadow-primary/25"
+                            : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
                         }`
                       }
                     >
-                      {({ isActive }) => (
-                        <>
-                          <div className="flex items-center gap-3">
-                            <item.icon className="w-[18px] h-[18px]" strokeWidth={2.2} />
-                            <span className="text-sm font-medium">{item.title}</span>
-                          </div>
-                          {isActive && (
-                            <ChevronRight className="w-4 h-4 text-primary" strokeWidth={2.5} />
-                          )}
-                        </>
-                      )}
+                      <item.icon className="w-5 h-5" strokeWidth={2} />
+                      <span className="text-sm font-medium">{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -108,14 +99,14 @@ export function AppSidebar() {
       <SidebarFooter className="p-3 border-t border-border/30">
         <div className="px-3 py-2 mb-2">
           <p className="text-xs text-muted-foreground/70">Usuário</p>
-          <p className="text-sm text-foreground font-medium">usuario@risecheckout.com</p>
+          <p className="text-sm text-sidebar-foreground font-medium">usuario@risecheckout.com</p>
         </div>
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground hover:bg-white/5 rounded-xl h-10 transition-all duration-200"
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-xl h-10 transition-all duration-200"
           onClick={signOut}
         >
-          <LogOut className="w-[18px] h-[18px]" strokeWidth={2.2} />
+          <LogOut className="w-5 h-5" strokeWidth={2} />
           <span className="text-sm font-medium">Sair</span>
         </Button>
       </SidebarFooter>

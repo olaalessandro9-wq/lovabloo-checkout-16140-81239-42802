@@ -22,9 +22,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.setAttribute('data-mode', theme);
     
     // Paleta fixa por modo (não editável pelo usuário)
-    // Light = Horizon (Sky Commander)
-    // Dark = Eagle
-    root.setAttribute('data-palette', theme === 'dark' ? 'eagle' : 'horizon');
+    // Light = Sky Commander (azul vibrante)
+    // Dark = Horizon (tons escuros)
+    root.setAttribute('data-palette', theme === 'dark' ? 'horizon' : 'sky');
     
     // Mantém data-theme para compatibilidade
     root.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');

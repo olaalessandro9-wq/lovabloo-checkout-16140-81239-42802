@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Input } from "./input";
 
 interface CurrencyInputProps {
-  value: string;
-  onChange: (value: string) => void;
+  value: string | number;  // Aceita centavos (number) ou string
+  onChange: (value: number) => void;  // Retorna centavos (number)
   className?: string;
   error?: string;
   id?: string;
@@ -39,7 +39,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
 
   // Atualizar display quando value mudar
   useEffect(() => {
-    const cents = parseCurrency(value);
+    const cents = typeof value === 'number' ? value : parseCurrency(value.toString());
     setDisplayValue(formatCurrency(cents));
   }, [value]);
 
@@ -73,8 +73,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
         cents = Math.floor(cents / 10);
       }
 
-      const newValue = (cents / 100).toFixed(2);
-      onChange(newValue);
+      onChange(cents);  // Retorna centavos diretamente
       setDisplayValue(formatCurrency(cents));
     }
   };
@@ -86,8 +85,7 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
     
     if (numbers) {
       const cents = parseInt(numbers, 10);
-      const newValue = (cents / 100).toFixed(2);
-      onChange(newValue);
+      onChange(cents);  // Retorna centavos diretamente
       setDisplayValue(formatCurrency(cents));
     }
   };

@@ -19,7 +19,7 @@ import { z } from "zod";
 const productSchema = z.object({
   name: z.string().trim().min(1, { message: "Nome é obrigatório" }).max(200, { message: "Nome muito longo" }),
   description: z.string().trim().max(2000, { message: "Descrição muito longa" }).optional(),
-  price: z.string().trim().regex(/^\d+(\.\d{1,2})?$/, { message: "Preço inválido" }),
+  price: z.number().int().positive({ message: "Preço deve ser maior que R$ 0,00" }),
 });
 
 interface AddProductDialogProps {
@@ -35,12 +35,12 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    price: "0.00",
+    price: 0,  // Centavos
   });
 
   const handleContinue = async () => {
-    if (!formData.name || !formData.description || parseFloat(formData.price) <= 0 || !user) {
-      if (parseFloat(formData.price) <= 0) {
+    if (!formData.name || !formData.description || formData.price <= 0 || !user) {
+      if (formData.price <= 0) {
         toast.error("O preço deve ser maior que R$ 0,00");
       }
       return;
@@ -65,7 +65,7 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
         .insert({
           name: validation.data.name,
           description: validation.data.description || "",
-          price: parseFloat(validation.data.price),
+          price: validation.data.price,  // Já está em centavos
           user_id: user.id,
           status: "active",
           support_name: "",
@@ -78,7 +78,7 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
 
       toast.success("Produto criado com sucesso!");
       onOpenChange(false);
-      setFormData({ name: "", description: "", price: "0.00" });
+      setFormData({ name: "", description: "", price: 0 });
       
       if (onProductAdded) onProductAdded();
       
@@ -93,7 +93,7 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
 
   const handleCancel = () => {
     onOpenChange(false);
-    setFormData({ name: "", description: "", price: "0.00" });
+    setFormData({ name: "", description: "", price: 0 });
   };
 
   return (
@@ -152,7 +152,7 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
           <Button 
             onClick={handleContinue}
             className="bg-primary hover:bg-primary/90"
-            disabled={!formData.name || !formData.description || parseFloat(formData.price) <= 0 || loading}
+            disabled={!formData.name || !formData.description || formData.price <= 0 || loading}
           >
             {loading ? "Criando..." : "Continuar"}
           </Button>

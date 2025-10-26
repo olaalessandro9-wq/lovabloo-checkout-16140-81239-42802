@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MoreVertical } from "lucide-react";
+import { formatCentsToBRL } from "@/utils/money";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AddProductDialog } from "./AddProductDialog";
@@ -352,7 +353,7 @@ export function ProductsTable() {
                   onClick={() => handleEdit(product.id)}
                 >
                   <td className="p-4 text-foreground">{product.name}</td>
-                  <td className="p-4 text-foreground">R$ {product.price.toFixed(2)}</td>
+                  <td className="p-4 text-foreground">{formatCentsToBRL(product.price)}</td>
                   <td className="p-4">
                     <Badge 
                       variant={product.status === "active" ? "default" : "secondary"}

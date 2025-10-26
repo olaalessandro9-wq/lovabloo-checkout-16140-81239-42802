@@ -1,6 +1,7 @@
 import { CheckoutCustomization, CheckoutComponent, CheckoutRow, ViewMode } from "@/pages/CheckoutCustomizer";
 import { useState } from "react";
 import { Plus, Wallet, Lock as LockIconLucide, User } from "lucide-react";
+import { formatCentsToBRL } from "@/utils/money";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
 import { PixIcon, CreditCardIcon, LockIcon } from "@/components/icons";
 import { CheckIconCakto } from "@/components/icons/CheckIconCakto";
@@ -631,7 +632,7 @@ export const CheckoutPreview = ({
                 {productData?.name || "Nome do Produto"}
               </h3>
               <p className="text-lg font-bold text-gray-900">
-                R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
+                {productData?.price ? formatCentsToBRL(productData.price) : 'R$ 0,00'}
               </p>
               <p className="text-xs text-gray-600 mt-0.5">à vista</p>
             </div>
@@ -766,7 +767,7 @@ export const CheckoutPreview = ({
                   <div className="flex-1">
                     <h5 className="text-sm font-medium text-gray-900 leading-tight">{productData?.name || "Nome do Produto"}</h5>
                     <p className="text-base font-bold text-gray-900 mt-0.5">
-                      R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
+                      {productData?.price ? formatCentsToBRL(productData.price) : 'R$ 0,00'}
                     </p>
                   </div>
                 </div>
@@ -775,7 +776,7 @@ export const CheckoutPreview = ({
                   <div className="flex justify-between">
                     <span className="text-gray-600">Produto</span>
                     <span className="text-gray-900 font-medium">
-                      R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
+                      {productData?.price ? formatCentsToBRL(productData.price) : 'R$ 0,00'}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -785,7 +786,7 @@ export const CheckoutPreview = ({
                   <div className="flex justify-between text-sm font-bold pt-1.5 border-t border-gray-300">
                     <span className="text-gray-900">Total</span>
                     <span className="text-gray-900">
-                      R$ {totalPrice.toFixed(2).replace('.', ',')}
+                      {formatCentsToBRL(totalPrice)}
                     </span>
                   </div>
                 </div>
@@ -814,7 +815,7 @@ export const CheckoutPreview = ({
                   <div className="flex-1">
                     <h5 className="text-sm font-medium text-gray-900 leading-tight">{productData?.name || "Nome do Produto"}</h5>
                     <p className="text-base font-bold text-gray-900 mt-0.5">
-                      R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
+                      {productData?.price ? formatCentsToBRL(productData.price) : 'R$ 0,00'}
                     </p>
                   </div>
                 </div>
@@ -823,7 +824,7 @@ export const CheckoutPreview = ({
                   <div className="flex justify-between">
                     <span className="text-gray-600">Produto</span>
                     <span className="text-gray-900 font-medium">
-                      R$ {productData?.price ? (Number(productData.price) / 100).toFixed(2).replace('.', ',') : '0,00'}
+                      {productData?.price ? formatCentsToBRL(productData.price) : 'R$ 0,00'}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -833,7 +834,7 @@ export const CheckoutPreview = ({
                   <div className="flex justify-between text-sm font-bold pt-1.5 border-t border-gray-300">
                     <span className="text-gray-900">Total</span>
                     <span className="text-gray-900">
-                      R$ {totalPrice.toFixed(2).replace('.', ',')}
+                      {formatCentsToBRL(totalPrice)}
                     </span>
                   </div>
                 </div>
@@ -940,13 +941,13 @@ export const CheckoutPreview = ({
                             className="text-sm line-through" 
                             style={{ color: customization.design.colors.secondaryText }}
                           >
-                            R$ {Number(bump.original_price).toFixed(2).replace('.', ',')}
+                            {formatCentsToBRL(Number(bump.original_price))}
                           </span>
                           <span 
                             className="font-bold" 
                             style={{ color: customization.design.colors.accent }}
                           >
-                            R$ {Number(bump.price).toFixed(2).replace('.', ',')}
+                            {formatCentsToBRL(Number(bump.price))}
                           </span>
                           <span 
                             className="text-xs px-2 py-1 rounded font-semibold" 
@@ -963,7 +964,7 @@ export const CheckoutPreview = ({
                           className="font-bold" 
                           style={{ color: customization.design.colors.accent }}
                         >
-                          + R$ {Number(bump.price).toFixed(2).replace('.', ',')}
+                          + {formatCentsToBRL(Number(bump.price))}
                         </span>
                       )}
                     </div>
@@ -1088,7 +1089,7 @@ export const CheckoutPreview = ({
                       <div className="flex justify-between items-baseline mb-1">
                         <span className="text-sm text-gray-600">Total</span>
                         <span className="text-xl font-bold text-gray-900">
-                          R$ {totalPrice.toFixed(2).replace('.', ',')}
+                          {formatCentsToBRL(totalPrice)}
                         </span>
                       </div>
                       <p className="text-xs text-gray-600">à vista no {selectedPayment === 'pix' ? 'PIX' : 'Cartão'}</p>

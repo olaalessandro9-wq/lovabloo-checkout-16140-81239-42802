@@ -8,7 +8,7 @@ export interface ProductData {
   id?: string;
   name: string;
   description: string;
-  price: string;
+  price: number;  // Centavos (inteiro)
   image_url: string | null;
   support_name: string;
   support_email: string;
@@ -50,7 +50,7 @@ export const useProduct = () => {
         id: data.id,
         name: data.name || "",
         description: data.description || "",
-        price: data.price?.toString() || "",
+        price: data.price || 0,  // Centavos
         image_url: data.image_url,
         support_name: data.support_name || "",
         support_email: data.support_email || "",
@@ -105,7 +105,7 @@ export const useProduct = () => {
       return;
     }
 
-    if (!productData.price || parseFloat(productData.price) <= 0) {
+    if (!productData.price || productData.price <= 0) {
       toast.error("O preço do produto deve ser maior que zero");
       return;
     }
@@ -126,7 +126,7 @@ export const useProduct = () => {
         support_email: productData.support_email?.trim() || "",
         status: productData.status || "active",
         image_url: imageUrl,
-        price: parseFloat(productData.price),
+        price: productData.price,  // Já está em centavos
         user_id: user.id,
       };
 
@@ -171,7 +171,7 @@ export const useProduct = () => {
             id: data.id,
             name: data.name || "",
             description: data.description || "",
-            price: data.price?.toString() || "",
+            price: data.price || 0,  // Centavos
             image_url: data.image_url,
             support_name: data.support_name || "",
             support_email: data.support_email || "",

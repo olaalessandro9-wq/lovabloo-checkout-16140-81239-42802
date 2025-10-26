@@ -36,7 +36,7 @@ const ProductEdit = () => {
   const [generalData, setGeneralData] = useState({
     name: "",
     description: "",
-    price: "",
+    price: 0,  // Centavos
     support_name: "",
     support_email: "",
   });
@@ -557,14 +557,14 @@ const ProductEdit = () => {
               await supabase.from("offers").insert({
                 product_id: productId,
                 name: offer.name,
-                price: parseFloat(offer.price),
+                price: Number(offer.price),  // Centavos
                 is_default: offer.is_default,
               });
             } else {
               // Atualizar oferta existente
               await supabase.from("offers").update({
                 name: offer.name,
-                price: parseFloat(offer.price),
+                price: Number(offer.price),  // Centavos
                 is_default: offer.is_default,
               }).eq("id", offer.id);
             }

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -192,17 +191,14 @@ const Integracoes = () => {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </MainLayout>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="container mx-auto max-w-4xl">
+    <div className="container mx-auto py-8 px-4 max-w-4xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Integrações</h1>
         <p className="text-muted-foreground mt-2">
@@ -283,8 +279,7 @@ const Integracoes = () => {
           </div>
         </CardContent>
       </Card>
-      </div>
-    </MainLayout>
+    </div>
   );
 };
 

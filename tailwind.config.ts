@@ -14,58 +14,67 @@ export default {
     },
     extend: {
       colors: {
-        // ===== EAGLE VISION SYSTEM (NOVO) =====
+        // Eagle Vision Theme
         bg: 'var(--bg)',
-        card: 'var(--card)',
         text: 'var(--text)',
         subtext: 'var(--subtext)',
-        muted: 'var(--muted)',
         brand: { 
           DEFAULT: 'var(--brand)', 
           fg: 'var(--brand-fg)', 
           subtle: 'var(--brand-subtle)' 
         },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
         sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+          // Eagle Vision
           bg: 'var(--sidebar-bg)',
           text: 'var(--sidebar-text)',
           muted: 'var(--sidebar-muted)',
           active: 'var(--sidebar-active)',
-          hover: 'var(--sidebar-hover)',
-          border: 'var(--sidebar-border)',
+          hover: 'var(--sidebar-hover)'
         },
-
-        // ===== ALIASES PARA COMPATIBILIDADE (SISTEMA ANTIGO) =====
-        // Mapeia classes antigas (bg-background, text-foreground, etc.) para novas vars
-        background: 'var(--bg)',
-        foreground: 'var(--text)',
-        primary: {
-          DEFAULT: 'var(--brand)',
-          foreground: 'var(--brand-fg)',
-        },
-        secondary: {
-          DEFAULT: 'var(--muted)',
-          foreground: 'var(--text)',
-        },
-        destructive: {
-          DEFAULT: "hsl(0 72% 51%)",
-          foreground: "hsl(0 0% 100%)",
-        },
-        accent: {
-          DEFAULT: 'var(--brand-subtle)',
-          foreground: 'var(--text)',
-        },
-        popover: {
-          DEFAULT: 'var(--card)',
-          foreground: 'var(--text)',
-        },
-        'card-foreground': 'var(--text)',
-        'muted-foreground': 'var(--subtext)',
-        border: 'var(--sidebar-border)',
-        input: 'var(--card)',
-        ring: 'var(--brand)',
-        success: "hsl(142 76% 36%)",
-        warning: "hsl(38 92% 50%)",
-        info: 'var(--brand)',
+        success: "hsl(var(--success))",
+        warning: "hsl(var(--warning))",
+        info: "hsl(var(--info))",
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',
@@ -108,4 +117,3 @@ export default {
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-

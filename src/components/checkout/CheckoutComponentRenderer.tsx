@@ -28,18 +28,16 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
         );
       }
       
-      // Valores padrão (pode ler do customization depois)
-      const maxW = component.content?.maxWidth ?? 720; // px (ajustado para 720)
-      const fit = component.content?.fit ?? "cover"; // cover padrão para preencher o bloco
+      const maxW = component.content?.maxWidth ?? 720;
+      const fit = component.content?.fit ?? "cover";
       const rounded = component.content?.rounded ?? true;
-      const canvasBg = component.content?.canvasBg ?? "transparent";
 
       return (
-        <div className="w-full flex justify-center mb-6">
+        <div className="w-full flex justify-center">
           <div className="w-full" style={{ maxWidth: `${maxW}px` }}>
-            <div className={`${rounded ? "rounded-xl" : ""} overflow-hidden`}>
-              {/* Proporção responsiva: 4/3 no mobile, 16/9 no desktop */}
-              <div className="aspect-[4/3] lg:aspect-[16/9] relative">
+            <div className={`${rounded ? "rounded-xl" : ""} overflow-hidden mt-2 mb-3`}>
+              {/* Proporção paisagem para top images (16/9) */}
+              <div className="aspect-[16/9] relative">
                 <img
                   key={component.id}
                   src={src}
@@ -48,7 +46,7 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
                   loading="eager"
                   fetchpriority="high"
                   decoding="async"
-                  style={{ maxWidth: `${maxW}px`, width: '100%', height: 'auto' }}
+                  style={{ width: '100%', height: '100%' }}
                   onError={(e) => {
                     const imgEl = e.currentTarget as HTMLImageElement;
                     imgEl.onerror = null;

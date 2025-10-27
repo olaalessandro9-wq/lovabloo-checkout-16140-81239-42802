@@ -55,7 +55,7 @@ export const CountdownTimer = ({
       {/* centraliza e fixa a largura ao mesmo "corpo" do cartão abaixo */}
       <div className="max-w-[720px] mx-auto px-4 lg:px-6">
         <div
-          className={`mt-4 mb-3 lg:mb-6 rounded-xl min-h-[64px] px-6 py-4 flex items-center justify-center gap-4 shadow-sm ${className}`}
+          className={`mt-4 mb-2 lg:mb-6 rounded-xl min-h-[64px] px-6 py-4 flex items-center justify-center gap-4 shadow-sm ${className}`}
           onClick={onClick}
           style={{ backgroundColor, color: textColor }}
         >

@@ -54,24 +54,22 @@ export const CountdownTimer = ({
     <div className={`w-full bg-transparent ${fixedTop ? 'sticky top-0 z-50' : ''}`}>
       <div className="max-w-[1120px] mx-auto px-4 lg:px-6">
         <div
-          className={`mt-4 mb-3 lg:mb-6 rounded-xl min-h-[64px] px-5 py-4 flex items-center justify-between gap-3 shadow-sm ${className}`}
+          className={`mt-4 mb-3 lg:mb-6 rounded-xl min-h-[64px] px-5 py-4 flex items-center justify-center gap-3 shadow-sm ${className}`}
           onClick={onClick}
           style={{ backgroundColor, color: textColor }}
         >
-          {/* Left: tempo + texto */}
-          <div className="flex items-center gap-3">
-            <span className="text-2xl lg:text-lg font-semibold tabular-nums">
-              {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-            </span>
-            {(isFinished ? finishedText : activeText) && (
-              <span className="text-sm opacity-90 ml-2 hidden sm:inline">
-                {isFinished ? finishedText : activeText}
-              </span>
-            )}
-          </div>
+          {/* Ordem: tempo -> ícone -> texto (sempre visível em mobile) */}
+          <span className="text-2xl lg:text-lg font-semibold tabular-nums">
+            {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+          </span>
 
-          {/* Right: ícone do cronômetro */}
-          <AlarmClock size={26} style={{ color: textColor }} />
+          <AlarmClock size={22} style={{ color: textColor }} />
+
+          {(isFinished ? finishedText : activeText) && (
+            <span className="text-sm opacity-90 ml-2">
+              {isFinished ? finishedText : activeText}
+            </span>
+          )}
         </div>
       </div>
     </div>

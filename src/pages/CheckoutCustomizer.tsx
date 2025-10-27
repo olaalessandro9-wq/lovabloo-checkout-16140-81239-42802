@@ -393,7 +393,15 @@ const CheckoutCustomizer = () => {
       const newComponent: CheckoutComponent = {
         id: `component-${Date.now()}`,
         type: componentType as any,
-        content: {},
+        content: componentType === 'timer' ? {
+          minutes: 15,
+          seconds: 0,
+          timerColor: "#EF4444",
+          textColor: "#FFFFFF",
+          activeText: "Oferta por tempo limitado",
+          finishedText: "Oferta finalizada",
+          fixedTop: false
+        } : {},
       };
 
       setCustomization((prev) => {

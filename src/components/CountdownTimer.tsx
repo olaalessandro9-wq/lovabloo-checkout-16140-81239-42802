@@ -52,18 +52,19 @@ export const CountdownTimer = ({
 
   return (
     <div className={`w-full bg-transparent ${fixedTop ? 'sticky top-0 z-50' : ''}`}>
-      <div className="max-w-[1120px] mx-auto px-4 lg:px-6">
+      {/* centraliza e fixa a largura ao mesmo "corpo" do cartão abaixo */}
+      <div className="max-w-[720px] mx-auto px-4 lg:px-6">
         <div
-          className={`mt-4 mb-3 lg:mb-6 rounded-xl min-h-[64px] px-5 py-4 flex items-center justify-center gap-3 shadow-sm ${className}`}
+          className={`mt-4 mb-3 lg:mb-6 rounded-xl min-h-[64px] px-6 py-4 flex items-center justify-center gap-4 shadow-sm ${className}`}
           onClick={onClick}
           style={{ backgroundColor, color: textColor }}
         >
-          {/* Ordem: tempo -> ícone -> texto (sempre visível em mobile) */}
-          <span className="text-2xl lg:text-lg font-semibold tabular-nums">
+          {/* Ordem: tempo -> ícone -> texto (texto sempre visível no mobile) */}
+          <span className="text-3xl lg:text-2xl font-semibold tabular-nums">
             {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
           </span>
 
-          <AlarmClock size={22} style={{ color: textColor }} />
+          <AlarmClock size={28} style={{ color: textColor }} />
 
           {(isFinished ? finishedText : activeText) && (
             <span className="text-sm opacity-90 ml-2">

@@ -9,8 +9,8 @@ All colors MUST be HSL.
 @layer base {
   /* ===== BASE LIGHT (Eagle Vision) ===== */
   :root {
-    /* Sistema antigo (HSL) - mantido para compatibilidade */
-    --background: 0 0% 100%;
+    /* Sistema HSL - unificado com Eagle Vision */
+    --background: 214 32% 98%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -48,21 +48,21 @@ All colors MUST be HSL.
     --shadow-subtle: 0 2px 12px hsl(0 0% 0% / 0.05);
 
     /* Eagle Vision Theme - Light (padrão) */
-    --bg: #F6F7FB;
-    --card: #FFFFFF;
-    --muted: #E5E7EB;
-    --text: #0A2540;
-    --subtext: #475569;
-    --brand: #0A2540;
-    --brand-fg: #FFFFFF;
-    --brand-subtle: #C8A951;
+    --bg: hsl(214 32% 98%);
+    --card: hsl(0 0% 100%);
+    --muted: hsl(214 32% 91%);
+    --text: hsl(222 47% 11%);
+    --subtext: hsl(215 16% 47%);
+    --brand: hsl(217 91% 60%);
+    --brand-fg: hsl(0 0% 100%);
+    --brand-subtle: hsl(217 91% 70%);
 
-    --sidebar-bg: #F9FAFB;
-    --sidebar-text: #1E293B;
-    --sidebar-muted: #64748B;
-    --sidebar-active: #E5E7EB;
-    --sidebar-hover: #EEF2FF;
-    --sidebar-border: #E5E7EB;
+    --sidebar-bg: hsl(0 0% 100%);
+    --sidebar-text: hsl(222 47% 11%);
+    --sidebar-muted: hsl(215 16% 47%);
+    --sidebar-active: hsl(217 91% 60%);
+    --sidebar-hover: hsl(217 91% 95%);
+    --sidebar-border: hsl(214 32% 91%);
   }
 
   /* ===== BASE DARK ===== */
@@ -103,21 +103,21 @@ All colors MUST be HSL.
 
   /* Eagle Vision Theme - Dark */
   [data-theme="dark"] {
-    --bg: #0B1220;
-    --card: #0F172A;
-    --muted: #1F2937;
-    --text: #E5E7EB;
-    --subtext: #94A3B8;
-    --brand: #C8A951;
-    --brand-fg: #0B1220;
-    --brand-subtle: #2F3D57;
+    --bg: hsl(222 47% 11%);
+    --card: hsl(222 47% 13%);
+    --muted: hsl(222 47% 17%);
+    --text: hsl(210 40% 98%);
+    --subtext: hsl(215 20% 65%);
+    --brand: hsl(217 91% 60%);
+    --brand-fg: hsl(0 0% 100%);
+    --brand-subtle: hsl(217 91% 70%);
 
-    --sidebar-bg: #111827;
-    --sidebar-border: #1F2937;
-    --sidebar-text: #F3F4F6;
-    --sidebar-muted: #9CA3AF;
-    --sidebar-active: #1F2937;
-    --sidebar-hover: #0A2540;
+    --sidebar-bg: hsl(222 47% 9%);
+    --sidebar-border: hsl(222 47% 17%);
+    --sidebar-text: hsl(210 40% 98%);
+    --sidebar-muted: hsl(215 20% 65%);
+    --sidebar-active: hsl(217 91% 60%);
+    --sidebar-hover: hsl(222 47% 15%);
   }
 
   /* ===== PALETA EAGLE VISION (padrão, sem mudanças) ===== */

@@ -379,7 +379,7 @@ const ProductEdit = () => {
       hasError = true;
     }
     
-    if (!generalData.price || parseFloat(generalData.price) <= 0) {
+    if (!generalData.price || parseFloat(String(generalData.price)) <= 0) {
       newErrors.price = "O preço deve ser maior que R$ 0,00";
       hasError = true;
     }
@@ -1268,7 +1268,7 @@ const ProductEdit = () => {
               <OffersManager
                 productId={productId}
                 productName={generalData.name}
-                defaultPrice={generalData.price}
+                defaultPrice={String(generalData.price)}
                 offers={offers}
                 onOffersChange={setOffers}
                 onModifiedChange={setOffersModified}

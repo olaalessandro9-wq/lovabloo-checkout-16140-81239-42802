@@ -50,16 +50,17 @@ export const EagleSidebar: React.FC = () => {
               {isActive(it.href) && (
                 <motion.div
                   layoutId="active"
-                  className="absolute inset-0 rounded-xl bg-brand-subtle/10"
+                  className="absolute inset-0 rounded-xl bg-gradient-to-r from-[var(--brand)]/10 to-[var(--brand)]/5 border-l-4 border-[var(--brand)]"
+                  style={{ boxShadow: '0 4px 12px rgba(66, 153, 225, 0.1)' }}
                   transition={{ type: 'spring', stiffness: 500, damping: 40 }}
                 />
               )}
               <NavLink
                 to={it.href}
-                className={`relative z-10 flex items-center gap-3 px-3 py-2 rounded-xl transition-colors
-                ${isActive(it.href) ? 'text-[var(--brand)] font-semibold' : 'text-sidebar-muted hover:text-[var(--text)] hover:bg-sidebar-hover'}`}
+                className={`relative z-10 flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200
+                ${isActive(it.href) ? 'text-[var(--brand)] font-bold pl-5' : 'text-sidebar-muted hover:text-[var(--text)] hover:bg-sidebar-hover'}`}
               >
-                <span className="opacity-90">{it.icon}</span>
+                <span className={isActive(it.href) ? 'opacity-100 scale-110' : 'opacity-90'}>{it.icon}</span>
                 <span className="text-sm">{it.label}</span>
               </NavLink>
             </li>

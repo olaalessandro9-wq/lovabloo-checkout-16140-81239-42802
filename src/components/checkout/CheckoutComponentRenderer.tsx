@@ -29,7 +29,7 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
       }
       
       // Valores padrão (pode ler do customization depois)
-      const maxW = component.content?.maxWidth ?? 620; // px (igual à Cakto)
+      const maxW = component.content?.maxWidth ?? 720; // px (igual à Cakto)
       const fit = component.content?.fit ?? "contain"; // contain padrão
       const rounded = component.content?.rounded ?? true;
       const canvasBg = component.content?.canvasBg ?? "transparent"; // sem fundo preto

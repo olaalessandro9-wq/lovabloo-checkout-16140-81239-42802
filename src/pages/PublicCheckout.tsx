@@ -488,7 +488,7 @@ const PublicCheckout = () => {
             </div>
 
             {/* Sidebar - Resumo do Pedido (Direita no Desktop) */}
-            <aside className="min-w-0">
+            <aside className="hidden lg:block min-w-0">
               <div className="lg:sticky lg:top-2">
                 {/* Card Principal Único com Cabeçalho Verde */}
                 <div className="bg-white rounded-xl shadow-sm overflow-hidden">

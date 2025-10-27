@@ -1046,7 +1046,7 @@ export const CheckoutPreview = ({
 
             {/* Coluna Direita - Sidebar (apenas desktop) */}
             {viewMode !== "mobile" && (
-              <aside className="min-w-0">
+              <aside className="hidden lg:block min-w-0">
               <div className="sticky top-6 space-y-3">
                 {/* Card Principal */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

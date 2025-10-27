@@ -22,10 +22,10 @@ const Index = () => {
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-1">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Visão geral das suas vendas e métricas</p>
+            <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--text)' }}>Dashboard</h1>
+            <p className="text-sm" style={{ color: 'var(--subtext)' }}>Visão geral das suas vendas e métricas</p>
           </div>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-card/50 border border-border/50 rounded-xl text-foreground hover:bg-card hover:border-primary/30 transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-primary/5">
+          <button className="flex items-center gap-2 px-5 py-2.5 bg-card/50 border border-border/50 rounded-xl hover:bg-card hover:border-primary/30 transition-all duration-200 shadow-sm hover:shadow-lg hover:shadow-primary/5" style={{ color: 'var(--text)' }}>
             <Calendar className="w-4 h-4" />
             <span className="text-sm font-medium">Selecionar período</span>
           </button>

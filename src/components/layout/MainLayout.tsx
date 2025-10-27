@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { EagleSidebar } from "./EagleSidebar";
 import { useThemeStore } from "@/contexts/ThemeProvider";
-import { Sun, Moon, Palette, Bell, User } from "lucide-react";
+import { Sun, Moon, Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MainLayoutProps {
@@ -9,20 +9,7 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { theme, toggleTheme, palette, cyclePalette } = useThemeStore();
-
-  const getPaletteName = () => {
-    switch (palette) {
-      case 'eagle':
-        return 'Eagle Vision';
-      case 'sky':
-        return 'Sky Commander';
-      case 'horizon':
-        return 'Horizon';
-      default:
-        return palette;
-    }
-  };
+  const { theme, toggleTheme } = useThemeStore();
 
   return (
     <div className="min-h-screen flex w-full bg-bg">
@@ -31,16 +18,6 @@ export function MainLayout({ children }: MainLayoutProps) {
         <header className="h-16 border-b border-sidebar-border flex items-center justify-between px-8 bg-card/30 backdrop-blur-xl sticky top-0 z-10">
           <div className="flex-1"></div>
           <div className="flex items-center gap-2 ml-auto">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={cyclePalette}
-              className="rounded-xl hover:bg-sidebar-hover transition-all duration-200 flex items-center gap-2 text-subtext hover:text-text"
-              title="Trocar paleta de cores"
-            >
-              <Palette className="w-4 h-4" />
-              <span className="hidden sm:inline text-xs">{getPaletteName()}</span>
-            </Button>
             <Button
               variant="ghost"
               size="icon"

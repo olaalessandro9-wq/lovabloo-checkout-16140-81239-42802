@@ -29,18 +29,15 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
       }
       
       // Valores padrão (pode ler do customization depois)
-      const maxW = component.content?.maxWidth ?? 720; // px (igual à Cakto)
-      const fit = component.content?.fit ?? "contain"; // contain padrão
+      const maxW = component.content?.maxWidth ?? 720; // px (ajustado para 720)
+      const fit = component.content?.fit ?? "cover"; // cover padrão para preencher o bloco
       const rounded = component.content?.rounded ?? true;
-      const canvasBg = component.content?.canvasBg ?? "transparent"; // sem fundo preto
-      
+      const canvasBg = component.content?.canvasBg ?? "transparent";
+
       return (
         <div className="w-full flex justify-center mb-6">
           <div className="w-full" style={{ maxWidth: `${maxW}px` }}>
-            <div
-              className={`${rounded ? "rounded-xl" : ""} overflow-hidden`}
-              style={{ backgroundColor: canvasBg }}
-            >
+            <div className={`${rounded ? "rounded-xl" : ""} overflow-hidden`}>
               {/* Proporção responsiva: 4/3 no mobile, 16/9 no desktop */}
               <div className="aspect-[4/3] lg:aspect-[16/9] relative">
                 <img
@@ -48,7 +45,16 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
                   src={src}
                   alt={component.content?.alt || 'Imagem'}
                   className={`absolute inset-0 w-full h-full object-${fit}`}
-                  loading="lazy"
+                  loading="eager"
+                  fetchpriority="high"
+                  decoding="async"
+                  style={{ maxWidth: `${maxW}px`, width: '100%', height: 'auto' }}
+                  onError={(e) => {
+                    const imgEl = e.currentTarget as HTMLImageElement;
+                    imgEl.onerror = null;
+                    imgEl.src = '/images/placeholder-top.png';
+                    console.error('Erro ao carregar imagem:', src);
+                  }}
                 />
               </div>
             </div>

@@ -9,6 +9,7 @@ import { ArrowLeft, Trash2, Columns, Columns2, Columns3, LayoutGrid, Copy, MoveU
 import { CheckoutColorSettingsEssential } from "./CheckoutColorSettingsEssential";
 import { TypeIcon, ImageIcon, CheckCircleIcon, AwardIcon, TimerIcon, QuoteIcon, VideoIcon } from "@/components/icons";
 import { useDraggable } from "@dnd-kit/core";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CheckoutCustomizationPanelProps {
   customization: any;
@@ -228,42 +229,67 @@ export const CheckoutCustomizationPanel = ({
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
-                      console.log('[Upload] Início');
                       const file = e.target.files?.[0];
-                      
-                      if (!file) {
-                        console.log('[Upload] Nenhum arquivo selecionado');
-                        return;
-                      }
+                      if (!file) return;
 
-                      // Validar tipo de arquivo
+                      // Validações (tipo / tamanho)
                       if (!file.type.startsWith('image/')) {
-                        console.log('[Upload] Tipo inválido:', file.type);
                         alert('Por favor, selecione uma imagem válida (JPG/PNG).');
                         return;
                       }
-                      
-                      // Validar tamanho (10MB máximo)
                       if (file.size > 10 * 1024 * 1024) {
-                        console.log('[Upload] Arquivo muito grande:', file.size);
                         alert('Imagem muito grande (máx. 10MB).');
                         return;
                       }
 
-                      // Criar URL temporária (NÃO revogar agora!)
-                      const objectUrl = URL.createObjectURL(file);
-                      console.log('[Upload] objectUrl:', objectUrl);
-                      console.log('[Upload] componentId:', selectedComponent.id);
-
-                      // Enviar APENAS o delta (handleUpdateComponent já faz o merge)
+                      // 1) preview imediato (não salvar este blob permanentemente)
+                      const previewUrl = URL.createObjectURL(file);
                       onUpdateComponent(selectedComponent.id, {
-                        imageUrl: objectUrl,
-                        url: objectUrl,
-                        _stamp: Date.now(),      // Força re-render
+                        ...selectedComponent.content,
+                        imageUrl: previewUrl,   // preview local
+                        _preview: true,
                         _fileName: file.name,
                       });
-                      
-                      console.log('[Upload] Fim');
+
+                      // 2) upload para Supabase em background (async IIFE)
+                      (async () => {
+                        try {
+                          const fileExt = file.name.split('.').pop();
+                          const fileName = `checkout-components/${selectedComponent.id}-${Date.now()}.${fileExt}`;
+
+                          // Fazer upload ao bucket 'product-images'
+                          const { error: uploadError } = await supabase.storage
+                            .from('product-images')
+                            .upload(fileName, file, { upsert: true });
+
+                          if (uploadError) throw uploadError;
+
+                          // Pegar URL pública
+                          const { data } = await supabase.storage
+                            .from('product-images')
+                            .getPublicUrl(fileName);
+
+                          const publicUrl = data?.publicUrl || null;
+                          if (!publicUrl) throw new Error('Public URL não retornada');
+
+                          // 3) atualizar componente com a URL pública (essa será salva no DB)
+                          onUpdateComponent(selectedComponent.id, {
+                            ...selectedComponent.content,
+                            imageUrl: publicUrl,
+                            url: publicUrl,
+                            _stamp: Date.now(),   // força re-render / marca atualizacao
+                            _preview: false,
+                          });
+
+                          // Opcional: revogar preview blob para liberar memória
+                          setTimeout(() => {
+                            try { URL.revokeObjectURL(previewUrl); } catch (e) { /* ignore */ }
+                          }, 2000);
+                        } catch (err) {
+                          console.error("Upload da imagem falhou:", err);
+                          alert("Falha ao enviar imagem. Tente novamente.");
+                        }
+                      })();
                     }}
                     className="hidden"
                     id={imageInputId}

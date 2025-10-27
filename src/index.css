@@ -7,10 +7,9 @@ All colors MUST be HSL.
 */
 
 @layer base {
-  /* ===== BASE LIGHT (Eagle Vision) ===== */
+  /* ===== SISTEMA ANTIGO (HSL) - Mantido para compatibilidade ===== */
   :root {
-    /* Sistema HSL - unificado com Eagle Vision */
-    --background: 214 32% 98%;
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -46,26 +45,8 @@ All colors MUST be HSL.
     --shadow-glow: 0 0 30px hsl(217 91% 60% / 0.15);
     --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.08);
     --shadow-subtle: 0 2px 12px hsl(0 0% 0% / 0.05);
-
-    /* Eagle Vision Theme - Light (padrão) */
-    --bg: hsl(214 32% 98%);
-    --card: hsl(0 0% 100%);
-    --muted: hsl(214 32% 91%);
-    --text: hsl(222 47% 11%);
-    --subtext: hsl(215 16% 47%);
-    --brand: hsl(217 91% 60%);
-    --brand-fg: hsl(0 0% 100%);
-    --brand-subtle: hsl(217 91% 70%);
-
-    --sidebar-bg: hsl(0 0% 100%);
-    --sidebar-text: hsl(222 47% 11%);
-    --sidebar-muted: hsl(215 16% 47%);
-    --sidebar-active: hsl(217 91% 60%);
-    --sidebar-hover: hsl(217 91% 95%);
-    --sidebar-border: hsl(214 32% 91%);
   }
 
-  /* ===== BASE DARK ===== */
   .dark {
     --background: 222 47% 11%;
     --foreground: 210 40% 98%;
@@ -101,35 +82,52 @@ All colors MUST be HSL.
     --shadow-subtle: 0 2px 12px hsl(0 0% 0% / 0.2);
   }
 
-  /* Eagle Vision Theme - Dark */
-  [data-theme="dark"] {
-    --bg: hsl(222 47% 11%);
-    --card: hsl(222 47% 13%);
-    --muted: hsl(222 47% 17%);
-    --text: hsl(210 40% 98%);
-    --subtext: hsl(215 20% 65%);
-    --brand: hsl(217 91% 60%);
-    --brand-fg: hsl(0 0% 100%);
-    --brand-subtle: hsl(217 91% 70%);
+  /* ============== 1) BASE LIGHT (padrão) ============== */
+  :root {
+    --bg: #F6F7FB;
+    --card: #FFFFFF;
+    --text: #0A2540;
+    --subtext: #475569;
 
-    --sidebar-bg: hsl(222 47% 9%);
-    --sidebar-border: hsl(222 47% 17%);
-    --sidebar-text: hsl(210 40% 98%);
-    --sidebar-muted: hsl(215 20% 65%);
-    --sidebar-active: hsl(217 91% 60%);
-    --sidebar-hover: hsl(222 47% 15%);
+    --brand: #0A2540;       /* Eagle Vision */
+    --brand-fg: #FFFFFF;
+    --brand-subtle: #C8A951;
+
+    --sidebar-bg: #F9FAFB;
+    --sidebar-text: #1E293B;
+    --sidebar-muted: #64748B;
+    --sidebar-active: #E5E7EB;
+    --sidebar-hover: #EEF2FF;
+    --sidebar-border: #E5E7EB;
   }
 
-  /* ===== PALETA EAGLE VISION (padrão, sem mudanças) ===== */
-  :root[data-palette="eagle"] {}
+  /* ============== 2) BASE DARK (padrão) ============== */
+  [data-theme="dark"] {
+    --bg: #0B1220;
+    --card: #0F172A;
+    --text: #E5E7EB;
+    --subtext: #94A3B8;
 
-  /* ===== PALETA SKY COMMANDER (LIGHT) ===== */
+    --brand: #C8A951;       /* Eagle destaca no dark */
+    --brand-fg: #0B1220;
+    --brand-subtle: #2F3D57;
+
+    --sidebar-bg: #111827;
+    --sidebar-text: #F3F4F6;
+    --sidebar-muted: #9CA3AF;
+    --sidebar-active: #1F2937;
+    --sidebar-hover: #0A2540;
+    --sidebar-border: #1F2937;
+  }
+
+  /* ============== 3) PALETAS — LIGHT ============== */
+  /* SKY COMMANDER (já era perceptível; mantemos) */
   :root[data-palette="sky"] {
     --brand: #1E90FF;
     --brand-subtle: #9FC9FF;
+
     --bg: #F7FAFF;
     --card: #FFFFFF;
-    --muted: #E6EEF9;
     --text: #0F172A;
     --subtext: #475569;
 
@@ -141,13 +139,50 @@ All colors MUST be HSL.
     --sidebar-border: #E6EEF9;
   }
 
-  /* SKY COMMANDER (DARK) */
+  /* EAGLE VISION (agora MUITO mais visível no claro) */
+  :root[data-palette="eagle"] {
+    --brand: #0A2540;
+    --brand-subtle: #C8A951;
+
+    /* ⇩ contraste mais "petróleo" no layout: */
+    --bg: #F2F5FA;           /* antes #F6F7FB */
+    --card: #FFFFFF;
+    --text: #0A2540;
+    --subtext: #445065;
+
+    --sidebar-bg: #EFF3F8;   /* mais frio */
+    --sidebar-text: #0A2540;
+    --sidebar-muted: #5D6B80;
+    --sidebar-active: #DEE6F0;
+    --sidebar-hover: rgba(10,37,64,0.06);
+    --sidebar-border: #DEE6F0;
+  }
+
+  /* HORIZON (claramente diferente da Eagle no claro) */
+  :root[data-palette="horizon"] {
+    --brand: #243B53;
+    --brand-subtle: #B87333;
+
+    --bg: #F3F6FA;           /* toque "acinzentado" */
+    --card: #FFFFFF;
+    --text: #0E1A26;
+    --subtext: #3F5468;
+
+    --sidebar-bg: #F1F5F9;
+    --sidebar-text: #0E1A26;
+    --sidebar-muted: #5A7288;
+    --sidebar-active: #E4EAF1;
+    --sidebar-hover: rgba(36,59,83,0.07);
+    --sidebar-border: #E4EAF1;
+  }
+
+  /* ============== 4) PALETAS — DARK (coerência geral) ============== */
   [data-theme="dark"][data-palette="sky"] {
     --brand: #9FC9FF;
     --brand-subtle: #1E90FF;
+
     --bg: #0A1020;
     --card: #0D1428;
-    --muted: #182447;
     --text: #E6ECFE;
     --subtext: #A6B3D9;
 
@@ -159,31 +194,16 @@ All colors MUST be HSL.
     --sidebar-border: #182447;
   }
 
-  /* ===== PALETA HORIZON (LIGHT) ===== */
-  :root[data-palette="horizon"] {
-    --brand: #243B53;
-    --brand-subtle: #B87333;
-    --bg: #F6F8FB;
-    --card: #FFFFFF;
-    --muted: #E7ECF3;
-    --text: #0F172A;
-    --subtext: #475569;
-
-    --sidebar-bg: #F7F9FB;
-    --sidebar-text: #0F172A;
-    --sidebar-muted: #64748B;
-    --sidebar-active: #E7ECF3;
-    --sidebar-hover: rgba(36,59,83,0.08);
-    --sidebar-border: #E7ECF3;
+  [data-theme="dark"][data-palette="eagle"] {
+    /* base dark já é eagle-friendly; opcional fine-tune */
   }
 
-  /* HORIZON (DARK) */
   [data-theme="dark"][data-palette="horizon"] {
     --brand: #B87333;
     --brand-subtle: #243B53;
+
     --bg: #0B1119;
     --card: #0E1621;
-    --muted: #1A2637;
     --text: #E6ECF5;
     --subtext: #9BB0C8;
 
@@ -226,284 +246,51 @@ All colors MUST be HSL.
   * { 
     transition: background-color 160ms, border-color 160ms, color 160ms; 
   }
-
-  /* Placeholders com contraste adequado */
-  input::placeholder,
-  textarea::placeholder,
-  select::placeholder {
-    color: var(--subtext);
-    opacity: 0.8;
-  }
-
-  /* Garantir contraste em inputs */
-  input,
-  textarea,
-  select {
-    color: var(--text);
-  }
 }
 
-
-
-/* ===========================
-   EAGLE VISION – TOKENS BASE
-   =========================== */
-
-/* Fallback neutro */
-:root {
-  --bg: #0b1220;
-  --fg: #e7eefc;
-  --muted: #9fb2d0;
-  --panel: #0f172a;
-  --border: #24314a;
-
-  --primary: #3b82f6;
-  --primary-600: #2563eb;
-  --accent: #22d3ee;
-
-  --ring: var(--primary);
-
-  --input-bg: #0e1526;
-  --input-fg: var(--fg);
-  --card-bg: #0c1323;
+/* ============== 5) HOTFIX FINAL — CAMPOS NO DARK ============== */
+/* deixe este bloco NO FIM do arquivo p/ ganhar da cascata */
+html[data-theme="dark"] input,
+html[data-theme="dark"] select,
+html[data-theme="dark"] textarea {
+  color: var(--text) !important;
+  background-color: var(--card) !important;
+  border-color: var(--sidebar-border) !important;
+  caret-color: var(--text) !important;
 }
 
-/* ---------- LIGHT ---------- */
-html[data-mode="light"] {
-  --bg: #f6f8fc;
-  --fg: #0b1220;
-  --muted: #63708a;
-  --panel: #ffffff;
-  --border: #e4e9f3;
-
-  --input-bg: #ffffff;
-  --input-fg: #0b1220;
-  --card-bg: #ffffff;
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder {
+  color: var(--subtext) !important;
+  opacity: 0.9;
 }
 
-/* Paleta: Visão de Águia */
-html[data-mode="light"][data-palette="eagle"] {
-  --primary: #274c77;
-  --primary-600: #1f3e61;
-  --accent: #a3cef1;
-}
-html[data-mode="dark"][data-palette="eagle"] {
-  --primary: #7db2ff;
-  --primary-600: #5b91e6;
-  --accent: #89cff0;
-}
-
-/* Paleta: Horizonte */
-html[data-mode="light"][data-palette="horizon"] {
-  --primary: #0f766e;
-  --primary-600: #0b5d57;
-  --accent: #60f7d2;
-}
-html[data-mode="dark"][data-palette="horizon"] {
-  --primary: #5eead4;
-  --primary-600: #40d8c0;
-  --accent: #22d3ee;
-}
-
-/* Paleta: Comandante do Céu */
-html[data-mode="light"][data-palette="sky"] {
-  --primary: #1e40af;
-  --primary-600: #17348b;
-  --accent: #60a5fa;
-}
-html[data-mode="dark"][data-palette="sky"] {
-  --primary: #60a5fa;
-  --primary-600: #3b82f6;
-  --accent: #93c5fd;
-}
-
-/* ===============================
-   EAGLE VISION – COMPONENTES BASE
-   =============================== */
-
-:root,
-html[data-mode="light"],
-html[data-mode="dark"] {
-  --input: var(--input-bg);
-  --input-foreground: var(--input-fg);
-  --muted-foreground: var(--muted);
-  --card: var(--card-bg);
-  --card-foreground: var(--fg);
-
-  --primary-foreground: #ffffff;
-  --secondary: var(--panel);
-  --secondary-foreground: var(--fg);
-
-  --border: var(--border);
-  --ring: var(--ring);
-
-  /* Alias caso o projeto use --brand */
-  --brand: var(--primary);
-  --brand-600: var(--primary-600);
-}
-
-/* Corrige "texto preto" no dark em inputs/selects/textarea */
-html[data-mode="dark"] input,
-html[data-mode="dark"] select,
-html[data-mode="dark"] textarea {
-  color: var(--input-foreground) !important;
-  background: var(--input) !important;
-  border-color: var(--border) !important;
-}
-
-/* Badges / chips / labels */
-.badge, .chip, .label { color: var(--fg); }
-
-/* Botões padrão (se houver util classes) */
-.btn-primary, button.btn-primary {
-  background: var(--primary);
-  color: var(--primary-foreground);
-}
-.btn-primary:hover, button.btn-primary:hover {
-  background: var(--primary-600);
-}
-.btn-ghost, button.btn-ghost { color: var(--primary); }
-
-/* Cards/painéis genéricos (coerência visual) */
-.card, .panel {
-  background: var(--panel);
-  color: var(--fg);
-  border-color: var(--border);
-}
-
-/* ==============================
-   NORMALIZAÇÃO /produtos/editar
-   ============================== */
-
-/* Aplique .edit-page no wrapper da tela de edição */
-.edit-page {
-  transform: none !important;
-  zoom: 1 !important;
-  max-width: 100% !important;
-  width: 100% !important;
-}
-.edit-page [style*="zoom"] { zoom: 1 !important; }
-.edit-page [style*="transform: scale"] { transform: none !important; }
-
-/* ===========================
-   SHELL DO LAYOUT (opcional)
-   =========================== */
-
-.app-shell {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  min-height: 100vh;
-}
-.app-sidebar {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  height: 100vh;
-  overflow-y: auto;
-  background: var(--panel);
-  border-right: 1px solid var(--border);
-}
-.app-main {
-  min-width: 0;
-  overflow: clip;
-  background: var(--bg);
-}
-
-
-/* ===== Dark-mode compatibility overrides ===== */
-html[data-mode="dark"] {
-  /* Variáveis de compatibilidade */
-  --fix-fg: var(--fg);
-  --fix-panel: var(--panel);
-  --fix-border: var(--border);
-}
-
-/* Textos muito escuros herdados de utilitários */
-html[data-mode="dark"] .text-black,
-html[data-mode="dark"] .text-gray-900,
-html[data-mode="dark"] .text-slate-900,
-html[data-mode="dark"] .text-zinc-900,
-html[data-mode="dark"] .text-neutral-900,
-html[data-mode="dark"] .text-gray-800,
-html[data-mode="dark"] .text-slate-800 {
-  color: var(--fix-fg) !important;
-}
-
-/* Fundos claros "fixos" que quebram no dark */
-html[data-mode="dark"] .bg-white,
-html[data-mode="dark"] .bg-gray-50,
-html[data-mode="dark"] .bg-slate-50,
-html[data-mode="dark"] .bg-neutral-50 {
-  background-color: var(--fix-panel) !important;
-}
-
-/* Bordas claras demais no dark */
-html[data-mode="dark"] .border-gray-200,
-html[data-mode="dark"] .border-slate-200,
-html[data-mode="dark"] .border-neutral-200 {
-  border-color: var(--fix-border) !important;
-}
-
-/* Placeholder legível no dark */
-html[data-mode="dark"] ::placeholder {
-  color: rgba(230, 237, 247, 0.5) !important;
-}
-
-/* ===== Inputs, selects e botões – contraste e estados ===== */
-:root {
-  --input-bg: var(--panel);
-  --input-fg: var(--fg);
-  --input-border: var(--border);
-  --input-ring: var(--primary);
-}
-
-input, select, textarea {
-  background-color: var(--input-bg);
-  color: var(--input-fg);
-  border-color: var(--input-border);
-}
-
-input:focus, select:focus, textarea:focus {
+html[data-theme="dark"] input:focus,
+html[data-theme="dark"] select:focus,
+html[data-theme="dark"] textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(43, 112, 255, 0.35);
-  border-color: var(--input-ring);
+  box-shadow: 0 0 0 2px var(--brand) inset, 0 0 0 3px color-mix(in srgb, var(--brand) 30%, transparent);
+  border-color: var(--brand) !important;
 }
 
-html[data-mode="dark"] input:focus,
-html[data-mode="dark"] select:focus,
-html[data-mode="dark"] textarea:focus {
-  box-shadow: 0 0 0 3px rgba(122, 162, 255, 0.35);
+/* Autofill (Chromium) */
+html[data-theme="dark"] input:-webkit-autofill,
+html[data-theme="dark"] textarea:-webkit-autofill,
+html[data-theme="dark"] select:-webkit-autofill {
+  -webkit-text-fill-color: var(--text) !important;
+  transition: background-color 9999s ease-in-out 0s;
+  box-shadow: 0 0 0px 1000px var(--card) inset !important;
+  caret-color: var(--text) !important;
 }
 
-/* Botões primários */
-.btn-primary,
-button[data-variant="primary"] {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary);
+/* Neutraliza utilitários hardcoded no dark */
+html[data-theme="dark"] .bg-white,
+html[data-theme="dark"] .bg-neutral-50 { 
+  background-color: var(--card) !important; 
 }
 
-.btn-primary:hover,
-button[data-variant="primary"]:hover {
-  filter: brightness(1.05);
-}
-
-/* ===== Normalização para páginas de edição ===== */
-.edit-page,
-[data-edit-page="true"] {
-  transform: none !important;
-  zoom: 1 !important;
-}
-
-.edit-page .container,
-[data-edit-page="true"] .container {
-  max-width: 1200px;
-}
-
-.edit-page .card,
-[data-edit-page="true"] .card {
-  overflow: hidden;
-  border-color: var(--border);
-  background: var(--panel);
+html[data-theme="dark"] .text-black,
+html[data-theme="dark"] .text-zinc-900 { 
+  color: var(--text) !important; 
 }
 

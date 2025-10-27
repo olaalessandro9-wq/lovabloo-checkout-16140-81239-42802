@@ -275,7 +275,7 @@ export const OffersManager = ({
                   <CurrencyInput
                     id={`offer-price-${offer.id}`}
                     value={offer.price}
-                    onChange={(value) => handleUpdateOffer(offer.id, "price", String(value))}
+                    onChange={(value) => handleUpdateOffer(offer.id, "price", value)}
                     className={`bg-background ${errors[offer.id]?.price ? 'border-destructive' : ''}`}
                   />
                   {errors[offer.id]?.price && (

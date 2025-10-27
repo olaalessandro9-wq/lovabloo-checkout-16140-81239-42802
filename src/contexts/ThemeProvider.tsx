@@ -1,57 +1,60 @@
 import React from 'react';
 
-type Mode = 'light' | 'dark';
+type ThemeName = 'light' | 'dark';
+type Palette = 'eagle' | 'sky' | 'horizon';
 
-interface ThemeContextType {
-  theme: Mode;
+type ThemeContextState = {
+  theme: ThemeName;
+  palette: Palette;
+  setTheme: (t: ThemeName) => void;
+  setPalette: (p: Palette) => void;
   toggleTheme: () => void;
-}
+  cyclePalette: () => void;
+};
 
-const ThemeContext = React.createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = React.createContext<ThemeContextState | null>(null);
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = React.useState<Mode>(() => {
-    const saved = localStorage.getItem('theme') as Mode | null;
+export const ThemeProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
+  const [theme, setTheme] = React.useState<ThemeName>(() => {
+    const saved = localStorage.getItem('theme') as ThemeName | null;
     return saved || 'light';
+  });
+  const [palette, setPalette] = React.useState<Palette>(() => {
+    const saved = localStorage.getItem('palette') as Palette | null;
+    return saved || 'eagle';
   });
 
   React.useEffect(() => {
-    const root = document.documentElement;
-    
-    // Seta data-mode
-    root.setAttribute('data-mode', theme);
-    
-    // Paleta fixa por modo (não editável pelo usuário)
-    // Light = Sky Commander (azul vibrante)
-    // Dark = Horizon (tons escuros)
-    root.setAttribute('data-palette', theme === 'dark' ? 'horizon' : 'sky');
-    
-    // Mantém data-theme para compatibilidade
-    root.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
-    
-    // Classe 'dark' para compatibilidade com Tailwind
-    root.classList.toggle('dark', theme === 'dark');
-    
+    document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+    // Também atualiza a classe 'dark' para compatibilidade com componentes existentes
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
     // Persiste no localStorage
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-palette', palette);
+    // Persiste no localStorage
+    localStorage.setItem('palette', palette);
+  }, [palette]);
+
+  const toggleTheme = () => setTheme(t => (t === 'light' ? 'dark' : 'light'));
+  const cyclePalette = () => setPalette(p => (p === 'eagle' ? 'sky' : p === 'sky' ? 'horizon' : 'eagle'));
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, palette, setTheme, setPalette, toggleTheme, cyclePalette }}>
       {children}
     </ThemeContext.Provider>
   );
-}
+};
 
-export function useTheme() {
-  const context = React.useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
-  }
-  return context;
-}
+export const useThemeStore = () => {
+  const ctx = React.useContext(ThemeContext);
+  if (!ctx) throw new Error('useThemeStore must be used within ThemeProvider');
+  return ctx;
+};
 

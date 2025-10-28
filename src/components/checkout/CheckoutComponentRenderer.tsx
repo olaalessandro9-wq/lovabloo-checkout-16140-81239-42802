@@ -28,23 +28,23 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
 
       const maxW = component.content?.maxWidth ?? 720;
       const fit = component.content?.fit ?? "cover";
-      const roundedImage = component.content?.roundedImage ?? false;
+      const roundedImage = component.content?.roundedImage ?? true; // agora por padrão arredondado médio
       // cardBgClass: destaque do bloco (ajustável)
       const cardBgClass = component.content?.cardBgClass || "bg-white dark:bg-gray-800";
 
       return (
         <div className="w-full flex justify-center">
           <div className="w-full" style={{ maxWidth: `${maxW}px` }}>
-            {/* Card de destaque com padding, borda e sombra */}
-            <div className={`${cardBgClass} p-3 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 mb-3`}>
+            {/* Card de destaque com padding reduzido e borda/sombra */}
+            <div className={`${cardBgClass} p-2 rounded-md shadow-md border border-gray-100 dark:border-gray-700 mb-2`}>
               {/* Força proporção 16/9 (paisagem) */}
               <div className="aspect-[16/9] relative overflow-hidden">
                 <img
                   key={component.id}
                   src={src}
                   alt={component.content?.alt || 'Imagem'}
-                  // imagem QUADRADA nos cantos (rounded-none), mas se quiser deixar opcional, use roundedImage
-                  className={`absolute inset-0 w-full h-full object-${fit} ${roundedImage ? 'rounded-xl' : 'rounded-none'}`}
+                  // arredondamento médio na imagem para ficar igual à referência
+                  className={`absolute inset-0 w-full h-full object-${fit} ${roundedImage ? 'rounded-md' : 'rounded-none'}`}
                   loading="eager"
                   fetchpriority="high"
                   decoding="async"

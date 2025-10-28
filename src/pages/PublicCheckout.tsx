@@ -218,20 +218,19 @@ const PublicCheckout = () => {
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             {/* Coluna Principal - Formulário (Esquerda no Desktop) */}
             <div className="space-y-4 min-w-0">
-              {/* Header do Produto - bloco destacado como card */}
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 p-5 mb-4">
+              {/* Header do Produto - bloco destacado com padding menor para reduzir espaço */}
+              <div className="bg-white dark:bg-gray-800 rounded-md shadow-md border border-gray-100 dark:border-gray-700 p-4 mb-3">
                 {/* Cabeçalho do Produto */}
-                <div className="flex items-center gap-4 mb-4">
+                <div className="flex items-center gap-3 mb-3">
                   {checkout.product?.image_url ? (
-                    // miniatura QUADRADA e com borda para destacar
                     <img 
                       src={checkout.product.image_url} 
                       alt={checkout.product?.name || 'Produto'}
-                      className="w-16 h-16 object-cover rounded-none border border-gray-200 dark:border-gray-700"
-                      style={{ flex: '0 0 auto' }}
+                      // miniatura com arredondamento médio (igual ao topo)
+                      className="w-16 h-16 object-cover rounded-md border border-gray-200 dark:border-gray-700"
                     />
                   ) : (
-                    <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-none flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                    <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center border border-gray-200 dark:border-gray-700">
                       <ImageIcon className="w-6 h-6 text-gray-400" />
                     </div>
                   )}
@@ -243,8 +242,8 @@ const PublicCheckout = () => {
                   </div>
                 </div>
 
-                {/* Linha separadora sutil */}
-                <div className="border-t border-gray-100 dark:border-gray-700 -mx-5 mb-4"></div>
+                {/* Linha separadora sutil (menor) */}
+                <div className="border-t border-gray-100 dark:border-gray-700 -mx-4 mb-3"></div>
 
                 {/* Formulário de Dados */}
                 <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 tracking-tight">

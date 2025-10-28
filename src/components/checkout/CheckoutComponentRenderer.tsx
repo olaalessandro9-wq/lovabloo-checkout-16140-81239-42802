@@ -14,12 +14,10 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
 
   switch (component.type) {
     case 'image': {
-      // Ler src com fallback seguro
       const src = typeof component.content?.imageUrl === 'string'
         ? component.content.imageUrl
         : (typeof component.content?.url === 'string' ? component.content.url : '');
-      console.log('[Renderer:image] src:', src, 'component:', component.id);
-      
+
       if (!src) {
         return (
           <div className="w-full border border-dashed rounded-lg p-6 text-center text-sm opacity-70 mb-6">
@@ -27,22 +25,26 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
           </div>
         );
       }
-      
+
       const maxW = component.content?.maxWidth ?? 720;
       const fit = component.content?.fit ?? "cover";
-      const rounded = component.content?.rounded ?? true;
+      const roundedImage = component.content?.roundedImage ?? false;
+      // cardBgClass: destaque do bloco (ajustável)
+      const cardBgClass = component.content?.cardBgClass || "bg-white dark:bg-gray-800";
 
       return (
         <div className="w-full flex justify-center">
           <div className="w-full" style={{ maxWidth: `${maxW}px` }}>
-            <div className={`${rounded ? "rounded-xl" : ""} overflow-hidden mt-2 mb-3`}>
-              {/* Proporção paisagem para top images (16/9) */}
-              <div className="aspect-[16/9] relative">
+            {/* Card de destaque com padding, borda e sombra */}
+            <div className={`${cardBgClass} p-3 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 mb-3`}>
+              {/* Força proporção 16/9 (paisagem) */}
+              <div className="aspect-[16/9] relative overflow-hidden">
                 <img
                   key={component.id}
                   src={src}
                   alt={component.content?.alt || 'Imagem'}
-                  className={`absolute inset-0 w-full h-full object-${fit}`}
+                  // imagem QUADRADA nos cantos (rounded-none), mas se quiser deixar opcional, use roundedImage
+                  className={`absolute inset-0 w-full h-full object-${fit} ${roundedImage ? 'rounded-xl' : 'rounded-none'}`}
                   loading="eager"
                   fetchpriority="high"
                   decoding="async"

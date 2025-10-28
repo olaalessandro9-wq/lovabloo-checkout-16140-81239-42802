@@ -217,9 +217,9 @@ const PublicCheckout = () => {
         <div className="max-w-[1120px] mx-auto px-4 lg:px-6 py-4 lg:py-8">
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             {/* Coluna Principal - Formulário (Esquerda no Desktop) */}
-            <div className="space-y-4 min-w-0">
+            <div className="space-y-1 min-w-0">
               {/* Header do Produto - card compacto */}
-              <div className="bg-white dark:bg-gray-800 rounded-sm shadow-sm ring-1 ring-gray-100 dark:ring-gray-700 p-1 mb-0.5">
+              <div className="bg-white dark:bg-gray-800 rounded-sm shadow-sm ring-1 ring-gray-100 dark:ring-gray-700 p-1">
                 {/* Cabeçalho do Produto */}
                 <div className="flex items-center gap-3 mb-2">
                   {checkout.product?.image_url ? (

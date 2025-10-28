@@ -218,10 +218,10 @@ const PublicCheckout = () => {
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             {/* Coluna Principal - Formulário (Esquerda no Desktop) */}
             <div className="space-y-4 min-w-0">
-              {/* Header do Produto - bloco destacado com padding mínimo */}
-              <div className="bg-white dark:bg-gray-800 rounded-md shadow-md border border-gray-100 dark:border-gray-700 p-3 mb-1">
+              {/* Header do Produto - bloco compacto com destaque */}
+              <div className="bg-white dark:bg-gray-800 rounded-md shadow-md border border-gray-100 dark:border-gray-700 p-2 mb-1">
                 {/* Cabeçalho do Produto */}
-                <div className="flex items-center gap-3 mb-3">
+                <div className="flex items-center gap-3 mb-2">
                   {checkout.product?.image_url ? (
                     <img 
                       src={checkout.product.image_url} 

@@ -218,31 +218,36 @@ const PublicCheckout = () => {
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             {/* Coluna Principal - Formulário (Esquerda no Desktop) */}
             <div className="space-y-4 min-w-0">
-              {/* Header do Produto - Integrado com "Seus dados" */}
-              <div className="bg-white rounded-xl shadow-sm p-5 mb-4">
+              {/* Header do Produto - bloco destacado como card */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-100 dark:border-gray-700 p-5 mb-4">
                 {/* Cabeçalho do Produto */}
-                <div className="flex items-center gap-3 mb-5">
+                <div className="flex items-center gap-4 mb-4">
                   {checkout.product?.image_url ? (
+                    // miniatura QUADRADA e com borda para destacar
                     <img 
                       src={checkout.product.image_url} 
                       alt={checkout.product?.name || 'Produto'}
-                      className="w-16 h-16 object-cover rounded-lg"
+                      className="w-16 h-16 object-cover rounded-none border border-gray-200 dark:border-gray-700"
+                      style={{ flex: '0 0 auto' }}
                     />
                   ) : (
-                    <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-none flex items-center justify-center border border-gray-200 dark:border-gray-700">
                       <ImageIcon className="w-6 h-6 text-gray-400" />
                     </div>
                   )}
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900 leading-tight tracking-tight">{checkout.product?.name}</h1>
-                    <p className="text-lg font-semibold text-gray-900 mt-1">
-                      R$ {(checkout.product?.price / 100)?.toFixed(2).replace('.', ',')} <span className="text-sm font-normal text-gray-600">à vista</span>
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight">{checkout.product?.name}</h1>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-gray-100 mt-1">
+                      R$ {(checkout.product?.price / 100)?.toFixed(2).replace('.', ',')} <span className="text-sm font-normal text-gray-600 dark:text-gray-300">à vista</span>
                     </p>
                   </div>
                 </div>
 
+                {/* Linha separadora sutil */}
+                <div className="border-t border-gray-100 dark:border-gray-700 -mx-5 mb-4"></div>
+
                 {/* Formulário de Dados */}
-                <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2 tracking-tight">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2 tracking-tight">
                   <User className="w-5 h-5" />
                   Seus dados
                 </h2>

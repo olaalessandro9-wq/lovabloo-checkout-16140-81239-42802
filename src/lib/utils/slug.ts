@@ -1,4 +1,4 @@
-// Gera slugs simples e únicos para checkouts e links
+// Gera slugs "kebab-case" e garante unicidade consultando o banco
 export function toSlug(input: string): string {
   return (input ?? "")
     .normalize("NFKD")
@@ -17,7 +17,6 @@ export async function ensureUniqueSlug(
 ): Promise<string> {
   let slug = toSlug(baseSlug) || "checkout";
   let suffix = 0;
-
   while (true) {
     const trySlug = suffix === 0 ? slug : `${slug}-${suffix}`;
     const { data, error } = await supabase
@@ -25,11 +24,9 @@ export async function ensureUniqueSlug(
       .select(column)
       .eq(column, trySlug)
       .limit(1);
-
     if (error) break;
     if (!data || data.length === 0) return trySlug;
     suffix++;
   }
-
   return `${slug}-${crypto?.randomUUID?.().slice(0, 8) ?? Date.now()}`;
 }

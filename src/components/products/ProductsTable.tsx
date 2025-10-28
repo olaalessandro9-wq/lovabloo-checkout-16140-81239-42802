@@ -23,6 +23,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { duplicateProductDeep } from "@/lib/products/duplicateProduct";
+import { deleteProductCascade } from "@/lib/products/deleteProduct";
 
 interface Product {
   id: string;
@@ -40,6 +43,39 @@ export function ProductsTable() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("products");
+
+  const qc = useQueryClient();
+
+  const duplicateMutation = useMutation({
+    mutationFn: async (productId: number) => {
+      const { newProductId } = await duplicateProductDeep(supabase, productId);
+      return newProductId;
+    },
+    onSuccess: async () => {
+      toast.success("Produto duplicado com sucesso!");
+      await loadProducts();
+      await qc.invalidateQueries({ queryKey: ["products:list"] });
+    },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error(`Falha ao duplicar: ${err?.message ?? "erro desconhecido"}`);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (productId: number) => {
+      await deleteProductCascade(supabase, productId);
+    },
+    onSuccess: async () => {
+      toast.success("Produto excluído com sucesso!");
+      await loadProducts();
+      await qc.invalidateQueries({ queryKey: ["products:list"] });
+    },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error(`Falha ao excluir: ${err?.message ?? "erro desconhecido"}`);
+    },
+  });
 
   useEffect(() => {
     loadProducts();
@@ -70,65 +106,14 @@ export function ProductsTable() {
     navigate(`/produtos/editar?id=${productId}`);
   };
 
-  const handleDuplicate = async (product: Product) => {
-    if (!user) return;
-
-    try {
-      // Buscar o produto completo
-      const { data: fullProduct, error: fetchError } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", product.id)
-        .eq("user_id", user.id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      // Criar uma cópia do produto
-      const { data: newProduct, error: insertError } = await supabase
-        .from("products")
-        .insert([{
-          name: `${fullProduct.name} (Cópia)`,
-          description: fullProduct.description,
-          price: fullProduct.price,
-          image_url: fullProduct.image_url,
-          support_name: fullProduct.support_name,
-          support_email: fullProduct.support_email,
-          status: fullProduct.status,
-          user_id: user.id
-        }])
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-
-      toast.success("Produto duplicado com sucesso!", { description: "O novo produto está na lista." });
-      loadProducts();
-    } catch (error: any) {
-      console.error(error);
-      toast.error("Erro ao duplicar produto", { description: error.message || "Erro desconhecido" });
-    }
+  const handleDuplicate = (productId: string) => {
+    duplicateMutation.mutate(Number(productId));
   };
 
-  const handleDelete = async (productId: string) => {
-    if (!user) return;
-
-    try {
-      // Deletar o produto - o RLS e CASCADE vão cuidar das relações
-      const { error: deleteError } = await supabase
-        .from("products")
-        .delete()
-        .eq("id", productId)
-        .eq("user_id", user.id);
-
-      if (deleteError) throw deleteError;
-
-      toast.success("Produto excluído com sucesso");
-      loadProducts();
-    } catch (error: any) {
-      console.error(error);
-      toast.error("Erro ao excluir produto", { description: error.message || "Erro desconhecido" });
-    }
+  const handleDelete = (productId: string) => {
+    const ok = window.confirm("Tem certeza que deseja excluir este produto?");
+    if (!ok) return;
+    deleteMutation.mutate(Number(productId));
   };
 
   const filteredProducts = products.filter(product => 
@@ -240,14 +225,18 @@ export function ProductsTable() {
                         <DropdownMenuItem onClick={() => handleEdit(product.id)}>
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDuplicate(product)}>
-                          Duplicar
+                        <DropdownMenuItem 
+                          onClick={() => handleDuplicate(product.id)}
+                          disabled={duplicateMutation.isPending || deleteMutation.isPending}
+                        >
+                          {duplicateMutation.isPending ? "Duplicando..." : "Duplicar"}
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="text-destructive"
                           onClick={() => handleDelete(product.id)}
+                          disabled={duplicateMutation.isPending || deleteMutation.isPending}
                         >
-                          Excluir
+                          {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

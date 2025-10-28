@@ -1,5 +1,9 @@
 import { copyPublicObjectToNewPath } from "@/lib/supabase/storageHelpers";
 
+/**
+ * Percorre o JSON de customização e copia URLs de imagem/asset para novos paths
+ * retornando um novo JSON com URLs atualizadas.
+ */
 export async function cloneCustomizationWithImages(
   supabase: any,
   customization: any,
@@ -16,7 +20,9 @@ export async function cloneCustomizationWithImages(
           clone[k] = await copyPublicObjectToNewPath(supabase, v, newProductId, "image");
         } else if (k === "src" && typeof v === "string" && v) {
           clone[k] = await copyPublicObjectToNewPath(supabase, v, newProductId, "asset");
-        } else clone[k] = await visit(v as any);
+        } else {
+          clone[k] = await visit(v as any);
+        }
       }
       return clone;
     }

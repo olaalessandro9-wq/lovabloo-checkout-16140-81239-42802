@@ -33,22 +33,22 @@ export async function copyPublicObjectToNewPath(
   const { bucket, path } = parsed;
   const newPath = buildNewObjectPath(productId, path, baseName);
 
+  // Tenta copiar no storage (server-side op suportada pelo Supabase)
   const copyRes = await supabase.storage.from(bucket).copy(path, newPath);
   if (!copyRes.error) {
     const { data: pub } = supabase.storage.from(bucket).getPublicUrl(newPath);
     return pub.publicUrl;
   }
 
+  // Fallback: baixar e reenviar (client-side)
   const resp = await fetch(originalUrl);
   if (!resp.ok) return originalUrl;
-
   const blob = await resp.blob();
   const uploadRes = await supabase.storage.from(bucket).upload(newPath, blob, {
     upsert: false,
     contentType: blob.type || "application/octet-stream",
   });
   if (uploadRes.error) return originalUrl;
-
   const { data: pub } = supabase.storage.from(bucket).getPublicUrl(newPath);
   return pub.publicUrl;
 }
@@ -56,7 +56,6 @@ export async function copyPublicObjectToNewPath(
 export async function removeAllUnderPrefix(supabase: any, bucket: string, prefix: string) {
   const toDelete: string[] = [];
   let page = 0;
-
   while (true) {
     const { data, error } = await supabase.storage.from(bucket).list(prefix, {
       limit: 1000,
@@ -67,16 +66,19 @@ export async function removeAllUnderPrefix(supabase: any, bucket: string, prefix
 
     for (const entry of data) {
       if (entry?.name) {
-        if (entry?.metadata?.size >= 0) toDelete.push(`${prefix}/${entry.name}`);
-        else await removeAllUnderPrefix(supabase, bucket, `${prefix}/${entry.name}`);
+        if (entry?.metadata?.size >= 0) {
+          toDelete.push(`${prefix}/${entry.name}`);
+        } else {
+          await removeAllUnderPrefix(supabase, bucket, `${prefix}/${entry.name}`);
+        }
       }
     }
-
     if (data.length < 1000) break;
     page++;
   }
-
-  if (toDelete.length)
-    for (let i = 0; i < toDelete.length; i += 1000)
+  if (toDelete.length) {
+    for (let i = 0; i < toDelete.length; i += 1000) {
       await supabase.storage.from(bucket).remove(toDelete.slice(i, i + 1000));
+    }
+  }
 }

@@ -10,6 +10,7 @@ async function waitAutoCheckout(supabase: any, productId: number, tries = 15) {
       .from("checkouts")
       .select("*")
       .eq("product_id", productId)
+      .order("created_at", { ascending: true })
       .limit(1);
     if (data?.length) return data[0];
     await new Promise(r => setTimeout(r, 200));
@@ -23,6 +24,7 @@ async function cloneCheckoutLinksIfTableExists(
   newCheckoutId: number,
   suggestedSlug: string
 ) {
+  // checkout_links (prioritário)
   try {
     const { data: srcLinks } = await supabase
       .from("checkout_links")
@@ -31,7 +33,7 @@ async function cloneCheckoutLinksIfTableExists(
     if (srcLinks?.length) {
       for (const link of srcLinks) {
         const newSlug = await ensureUniqueSlug(supabase, "checkout_links", "slug", suggestedSlug);
-        const insert = { ...link, id: undefined, checkout_id: newCheckoutId, slug: newSlug };
+        const insert: any = { ...link, id: undefined, checkout_id: newCheckoutId, slug: newSlug };
         delete insert.created_at;
         delete insert.updated_at;
         await supabase.from("checkout_links").insert(insert);
@@ -39,7 +41,7 @@ async function cloneCheckoutLinksIfTableExists(
       return;
     }
   } catch {}
-
+  // payment_links (fallback)
   try {
     const { data: payLinks } = await supabase
       .from("payment_links")
@@ -48,7 +50,7 @@ async function cloneCheckoutLinksIfTableExists(
     if (payLinks?.length) {
       for (const link of payLinks) {
         const newSlug = await ensureUniqueSlug(supabase, "payment_links", "slug", suggestedSlug);
-        const insert = { ...link, id: undefined, checkout_id: newCheckoutId, slug: newSlug };
+        const insert: any = { ...link, id: undefined, checkout_id: newCheckoutId, slug: newSlug };
         delete insert.created_at;
         delete insert.updated_at;
         await supabase.from("payment_links").insert(insert);
@@ -58,9 +60,11 @@ async function cloneCheckoutLinksIfTableExists(
 }
 
 export async function duplicateProductDeep(supabase: any, productId: number) {
+  // 1) produto origem
   const { data: srcProduct } = await supabase.from("products").select("*").eq("id", productId).single();
   if (!srcProduct) throw new Error("Produto origem não encontrado.");
 
+  // 2) cria produto cópia
   const productInsert: ProductRow = { ...srcProduct };
   delete productInsert.id;
   delete productInsert.created_at;
@@ -74,18 +78,26 @@ export async function duplicateProductDeep(supabase: any, productId: number) {
     .single();
   if (!newProd) throw new Error("Falha ao criar produto cópia.");
 
-  const newProductId = newProd.id;
+  const newProductId = newProd.id as number;
+
+  // 3) aguarda checkout auto-criado (trigger)
   const autoCheckout = await waitAutoCheckout(supabase, newProductId);
 
+  // 4) checkouts origem
   const { data: srcCheckouts } = await supabase
     .from("checkouts")
     .select("*")
-    .eq("product_id", productId);
+    .eq("product_id", productId)
+    .order("created_at", { ascending: true });
   if (!srcCheckouts?.length) return { newProductId };
 
   for (let i = 0; i < srcCheckouts.length; i++) {
     const src = srcCheckouts[i];
+
+    // clona customização (regravando URLs de imagem/asset)
     const clonedCustomization = await cloneCustomizationWithImages(supabase, src.customization, newProductId);
+
+    // slug único para o checkout clonado
     const baseSlug = src.slug || `${toSlug(srcProduct.name)}-${i + 1}`;
     const newSlug = await ensureUniqueSlug(supabase, "checkouts", "slug", baseSlug);
 

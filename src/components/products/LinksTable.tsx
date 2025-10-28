@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { formatCentsToBRL } from "@/utils/money";
 
 export interface PaymentLink {
   id: string;
@@ -111,7 +112,7 @@ export function LinksTable({ links, onToggleStatus }: LinksTableProps) {
                     </div>
                   </TableCell>
                   <TableCell className="text-foreground font-medium">
-                    R$ {link.offer_price.toFixed(2)}
+                    {formatCentsToBRL(link.offer_price)}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2 max-w-md">

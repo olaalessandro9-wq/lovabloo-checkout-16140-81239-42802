@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { formatCentsToBRL } from "@/utils/money";
 
 export interface Checkout {
   id: string;
@@ -102,7 +103,7 @@ export const CheckoutTable = ({
                       </div>
                     </TableCell>
                     <TableCell className="text-primary font-semibold">
-                      R$ {checkout.price.toFixed(2)}
+                      {formatCentsToBRL(checkout.price)}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {checkout.visits}

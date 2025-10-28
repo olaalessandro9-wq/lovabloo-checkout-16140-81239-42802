@@ -258,6 +258,7 @@ const CheckoutCustomizer = () => {
   };
 
   // Helper para obter todos os componentes em um array plano
+  // Helper para obter todos os componentes em um array plano
   const getAllComponents = (custom: CheckoutCustomization) => {
     const all = [...custom.topComponents, ...custom.bottomComponents];
     custom.rows.forEach(row => row.columns.forEach(col => all.push(...col)));
@@ -275,10 +276,10 @@ const CheckoutCustomizer = () => {
     }
 
     // 1. Aguardar uploads pendentes
-    if (hasPendingUploads(getAllComponents(customization))) {
+    if (hasPendingUploads(customization)) {
       toast({ title: "Aguardando upload", description: "Existem imagens sendo enviadas. Salvando automaticamente quando terminar..." });
       try {
-        await waitForUploadsToFinish(() => getAllComponents(customization), 45000);
+        await waitForUploadsToFinish(() => customization, 45000);
       } catch (err) {
         toast({ title: "Tempo esgotado", description: "Uploads demoraram muito. Tente novamente.", variant: "destructive" });
         return;
@@ -286,7 +287,7 @@ const CheckoutCustomizer = () => {
     }
 
     // 2. Sanity check: no blobs (após o wait)
-    const blobs = getAllComponents(customization).filter(c => typeof c?.content?.imageUrl === "string" && c.content.imageUrl.startsWith("blob:"));
+    const blobs = getAllComponentsFromCustomization(customization).filter(c => typeof c?.content?.imageUrl === "string" && c.content.imageUrl.startsWith("blob:"));
     if (blobs.length) {
       toast({ title: "Erro", description: "Existem imagens em preview. Aguarde o upload terminar.", variant: "destructive" });
       return;
@@ -297,7 +298,7 @@ const CheckoutCustomizer = () => {
 
     try {
       // 3. Coletar paths antigos para exclusão
-      getAllComponents(customization).forEach(comp => {
+      getAllComponentsFromCustomization(customization).forEach(comp => {
         if (comp.content?._old_storage_path) {
           oldStoragePaths.push(comp.content._old_storage_path);
         }

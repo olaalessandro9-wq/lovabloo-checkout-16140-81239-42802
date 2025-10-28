@@ -23,3 +23,6 @@ export const formatPriceFromCents = (cents: number | null | undefined): string =
     maximumFractionDigits: 2
   });
 };
+
+// Alias para manter compatibilidade
+export const formatCentsToBRL = formatPriceFromCents;

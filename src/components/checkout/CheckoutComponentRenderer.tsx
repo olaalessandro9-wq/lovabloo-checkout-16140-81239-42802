@@ -43,10 +43,9 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
                   key={component.id}
                   src={src}
                   alt={component.content?.alt || 'Imagem'}
-                  // NÃO alterar width/height/maxW da imagem — apenas garantir crop central
                   className={`absolute inset-0 w-full h-full object-${fit} object-center ${roundedImage ? 'rounded-sm' : 'rounded-none'}`}
                   loading="eager"
-                  fetchpriority="high"
+                  fetchPriority="high"
                   decoding="async"
                   style={{ width: '100%', height: '100%' }}
                   onError={(e) => {

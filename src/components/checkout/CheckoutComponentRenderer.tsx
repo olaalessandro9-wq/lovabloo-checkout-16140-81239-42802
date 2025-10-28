@@ -35,16 +35,16 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
       return (
         <div className="w-full flex justify-center">
           <div className="w-full" style={{ maxWidth: `${maxW}px` }}>
-            {/* Card de destaque com padding mínimo e borda/sombra */}
+            {/* Card: padding e margin reduzidos para ficar mais fino */}
             <div className={`${cardBgClass} p-1 rounded-md shadow-md border border-gray-100 dark:border-gray-700 mb-1`}>
-              {/* Proporção 14/9 (mais compacta) */}
-              <div className="aspect-[14/9] relative overflow-hidden">
+              {/* Usamos 16/9 (padrão) para preservar a área visível */}
+              <div className="aspect-[16/9] relative overflow-hidden">
                 <img
                   key={component.id}
                   src={src}
                   alt={component.content?.alt || 'Imagem'}
-                  // arredondamento sutil na imagem
-                  className={`absolute inset-0 w-full h-full object-${fit} ${roundedImage ? 'rounded-sm' : 'rounded-none'}`}
+                  // NÃO alterar width/height/maxW da imagem — apenas garantir crop central
+                  className={`absolute inset-0 w-full h-full object-${fit} object-center ${roundedImage ? 'rounded-sm' : 'rounded-none'}`}
                   loading="eager"
                   fetchpriority="high"
                   decoding="async"

@@ -34,10 +34,10 @@ const CheckoutComponentRenderer = ({ component }: CheckoutComponentRendererProps
 
       return (
         <div className="w-full flex justify-center">
-          <div className="w-full" style={{ maxWidth: `${maxW}px` }}>
-            {/* Card: padding e margin reduzidos para ficar mais fino */}
-            <div className={`${cardBgClass} p-1 rounded-md shadow-md border border-gray-100 dark:border-gray-700 mb-1`}>
-              {/* Usamos 16/9 (padrão) para preservar a área visível */}
+          <div className="w-full" style={{ maxWidth: `${720}px` /* manter 720 */ }}>
+            {/* Card: padding e margin ainda menores, borda mais sutil (ring) e sombra leve */}
+            <div className={`bg-white dark:bg-gray-800 p-0.5 rounded-sm shadow-sm ring-1 ring-gray-100 dark:ring-gray-700 mb-0.5`}>
+              {/* Manter 16/9 para preservar área visível da imagem */}
               <div className="aspect-[16/9] relative overflow-hidden">
                 <img
                   key={component.id}

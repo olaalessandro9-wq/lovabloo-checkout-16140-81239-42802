@@ -74,54 +74,60 @@ export function ProductsTable() {
     if (!user) return;
 
     try {
-      const res = await fetch("/api/products/duplicate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: product.id })
-      });
-      
-      const json = await res.json();
+      // Buscar o produto completo
+      const { data: fullProduct, error: fetchError } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", product.id)
+        .eq("user_id", user.id)
+        .single();
 
-      if (!res.ok) {
-        toast.error("Erro ao duplicar produto", { description: json.error || "Erro desconhecido" });
-        throw new Error(json.error || "Erro ao duplicar produto");
-      } else {
-        toast.success("Produto duplicado com sucesso!", { description: "O novo produto está na lista." });
-        loadProducts();
-      }
+      if (fetchError) throw fetchError;
+
+      // Criar uma cópia do produto
+      const { data: newProduct, error: insertError } = await supabase
+        .from("products")
+        .insert([{
+          name: `${fullProduct.name} (Cópia)`,
+          description: fullProduct.description,
+          price: fullProduct.price,
+          image_url: fullProduct.image_url,
+          support_name: fullProduct.support_name,
+          support_email: fullProduct.support_email,
+          status: fullProduct.status,
+          user_id: user.id
+        }])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      toast.success("Produto duplicado com sucesso!", { description: "O novo produto está na lista." });
+      loadProducts();
     } catch (error: any) {
       console.error(error);
-      // O toast.error já foi chamado acima, mas se for outro erro:
-      if (!error.message.includes("Erro ao duplicar produto")) {
-        toast.error("Erro ao duplicar produto", { description: "Verifique o console para detalhes." });
-      }
+      toast.error("Erro ao duplicar produto", { description: error.message || "Erro desconhecido" });
     }
   };
 
   const handleDelete = async (productId: string) => {
+    if (!user) return;
+
     try {
-      // Usar a nova API para deletar produto e assets
-      const res = await fetch("/api/products/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId })
-      });
+      // Deletar o produto - o RLS e CASCADE vão cuidar das relações
+      const { error: deleteError } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", productId)
+        .eq("user_id", user.id);
 
-      const json = await res.json();
-      
-      if (!res.ok) {
-        toast.error("Erro ao excluir produto", { description: json.error || "Erro desconhecido" });
-        throw new Error(json.error || "Erro ao excluir produto");
-      }
+      if (deleteError) throw deleteError;
 
-      toast.success("Produto excluído com sucesso", { description: "O produto e seus assets foram removidos." });
+      toast.success("Produto excluído com sucesso");
       loadProducts();
     } catch (error: any) {
       console.error(error);
-      // O toast.error já foi chamado acima, mas se for outro erro:
-      if (!error.message.includes("Erro ao excluir produto")) {
-        toast.error("Erro ao excluir produto", { description: "Verifique o console para detalhes." });
-      }
+      toast.error("Erro ao excluir produto", { description: error.message || "Erro desconhecido" });
     }
   };
 

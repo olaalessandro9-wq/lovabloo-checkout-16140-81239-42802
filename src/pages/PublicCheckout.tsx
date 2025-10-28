@@ -218,8 +218,10 @@ const PublicCheckout = () => {
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
             {/* Coluna Principal - Formulário (Esquerda no Desktop) */}
             <div className="space-y-1 min-w-0">
-              {/* Header do Produto - card compacto */}
-              <div className="bg-white dark:bg-gray-800 rounded-sm shadow-sm ring-1 ring-gray-100 dark:ring-gray-700 p-1">
+              {/* Header do Produto - card compacto alinhado ao mesmo max-width */}
+              <div className="w-full flex justify-center">
+                <div className="w-full max-w-[680px] mx-auto px-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-sm shadow-sm ring-1 ring-gray-100 dark:ring-gray-700 p-2 mb-1">
                 {/* Cabeçalho do Produto */}
                 <div className="flex items-center gap-3 mb-2">
                   {checkout.product?.image_url ? (
@@ -304,6 +306,8 @@ const PublicCheckout = () => {
                     />
                   </div>
                 </form>
+                  </div>
+                </div>
               </div>
 
               {/* Métodos de Pagamento */}

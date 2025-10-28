@@ -1,20 +1,18 @@
-import fetch from "node-fetch";
-import { supabase } from "@/integrations/supabase/client"; // ajustar se necessário
-import { v4 as uuidv4 } from "uuid";
+import { supabase } from "@/integrations/supabase/client";
 
 export async function copyImagePublicUrlToNewFile(publicUrl: string, destFolder = "product-images") {
   if (!publicUrl || !publicUrl.startsWith("http")) return null;
 
-  const res = await fetch(publicUrl);
+  const res = await window.fetch(publicUrl);
   if (!res.ok) throw new Error(`Erro ao baixar imagem: ${res.status}`);
   const arrayBuffer = await res.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  const uint8Array = new Uint8Array(arrayBuffer);
 
   const contentType = res.headers.get("content-type") || "image/jpeg";
   const ext = (contentType.split("/")[1] || "jpg").split(";")[0];
-  const fileName = `${destFolder}/${uuidv4()}.${ext}`;
+  const fileName = `${destFolder}/${crypto.randomUUID()}.${ext}`;
 
-  const { error: uploadError } = await supabase.storage.from(destFolder).upload(fileName, buffer, {
+  const { error: uploadError } = await supabase.storage.from(destFolder).upload(fileName, uint8Array, {
     contentType,
     upsert: true
   });

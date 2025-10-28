@@ -18,6 +18,36 @@ export interface CheckoutComponent {
   content?: any;
 }
 
+// Helper function to get all components from customization
+function getAllComponentsFromCustomization(customization: CheckoutCustomization): CheckoutComponent[] {
+  const allComponents: CheckoutComponent[] = [];
+  
+  // Add top components
+  if (customization.topComponents) {
+    allComponents.push(...customization.topComponents);
+  }
+  
+  // Add components from rows
+  if (customization.rows) {
+    customization.rows.forEach(row => {
+      if (row.columns) {
+        row.columns.forEach(column => {
+          if (Array.isArray(column)) {
+            allComponents.push(...column);
+          }
+        });
+      }
+    });
+  }
+  
+  // Add bottom components
+  if (customization.bottomComponents) {
+    allComponents.push(...customization.bottomComponents);
+  }
+  
+  return allComponents;
+}
+
 export type LayoutType = "single" | "two-columns" | "two-columns-asymmetric" | "three-columns";
 
 export interface CheckoutRow {

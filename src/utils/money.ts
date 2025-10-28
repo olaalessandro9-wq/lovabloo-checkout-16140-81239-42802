@@ -3,3 +3,5 @@ export function formatPriceFromCents(cents) {
   const value = Number(cents) / 100;
   return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
+
+export const formatCentsToBRL = formatPriceFromCents;

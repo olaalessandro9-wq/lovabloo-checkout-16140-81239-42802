@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { parseJsonSafely } from "@/lib/utils"; // Importando função auxiliar
+import { hasPendingUploads, waitForUploadsToFinish } from "@/lib/uploadUtils";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Monitor, Smartphone, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -256,6 +257,13 @@ const CheckoutCustomizer = () => {
     }
   };
 
+  // Helper para obter todos os componentes em um array plano
+  const getAllComponents = (custom: CheckoutCustomization) => {
+    const all = [...custom.topComponents, ...custom.bottomComponents];
+    custom.rows.forEach(row => row.columns.forEach(col => all.push(...col)));
+    return all;
+  };
+
   const handleSave = async () => {
     if (!checkoutId) {
       toast({
@@ -266,8 +274,35 @@ const CheckoutCustomizer = () => {
       return;
     }
 
+    // 1. Aguardar uploads pendentes
+    if (hasPendingUploads(getAllComponents(customization))) {
+      toast({ title: "Aguardando upload", description: "Existem imagens sendo enviadas. Salvando automaticamente quando terminar..." });
+      try {
+        await waitForUploadsToFinish(() => getAllComponents(customization), 45000);
+      } catch (err) {
+        toast({ title: "Tempo esgotado", description: "Uploads demoraram muito. Tente novamente.", variant: "destructive" });
+        return;
+      }
+    }
+
+    // 2. Sanity check: no blobs (após o wait)
+    const blobs = getAllComponents(customization).filter(c => typeof c?.content?.imageUrl === "string" && c.content.imageUrl.startsWith("blob:"));
+    if (blobs.length) {
+      toast({ title: "Erro", description: "Existem imagens em preview. Aguarde o upload terminar.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
+    let oldStoragePaths: string[] = [];
+
     try {
+      // 3. Coletar paths antigos para exclusão
+      getAllComponents(customization).forEach(comp => {
+        if (comp.content?._old_storage_path) {
+          oldStoragePaths.push(comp.content._old_storage_path);
+        }
+      });
+
       console.log('Salvando componentes:', {
         topComponents: customization.topComponents,
         bottomComponents: customization.bottomComponents
@@ -282,13 +317,28 @@ const CheckoutCustomizer = () => {
           primary_color: customization.design.colors.accent,
           button_color: customization.design.colors.button.background,
           button_text_color: customization.design.colors.button.text,
-          components: customization.rows as any,
-          top_components: (customization.topComponents || []) as any,
-          bottom_components: (customization.bottomComponents || []) as any,
+          // Remover campos temporários antes de salvar
+          components: JSON.parse(JSON.stringify(customization.rows, (k, v) => (k.startsWith('_') ? undefined : v))) as any,
+          top_components: JSON.parse(JSON.stringify(customization.topComponents || [], (k, v) => (k.startsWith('_') ? undefined : v))) as any,
+          bottom_components: JSON.parse(JSON.stringify(customization.bottomComponents || [], (k, v) => (k.startsWith('_') ? undefined : v))) as any,
         })
         .eq("id", checkoutId);
 
       if (error) throw error;
+
+      // 4. Excluir arquivos antigos do storage (após save no DB)
+      if (oldStoragePaths.length > 0) {
+        const res = await fetch("/api/storage/remove", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paths: oldStoragePaths, bucket: "product-images" })
+        });
+        if (!res.ok) {
+          console.error("Falha ao remover arquivos antigos do storage:", await res.json());
+        } else {
+          console.log("Arquivos antigos removidos com sucesso:", oldStoragePaths);
+        }
+      }
 
       // Resetar flag de modificação após salvar
       setIsDirty(false);

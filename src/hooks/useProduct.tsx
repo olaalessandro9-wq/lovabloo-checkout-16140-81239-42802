@@ -206,163 +206,22 @@ export const useProduct = () => {
     if (!productId || !user) return false;
 
     try {
-      console.log("[deleteProduct] Iniciando exclusão do produto:", productId);
-      
-      // 1. Buscar ofertas do produto
-      console.log("[deleteProduct] Buscando ofertas...");
-      const { data: offers, error: offersError } = await supabase
-        .from("offers")
-        .select("id")
-        .eq("product_id", productId);
-      
-      if (offersError) {
-        console.error("[deleteProduct] Erro ao buscar ofertas:", offersError);
-        throw offersError;
-      }
-      
-      console.log("[deleteProduct] Ofertas encontradas:", offers?.length || 0);
+      const res = await fetch("/api/products/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId })
+      });
 
-      // 2. Buscar checkouts do produto PRIMEIRO (para excluir antes dos links)
-      console.log("[deleteProduct] Buscando checkouts...");
-      const { data: checkouts, error: checkoutsError } = await supabase
-        .from("checkouts")
-        .select("id")
-        .eq("product_id", productId);
+      const json = await res.json();
       
-      if (checkoutsError) {
-        console.error("[deleteProduct] Erro ao buscar checkouts:", checkoutsError);
-        throw checkoutsError;
-      }
-      
-      console.log("[deleteProduct] Checkouts encontrados:", checkouts?.length || 0);
-
-      // 3. Excluir checkouts ANTES de excluir links (para evitar trigger)
-      if (checkouts && checkouts.length > 0) {
-        const checkoutIds = checkouts.map(c => c.id);
-        console.log("[deleteProduct] IDs dos checkouts:", checkoutIds);
-
-        // Excluir associações checkout_links
-        console.log("[deleteProduct] Excluindo checkout_links...");
-        const { error: checkoutLinksError } = await supabase
-          .from("checkout_links")
-          .delete()
-          .in("checkout_id", checkoutIds);
-        
-        if (checkoutLinksError) {
-          console.error("[deleteProduct] Erro ao excluir checkout_links:", checkoutLinksError);
-          throw checkoutLinksError;
-        }
-
-        // Excluir checkouts
-        console.log("[deleteProduct] Excluindo checkouts...");
-        const { error: checkoutsDeleteError } = await supabase
-          .from("checkouts")
-          .delete()
-          .in("id", checkoutIds);
-        
-        if (checkoutsDeleteError) {
-          console.error("[deleteProduct] Erro ao excluir checkouts:", checkoutsDeleteError);
-          throw checkoutsDeleteError;
-        }
+      if (!res.ok) {
+        toast.error("Erro ao excluir produto", { description: json.error || "Erro desconhecido" });
+        return false;
       }
 
-      // 4. Agora excluir links e ofertas (sem trigger porque checkouts já foram excluídos)
-      if (offers && offers.length > 0) {
-        const offerIds = offers.map(o => o.id);
-        console.log("[deleteProduct] IDs das ofertas:", offerIds);
-
-        // Buscar links das ofertas
-        console.log("[deleteProduct] Buscando links de pagamento...");
-        const { data: links, error: linksError } = await supabase
-          .from("payment_links")
-          .select("id")
-          .in("offer_id", offerIds);
-        
-        if (linksError) {
-          console.error("[deleteProduct] Erro ao buscar links:", linksError);
-          throw linksError;
-        }
-        
-        console.log("[deleteProduct] Links encontrados:", links?.length || 0);
-
-        // Excluir payment_links
-        if (links && links.length > 0) {
-          const linkIds = links.map(l => l.id);
-          console.log("[deleteProduct] IDs dos links:", linkIds);
-
-          console.log("[deleteProduct] Excluindo payment_links...");
-          const { error: paymentLinksError } = await supabase
-            .from("payment_links")
-            .delete()
-            .in("id", linkIds);
-          
-          if (paymentLinksError) {
-            console.error("[deleteProduct] Erro ao excluir payment_links:", paymentLinksError);
-            throw paymentLinksError;
-          }
-        }
-
-        // Excluir ofertas
-        console.log("[deleteProduct] Excluindo ofertas...");
-        const { error: offersDeleteError } = await supabase
-          .from("offers")
-          .delete()
-          .in("id", offerIds);
-        
-        if (offersDeleteError) {
-          console.error("[deleteProduct] Erro ao excluir ofertas:", offersDeleteError);
-          throw offersDeleteError;
-        }
-      }
-
-      // 7. Excluir order bumps dos checkouts deste produto
-      console.log("[deleteProduct] Excluindo order bumps...");
-      const { data: productCheckouts } = await supabase
-        .from("checkouts")
-        .select("id")
-        .eq("product_id", productId);
-      
-      if (productCheckouts && productCheckouts.length > 0) {
-        const checkoutIds = productCheckouts.map(c => c.id);
-        const { error: orderBumpsError } = await supabase
-          .from("order_bumps")
-          .delete()
-          .in("checkout_id", checkoutIds);
-        
-        if (orderBumpsError) {
-          console.error("[deleteProduct] Erro ao excluir order bumps:", orderBumpsError);
-        }
-      }
-
-      // 8. Excluir coupon_products para este produto
-      console.log("[deleteProduct] Excluindo coupon_products...");
-      const { error: couponProductsError } = await supabase
-        .from("coupon_products")
-        .delete()
-        .eq("product_id", productId);
-      
-      if (couponProductsError) {
-        console.error("[deleteProduct] Erro ao excluir coupon_products:", couponProductsError);
-      }
-
-      // 9. Finalmente, excluir o produto
-      console.log("[deleteProduct] Excluindo produto...");
-      const { error } = await supabase
-        .from("products")
-        .delete()
-        .eq("id", productId)
-        .eq("user_id", user.id);
-
-      if (error) {
-        console.error("[deleteProduct] Erro ao excluir produto:", error);
-        throw error;
-      }
-      
-      console.log("[deleteProduct] Produto excluído com sucesso!");
       toast.success("Produto excluído com sucesso");
       return true;
     } catch (error: any) {
-      console.error("[deleteProduct] Erro geral:", error);
       toast.error(`Erro ao excluir produto: ${error.message || "Erro desconhecido"}`);
       return false;
     }

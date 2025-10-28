@@ -220,6 +220,84 @@ export const CheckoutCustomizationPanel = ({
 
           {selectedComponent.type === "image" && (() => {
             const imageInputId = `image-upload-${selectedComponent.id}`;
+            const isUploading = selectedComponent.content?._uploading === true;
+
+            const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              
+              const oldImageUrl = selectedComponent.content?.imageUrl;
+              const oldStoragePath = selectedComponent.content?._storage_path;
+
+              // 1. Validações
+              if (!file.type.startsWith('image/')) {
+                alert('Por favor, selecione uma imagem válida (JPG/PNG).');
+                return;
+              }
+              if (file.size > 10 * 1024 * 1024) {
+                alert('Imagem muito grande (máx. 10MB).');
+                return;
+              }
+
+              // 2. Preview imediato e marca uploading
+              const previewUrl = URL.createObjectURL(file);
+              onUpdateComponent(selectedComponent.id, {
+                ...selectedComponent.content,
+                imageUrl: previewUrl,   // preview local
+                _preview: true,
+                _uploading: true,
+                _uploadError: false,
+                _fileName: file.name,
+                _old_storage_path: oldStoragePath, // Guarda o path antigo para deletar depois do save
+              });
+
+              // 3. Upload para Supabase em background
+              try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `checkout-components/${selectedComponent.id}-${Date.now()}.${fileExt}`;
+
+                // Fazer upload ao bucket 'product-images'
+                const { error: uploadError } = await supabase.storage
+                  .from('product-images')
+                  .upload(fileName, file, { upsert: true });
+
+                if (uploadError) throw uploadError;
+
+                // Pegar URL pública
+                const { data } = await supabase.storage
+                  .from('product-images')
+                  .getPublicUrl(fileName);
+
+                const publicUrl = data?.publicUrl || null;
+                if (!publicUrl) throw new Error('Public URL não retornada');
+
+                // 4. Atualizar componente com a URL pública e storage_path
+                onUpdateComponent(selectedComponent.id, {
+                  ...selectedComponent.content,
+                  imageUrl: publicUrl,
+                  url: publicUrl,
+                  _storage_path: fileName, // Novo storage path
+                  _uploading: false,
+                  _preview: false,
+                });
+
+                // 5. Revogar preview blob
+                setTimeout(() => {
+                  try { URL.revokeObjectURL(previewUrl); } catch (e) { /* ignore */ }
+                }, 2000);
+
+              } catch (err: any) {
+                console.error("Upload da imagem falhou:", err);
+                onUpdateComponent(selectedComponent.id, {
+                  ...selectedComponent.content,
+                  _uploading: false,
+                  _uploadError: true,
+                  _old_storage_path: null, // Não deletar o antigo
+                });
+                alert("Falha ao enviar imagem. Tente novamente.");
+              }
+            };
+            
             return (
             <>
               <div>
@@ -228,76 +306,27 @@ export const CheckoutCustomizationPanel = ({
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-
-                      // Validações (tipo / tamanho)
-                      if (!file.type.startsWith('image/')) {
-                        alert('Por favor, selecione uma imagem válida (JPG/PNG).');
-                        return;
-                      }
-                      if (file.size > 10 * 1024 * 1024) {
-                        alert('Imagem muito grande (máx. 10MB).');
-                        return;
-                      }
-
-                      // 1) preview imediato (não salvar este blob permanentemente)
-                      const previewUrl = URL.createObjectURL(file);
-                      onUpdateComponent(selectedComponent.id, {
-                        ...selectedComponent.content,
-                        imageUrl: previewUrl,   // preview local
-                        _preview: true,
-                        _fileName: file.name,
-                      });
-
-                      // 2) upload para Supabase em background (async IIFE)
-                      (async () => {
-                        try {
-                          const fileExt = file.name.split('.').pop();
-                          const fileName = `checkout-components/${selectedComponent.id}-${Date.now()}.${fileExt}`;
-
-                          // Fazer upload ao bucket 'product-images'
-                          const { error: uploadError } = await supabase.storage
-                            .from('product-images')
-                            .upload(fileName, file, { upsert: true });
-
-                          if (uploadError) throw uploadError;
-
-                          // Pegar URL pública
-                          const { data } = await supabase.storage
-                            .from('product-images')
-                            .getPublicUrl(fileName);
-
-                          const publicUrl = data?.publicUrl || null;
-                          if (!publicUrl) throw new Error('Public URL não retornada');
-
-                          // 3) atualizar componente com a URL pública (essa será salva no DB)
-                          onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            imageUrl: publicUrl,
-                            url: publicUrl,
-                            _stamp: Date.now(),   // força re-render / marca atualizacao
-                            _preview: false,
-                          });
-
-                          // Opcional: revogar preview blob para liberar memória
-                          setTimeout(() => {
-                            try { URL.revokeObjectURL(previewUrl); } catch (e) { /* ignore */ }
-                          }, 2000);
-                        } catch (err) {
-                          console.error("Upload da imagem falhou:", err);
-                          alert("Falha ao enviar imagem. Tente novamente.");
-                        }
-                      })();
-                    }}
+                    onChange={handleImageFileChange}
                     className="hidden"
                     id={imageInputId}
+                    disabled={isUploading}
                   />
-                  <label htmlFor={imageInputId} className="cursor-pointer">
+                  <label htmlFor={imageInputId} className={`cursor-pointer ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}>
                     <div className="text-gray-500">
-                      <p className="text-sm">Solte os arquivos aqui ou clique para fazer upload</p>
-                      <p className="text-xs mt-1">Formatos aceitos: JPG ou PNG. Tamanho máximo: 10MB</p>
+                      {isUploading ? (
+                        <div className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <p className="text-sm">Enviando imagem...</p>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm">Solte os arquivos aqui ou clique para fazer upload</p>
+                          <p className="text-xs mt-1">Formatos aceitos: JPG ou PNG. Tamanho máximo: 10MB</p>
+                        </>
+                      )}
                     </div>
                   </label>
                 </div>

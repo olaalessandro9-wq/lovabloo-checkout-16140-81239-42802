@@ -256,6 +256,39 @@ const CheckoutCustomizer = () => {
     }
   };
 
+  // Helpers para gerenciar uploads pendentes
+  const getAllComponents = (customization: any) => {
+    const comps = [
+      ...(customization.topComponents || []),
+      ...(customization.bottomComponents || []),
+    ];
+    (customization.rows || []).forEach((row: any) => {
+      row.columns?.forEach((col: any) => comps.push(...(col || [])));
+    });
+    return comps;
+  };
+
+  const hasPendingUploads = (customization: any) => {
+    return getAllComponents(customization).some((c: any) => c?.content?._uploading === true);
+  };
+
+  const waitForUploadsToFinish = (getCustomizationFn: () => any, timeout = 45000) => {
+    // getCustomizationFn deve retornar a referência atual de customization
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      const iv = setInterval(() => {
+        const customization = getCustomizationFn();
+        if (!hasPendingUploads(customization)) {
+          clearInterval(iv);
+          resolve(true);
+        } else if (Date.now() - start > timeout) {
+          clearInterval(iv);
+          reject(new Error('Timeout uploads pendentes'));
+        }
+      }, 300);
+    });
+  };
+
   const handleSave = async () => {
     if (!checkoutId) {
       toast({
@@ -267,7 +300,39 @@ const CheckoutCustomizer = () => {
     }
 
     setLoading(true);
+
     try {
+      // se há uploads pendentes, aguarda
+      if (hasPendingUploads(customization)) {
+        toast({
+          title: "Aguardando upload",
+          description: "Existem imagens sendo enviadas. Salvando automaticamente quando terminar..."
+        });
+        try {
+          await waitForUploadsToFinish(() => customization, 45000);
+        } catch (err: any) {
+          toast({
+            title: "Timeout",
+            description: "Alguns uploads demoraram muito. Verifique sua conexão e tente novamente.",
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Verifica se por algum motivo ainda há blob URLs (precaução)
+      const componentsWithBlob = getAllComponents(customization).filter((c: any) => typeof c?.content?.imageUrl === 'string' && c.content.imageUrl.startsWith('blob:'));
+      if (componentsWithBlob.length > 0) {
+        toast({
+          title: "Erro",
+          description: "Existem imagens ainda em preview que não foram enviadas. Aguarde o upload concluir.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
       console.log('Salvando componentes:', {
         topComponents: customization.topComponents,
         bottomComponents: customization.bottomComponents
@@ -770,8 +835,8 @@ const CheckoutCustomizer = () => {
                 Preview
               </Button>
 
-              <Button onClick={handleSave} disabled={loading}>
-                {loading ? "Salvando..." : "Salvar"}
+              <Button onClick={handleSave} disabled={loading || hasPendingUploads(customization)}>
+                {hasPendingUploads(customization) ? "Aguardando upload..." : (loading ? "Salvando..." : "Salvar")}
               </Button>
             </div>
           </div>

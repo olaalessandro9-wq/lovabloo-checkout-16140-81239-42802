@@ -224,11 +224,11 @@ export const CheckoutCustomizationPanel = ({
             <>
               <div>
                 <Label>Arraste ou selecione o arquivo</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center relative">
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (!file) return;
 
@@ -242,54 +242,61 @@ export const CheckoutCustomizationPanel = ({
                         return;
                       }
 
-                      // 1) preview imediato (não salvar este blob permanentemente)
+                      // 1) Preview local imediato
                       const previewUrl = URL.createObjectURL(file);
+
+                      // 2) Marcar upload em andamento no state do componente (não salvar ainda)
                       onUpdateComponent(selectedComponent.id, {
                         ...selectedComponent.content,
-                        imageUrl: previewUrl,   // preview local
+                        imageUrl: previewUrl, // preview temporário
                         _preview: true,
+                        _uploading: true,
+                        _uploadProgress: 0,
+                        _uploadError: false,
                         _fileName: file.name,
                       });
 
-                      // 2) upload para Supabase em background (async IIFE)
-                      (async () => {
-                        try {
-                          const fileExt = file.name.split('.').pop();
-                          const fileName = `checkout-components/${selectedComponent.id}-${Date.now()}.${fileExt}`;
+                      // 3) Upload para Supabase
+                      try {
+                        const fileExt = file.name.split('.').pop();
+                        const fileName = `checkout-components/${selectedComponent.id}-${Date.now()}.${fileExt}`;
 
-                          // Fazer upload ao bucket 'product-images'
-                          const { error: uploadError } = await supabase.storage
-                            .from('product-images')
-                            .upload(fileName, file, { upsert: true });
+                        // Upload
+                        const { error: uploadError } = await supabase.storage
+                          .from('product-images')
+                          .upload(fileName, file, { upsert: true });
 
-                          if (uploadError) throw uploadError;
+                        if (uploadError) throw uploadError;
 
-                          // Pegar URL pública
-                          const { data } = await supabase.storage
-                            .from('product-images')
-                            .getPublicUrl(fileName);
+                        // Obter publicUrl
+                        const { data } = supabase.storage.from('product-images').getPublicUrl(fileName);
+                        const publicUrl = data?.publicUrl;
+                        if (!publicUrl) throw new Error('Public URL não retornada');
 
-                          const publicUrl = data?.publicUrl || null;
-                          if (!publicUrl) throw new Error('Public URL não retornada');
+                        // 4) Atualizar component com a publicUrl (agora sim é seguro salvar)
+                        onUpdateComponent(selectedComponent.id, {
+                          ...selectedComponent.content,
+                          imageUrl: publicUrl,
+                          url: publicUrl,
+                          _uploading: false,
+                          _uploadProgress: 100,
+                          _preview: false,
+                        });
 
-                          // 3) atualizar componente com a URL pública (essa será salva no DB)
-                          onUpdateComponent(selectedComponent.id, {
-                            ...selectedComponent.content,
-                            imageUrl: publicUrl,
-                            url: publicUrl,
-                            _stamp: Date.now(),   // força re-render / marca atualizacao
-                            _preview: false,
-                          });
+                        // Revoke preview para liberar memória
+                        setTimeout(() => { try { URL.revokeObjectURL(previewUrl); } catch (e) {} }, 2000);
 
-                          // Opcional: revogar preview blob para liberar memória
-                          setTimeout(() => {
-                            try { URL.revokeObjectURL(previewUrl); } catch (e) { /* ignore */ }
-                          }, 2000);
-                        } catch (err) {
-                          console.error("Upload da imagem falhou:", err);
-                          alert("Falha ao enviar imagem. Tente novamente.");
-                        }
-                      })();
+                      } catch (err: any) {
+                        console.error('Upload falhou:', err);
+                        onUpdateComponent(selectedComponent.id, {
+                          ...selectedComponent.content,
+                          _uploading: false,
+                          _uploadError: true,
+                          _uploadProgress: 0
+                        });
+
+                        alert(`Falha ao enviar imagem: ${err.message || 'Tente novamente'}`);
+                      }
                     }}
                     className="hidden"
                     id={imageInputId}
@@ -300,6 +307,23 @@ export const CheckoutCustomizationPanel = ({
                       <p className="text-xs mt-1">Formatos aceitos: JPG ou PNG. Tamanho máximo: 10MB</p>
                     </div>
                   </label>
+                  {selectedComponent.content?._uploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-sm rounded-lg">
+                      <div className="text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+                        <p>Upload em andamento...</p>
+                        <p className="text-xs mt-1">(aguarde)</p>
+                      </div>
+                    </div>
+                  )}
+                  {selectedComponent.content?._uploadError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-red-500 bg-opacity-50 text-white text-sm rounded-lg">
+                      <div className="text-center">
+                        <p className="font-bold">Erro no upload</p>
+                        <p className="text-xs mt-1">Tente novamente</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div>

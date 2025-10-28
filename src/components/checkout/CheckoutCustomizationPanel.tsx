@@ -226,9 +226,6 @@ export const CheckoutCustomizationPanel = ({
               const file = e.target.files?.[0];
               if (!file) return;
               
-              const oldImageUrl = selectedComponent.content?.imageUrl;
-              const oldStoragePath = selectedComponent.content?._storage_path;
-
               // 1. Validações
               if (!file.type.startsWith('image/')) {
                 alert('Por favor, selecione uma imagem válida (JPG/PNG).');
@@ -248,7 +245,7 @@ export const CheckoutCustomizationPanel = ({
                 _uploading: true,
                 _uploadError: false,
                 _fileName: file.name,
-                _old_storage_path: oldStoragePath, // Guarda o path antigo para deletar depois do save
+                _old_storage_path: selectedComponent.content?._storage_path, // Guarda o path antigo para deletar depois do save
               });
 
               // 3. Upload para Supabase em background
@@ -264,7 +261,7 @@ export const CheckoutCustomizationPanel = ({
                 if (uploadError) throw uploadError;
 
                 // Pegar URL pública
-                const { data } = await supabase.storage
+                const { data } = supabase.storage
                   .from('product-images')
                   .getPublicUrl(fileName);
 

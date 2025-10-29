@@ -251,17 +251,25 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
 
       // Add order bump only to the main checkout
       const orderBump = {
-        checkout_id: checkouts[0].id,
-        product_id: selectedProductId,
-        offer_id: selectedOfferId,
-        discount_enabled: discountEnabled,
-        discount_price: discountEnabled ? parseCurrency(discountPrice) : null,
-        call_to_action: callToAction,
-        custom_title: customTitle || null,
-        custom_description: customDescription || null,
-        show_image: showImage,
+        checkout_id: checkouts[0].id,                // ✅ coluna de order_bumps
+        product_id: selectedProductId,               // ✅ coluna de order_bumps
+        offer_id: selectedOfferId,                   // ✅ coluna de order_bumps
         active: true,
+        discount_enabled: !!discountEnabled,
+        discount_price: discountEnabled ? parseCurrency(discountPrice) : null,
+        call_to_action: callToAction?.trim() || null,
+        custom_title: customTitle?.trim() || null,
+        custom_description: customDescription?.trim() || null,
+        show_image: !!showImage,
       };
+
+      // Sanity-check: garante que não estamos mandando objeto "checkout"
+      if ('checkout' in (orderBump as any)) {
+        console.error('Payload inválido: não inclua objeto "checkout" no insert de order_bumps', orderBump);
+        toast.error('Erro interno: payload inválido (checkout embutido).');
+        return;
+      }
+      console.log('Salvando order_bumps com payload:', orderBump);
 
       const { error: insertError } = await supabase
         .from("order_bumps")

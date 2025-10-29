@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { X, Gift, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchOrderBumpCandidates, OrderBumpCandidate } from "@/lib/orderBump/fetchCandidates";
+import { fetchOffersByProduct, NormalizedOffer } from "@/services/offers";
 import { formatBRL } from "@/lib/formatters/money";
 import { toast } from "sonner";
 
@@ -44,7 +45,7 @@ interface OrderBumpDialogProps {
 
 export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: OrderBumpDialogProps) {
   const [products, setProducts] = useState<OrderBumpProduct[]>([]);
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const [offers, setOffers] = useState<NormalizedOffer[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [selectedOfferId, setSelectedOfferId] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -168,25 +169,16 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
 
   const loadOffers = async (prodId: string) => {
     try {
-      // @ts-ignore
-      const { data, error } = await supabase
-        .from("offers")
-        .select("*")
-        .eq("product_id", prodId)
-        .order("created_at");
-
-      if (error) throw error;
-
-      const offersList = data || [];
+      const offersList = await fetchOffersByProduct(prodId);
       setOffers(offersList);
       
       // Automatically select the first offer (principal)
       if (offersList.length > 0) {
         setSelectedOfferId(offersList[0].id);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading offers:", error);
-      toast.error("Erro ao carregar ofertas");
+      toast.error(`Erro ao carregar ofertas: ${error?.message ?? 'erro desconhecido'}`);
     }
   };
 
@@ -282,12 +274,12 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error("Error saving order bump:", error);
+      console.error("Erro ao salvar order_bumps:", error);
       
       if (error.code === "23505") {
         toast.error("Este produto já está configurado como order bump");
       } else {
-        toast.error("Erro ao salvar order bump");
+        toast.error(`Não foi possível salvar: ${error?.message ?? 'erro desconhecido'}`);
       }
     } finally {
       setLoading(false);
@@ -376,7 +368,7 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
                 <SelectContent>
                   {offers.map((offer) => (
                     <SelectItem key={offer.id} value={offer.id}>
-                      {offer.name} - {formatBRL(offer.price)}
+                      {offer.product_name ?? selectedProduct?.name} - {formatBRL(offer.price)}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -24,7 +24,7 @@ interface Product {
 
 // Usamos o tipo do helper para a lista de produtos
 export interface OrderBumpProduct extends OrderBumpCandidate {
-  price: number; // Adicionamos 'price' para manter compatibilidade com o código existente (Linhas 20, 27, 286, 287, 334, 394, 401, 526, 529, 537)
+  // price: number; // Removido, pois o preço vem da oferta, não do produto.
   image_url?: string; // Adicionamos 'image_url' para manter compatibilidade (Linha 21, 499, 502)
 }
 
@@ -141,11 +141,10 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
       .then((rows) => {
         if (!active) return;
         
-        // Mapeia o resultado do helper para o tipo OrderBumpProduct
-        // O helper retorna price_cents, mas o componente usa 'price' (number)
+        // O helper agora retorna apenas id, name e status.
+        // O preço será buscado da oferta (offer)
         const mappedProducts: OrderBumpProduct[] = rows.map(row => ({
           ...row,
-          price: row.price_cents ? row.price_cents / 100 : 0, // Converte centavos para BRL
           image_url: undefined, // O helper não busca image_url, mas o componente espera. Deixamos undefined.
         }));
         
@@ -349,7 +348,7 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
                     ) : (
                       products.map((product) => (
                         <SelectItem key={product.id} value={product.id}>
-                          {product.name} - R$ {product.price.toFixed(2)}
+                          {product.name}
                         </SelectItem>
                       ))
                     )}

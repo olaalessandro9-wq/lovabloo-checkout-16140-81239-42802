@@ -47,7 +47,8 @@ export function ProductsTable() {
   const qc = useQueryClient();
 
   const duplicateMutation = useMutation({
-    mutationFn: async (productId: number) => {
+    mutationFn: async (productId: string) => {
+      console.log('[ProductsTable] Duplicating product:', productId);
       const { newProductId } = await duplicateProductDeep(supabase, productId);
       return newProductId;
     },
@@ -63,7 +64,8 @@ export function ProductsTable() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (productId: number) => {
+    mutationFn: async (productId: string) => {
+      console.log('[ProductsTable] Deleting product:', productId);
       await deleteProductCascade(supabase, productId);
     },
     onSuccess: async () => {
@@ -107,13 +109,15 @@ export function ProductsTable() {
   };
 
   const handleDuplicate = (productId: string) => {
-    duplicateMutation.mutate(Number(productId));
+    console.log('[handleDuplicate] Called with ID:', productId, 'Type:', typeof productId);
+    duplicateMutation.mutate(productId);
   };
 
   const handleDelete = (productId: string) => {
     const ok = window.confirm("Tem certeza que deseja excluir este produto?");
     if (!ok) return;
-    deleteMutation.mutate(Number(productId));
+    console.log('[handleDelete] Called with ID:', productId, 'Type:', typeof productId);
+    deleteMutation.mutate(productId);
   };
 
   const filteredProducts = products.filter(product => 

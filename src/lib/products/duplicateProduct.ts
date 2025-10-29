@@ -59,10 +59,35 @@ async function cloneCheckoutLinksIfTableExists(
   } catch {}
 }
 
-export async function duplicateProductDeep(supabase: any, productId: number) {
+export async function duplicateProductDeep(supabase: any, rawProductId: string | number) {
+  // Garantir que productId é numérico
+  const productId = Number(rawProductId);
+  
+  if (!productId || isNaN(productId)) {
+    console.error('[duplicateProductDeep] Invalid product ID:', rawProductId);
+    throw new Error("ID do produto inválido");
+  }
+
+  console.log('[duplicateProductDeep] Starting duplication for product:', productId);
+
   // 1) produto origem
-  const { data: srcProduct } = await supabase.from("products").select("*").eq("id", productId).single();
-  if (!srcProduct) throw new Error("Produto origem não encontrado.");
+  const { data: srcProduct, error: selectError } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", productId)
+    .single();
+  
+  if (selectError) {
+    console.error('[duplicateProductDeep] Database select failed:', selectError);
+    throw new Error(`Falha ao buscar produto: ${selectError.message}`);
+  }
+  
+  if (!srcProduct) {
+    console.error('[duplicateProductDeep] Product not found for ID:', productId);
+    throw new Error("Produto origem não encontrado");
+  }
+
+  console.log('[duplicateProductDeep] Source product loaded:', srcProduct.name);
 
   // 2) cria produto cópia
   const productInsert: ProductRow = { ...srcProduct };

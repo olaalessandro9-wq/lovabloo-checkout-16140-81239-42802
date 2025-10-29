@@ -77,9 +77,8 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
 
       if (error) throw error;
 
-      // ✅ Garante exatamente 1 checkout (reutiliza auto-criado ou cria fallback)
-      await ensureSingleCheckout(data.id);
-
+      // O trigger create_default_checkout já cria o checkout automaticamente
+      
       toast.success("Produto criado com sucesso!");
       onOpenChange(false);
       setFormData({ name: "", description: "", price: 0 });

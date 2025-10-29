@@ -12,9 +12,7 @@ export type OrderBumpCandidate = {
   id: string;
   name: string;
   // A base do projeto trabalha com centavos (price_cents).
-  // Mantemos essa coluna aqui. Caso a tabela use outro nome,
-  // ajuste os campos do select mais abaixo.
-  price_cents: number | null;
+
   status?: string | null;
 };
 
@@ -30,7 +28,7 @@ export async function fetchOrderBumpCandidates(opts?: {
   // Monta a query base
   let query = supabase
     .from("products")
-    .select("id,name,price_cents,status");
+    .select("id,name,status");
 
   // Se quiser excluir o produto atual:
   if (excludeId) {

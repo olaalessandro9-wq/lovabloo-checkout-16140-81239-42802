@@ -234,12 +234,11 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
     try {
       setLoading(true);
 
-      // Get the main checkout for the current product (offer_id is null)
+      // Get the main checkout for the current product
       const { data: checkouts, error: checkoutsError } = await supabase
         .from("checkouts")
         .select("id")
         .eq("product_id", productId)
-        .is("offer_id", null)
         .limit(1);
 
       if (checkoutsError) throw checkoutsError;

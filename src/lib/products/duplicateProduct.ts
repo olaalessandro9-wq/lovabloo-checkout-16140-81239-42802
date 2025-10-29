@@ -60,10 +60,10 @@ async function cloneCheckoutLinksIfTableExists(
 }
 
 export async function duplicateProductDeep(supabase: any, rawProductId: string | number) {
-  // Garantir que productId é numérico
-  const productId = Number(rawProductId);
+  // Garantir que productId é uma string UUID válida
+  const productId = String(rawProductId).trim();
   
-  if (!productId || isNaN(productId)) {
+  if (!productId || productId === 'undefined' || productId === 'null') {
     console.error('[duplicateProductDeep] Invalid product ID:', rawProductId);
     throw new Error("ID do produto inválido");
   }

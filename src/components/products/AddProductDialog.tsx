@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
+import { ensureSingleCheckout } from "@/lib/products/ensureSingleCheckout";
 
 const productSchema = z.object({
   name: z.string().trim().min(1, { message: "Nome é obrigatório" }).max(200, { message: "Nome muito longo" }),
@@ -75,6 +76,9 @@ export function AddProductDialog({ open, onOpenChange, onProductAdded }: AddProd
         .single();
 
       if (error) throw error;
+
+      // ✅ Garante exatamente 1 checkout (reutiliza auto-criado ou cria fallback)
+      await ensureSingleCheckout(data.id);
 
       toast.success("Produto criado com sucesso!");
       onOpenChange(false);

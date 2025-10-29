@@ -25,11 +25,10 @@ export async function fetchOrderBumpCandidates(opts?: {
 }): Promise<OrderBumpCandidate[]> {
   const excludeId = opts?.excludeProductId;
 
-  // Monta a query base
+  // Monta a query base a partir da VIEW canônica (filtrada no servidor)
   let query = supabase
-    .from("products")
-    .select("id,name,status")
-    .eq("active", true); // Filtra apenas produtos ativos
+    .from("v_order_bump_products")
+    .select("id,name,price,updated_at"); // 'price' já normalizado na view
 
   // Se quiser excluir o produto atual:
   if (excludeId) {
@@ -46,6 +45,6 @@ export async function fetchOrderBumpCandidates(opts?: {
     throw error;
   }
 
-  // Garante array
-  return (data ?? []) as OrderBumpCandidate[];
+  // Defesa extra: view já filtra, mas garantimos sanidade no cliente
+  return (data ?? []).filter((p: any) => p && p.id && p.name) as OrderBumpCandidate[];
 }

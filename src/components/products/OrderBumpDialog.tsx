@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, Gift, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchOrderBumpCandidates, OrderBumpCandidate } from "@/lib/orderBump/fetchCandidates";
 import { toast } from "sonner";
 
 interface Product {
@@ -19,6 +20,12 @@ interface Product {
   name: string;
   price: number;
   image_url?: string;
+}
+
+// Usamos o tipo do helper para a lista de produtos
+export interface OrderBumpProduct extends OrderBumpCandidate {
+  price: number; // Adicionamos 'price' para manter compatibilidade com o código existente (Linhas 20, 27, 286, 287, 334, 394, 401, 526, 529, 537)
+  image_url?: string; // Adicionamos 'image_url' para manter compatibilidade (Linha 21, 499, 502)
 }
 
 interface Offer {
@@ -35,7 +42,7 @@ interface OrderBumpDialogProps {
 }
 
 export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: OrderBumpDialogProps) {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<OrderBumpProduct[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [selectedOfferId, setSelectedOfferId] = useState<string>("");
@@ -55,8 +62,6 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
   // Load form data from localStorage when dialog opens
   useEffect(() => {
     if (open) {
-      loadProducts();
-      
       // Try to load saved form data
       const savedData = localStorage.getItem(STORAGE_KEY);
       if (savedData) {
@@ -125,28 +130,41 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  const loadProducts = async () => {
+  // Novo useEffect para carregar produtos usando o helper
+  useEffect(() => {
+    if (!open) return;
+    
+    let active = true;
     setLoadingProducts(true);
     
-    try {
-      // @ts-ignore
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .neq("id", productId)
-        .eq("active", true)
-        .order("name");
-
-      if (error) throw error;
-
-      setProducts(data || []);
-    } catch (error) {
-      console.error("Error loading products:", error);
-      toast.error("Erro ao carregar produtos");
-    } finally {
-      setLoadingProducts(false);
-    }
-  };
+    fetchOrderBumpCandidates({ excludeProductId: productId })
+      .then((rows) => {
+        if (!active) return;
+        
+        // Mapeia o resultado do helper para o tipo OrderBumpProduct
+        // O helper retorna price_cents, mas o componente usa 'price' (number)
+        const mappedProducts: OrderBumpProduct[] = rows.map(row => ({
+          ...row,
+          price: row.price_cents ? row.price_cents / 100 : 0, // Converte centavos para BRL
+          image_url: undefined, // O helper não busca image_url, mas o componente espera. Deixamos undefined.
+        }));
+        
+        setProducts(mappedProducts);
+      })
+      .catch((err) => {
+        if (!active) return;
+        toast.error("Erro ao carregar produtos");
+        console.error("[OrderBump] load products failed:", err);
+        setProducts([]);
+      })
+      .finally(() => {
+        if (active) setLoadingProducts(false);
+      });
+      
+    return () => {
+      active = false;
+    };
+  }, [open, productId]);
 
   const loadOffers = async (prodId: string) => {
     try {

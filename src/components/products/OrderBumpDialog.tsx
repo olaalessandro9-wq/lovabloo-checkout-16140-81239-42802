@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { X, Gift, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchOrderBumpCandidates, OrderBumpCandidate } from "@/lib/orderBump/fetchCandidates";
+import { formatBRL } from "@/lib/formatters/money";
 import { toast } from "sonner";
 
 interface Product {
@@ -215,8 +216,10 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
   };
 
   const handleSave = async () => {
-    if (!selectedProductId) {
-      toast.error("Selecione um produto");
+    // Guardas: evita salvar com valores inválidos (causa comum de erro)
+    const selectedProduct = products.find(p => p.id === selectedProductId);
+    if (!selectedProduct?.id) {
+      toast.error("Selecione um produto válido antes de salvar.");
       return;
     }
 
@@ -373,7 +376,7 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
                 <SelectContent>
                   {offers.map((offer) => (
                     <SelectItem key={offer.id} value={offer.id}>
-                      {offer.name} - R$ {offer.price.toFixed(2)}
+                      {offer.name} - {formatBRL(offer.price)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -540,10 +543,10 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
                       {discountEnabled && discountPercentage > 0 ? (
                         <>
                           <span className="text-sm text-muted-foreground line-through">
-                            R$ {originalPrice.toFixed(2).replace('.', ',')}
+                            {formatBRL(originalPrice)}
                           </span>
                           <span className="text-lg font-bold text-primary">
-                            R$ {finalPrice.toFixed(2).replace('.', ',')}
+                            {formatBRL(finalPrice)}
                           </span>
                           <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded font-semibold">
                             {discountPercentage}% OFF
@@ -551,7 +554,7 @@ export function OrderBumpDialog({ open, onOpenChange, productId, onSuccess }: Or
                         </>
                       ) : (
                         <span className="text-lg font-bold text-primary">
-                          R$ {finalPrice.toFixed(2).replace('.', ',')}
+                          {formatBRL(finalPrice)}
                         </span>
                       )}
                     </div>

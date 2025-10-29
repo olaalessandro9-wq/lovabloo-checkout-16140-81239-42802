@@ -28,7 +28,8 @@ export async function fetchOrderBumpCandidates(opts?: {
   // Monta a query base
   let query = supabase
     .from("products")
-    .select("id,name,status");
+    .select("id,name,status")
+    .eq("active", true); // Filtra apenas produtos ativos
 
   // Se quiser excluir o produto atual:
   if (excludeId) {

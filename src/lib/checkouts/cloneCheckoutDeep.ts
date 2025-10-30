@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Clona o layout completo de um checkout para outro usando a RPC V5.
+ * Clona o layout completo de um checkout para outro usando a RPC clone_checkout_layout.
  * 
  * @param supabase - Cliente Supabase
  * @param srcCheckoutId - ID do checkout origem
@@ -13,14 +13,14 @@ export async function cloneCheckoutDeep(
   srcCheckoutId: string,
   dstCheckoutId: string
 ): Promise<void> {
-  console.log('[cloneCheckoutDeep] Calling RPC clone_checkout_deep_v5:', {
-    p_src: srcCheckoutId,
-    p_dst: dstCheckoutId,
+  console.log('[cloneCheckoutDeep] Calling RPC clone_checkout_layout:', {
+    p_source_checkout_id: srcCheckoutId,
+    p_target_checkout_id: dstCheckoutId,
   });
 
-  const { error } = await supabase.rpc("clone_checkout_deep_v5", {
-    p_src: srcCheckoutId,
-    p_dst: dstCheckoutId,
+  const { error } = await supabase.rpc("clone_checkout_layout", {
+    p_source_checkout_id: srcCheckoutId,
+    p_target_checkout_id: dstCheckoutId,
   });
 
   if (error) {

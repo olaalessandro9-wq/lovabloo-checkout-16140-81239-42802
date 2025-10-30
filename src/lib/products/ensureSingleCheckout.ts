@@ -14,25 +14,16 @@ export async function ensureSingleCheckout(
 
   console.log('[ensureSingleCheckout] Waiting for auto-created checkout for product:', id);
 
-  // se já existir, retorna o primeiro
-  {
-    const { data, error } = await supabase
-      .from("checkouts")
-      .select("id")
-      .eq("product_id", id)
-      .order("created_at", { ascending: true });
-    if (error) throw error;
-    if (data && data.length > 0) return data[0];
-  }
-
-  // aguarda checkout auto-criado
+  // ✅ REMOVIDA a checagem inicial imediata (linhas 17-26)
+  // Isso previne race conditions com o trigger
+  
+  // Aguarda checkout auto-criado pelo trigger
   for (let i = 0; i < tries; i++) {
     const { data, error } = await supabase
       .from("checkouts")
       .select("id")
       .eq("product_id", id)
-      .order("created_at", { ascending: true })
-      .limit(1);
+      .order("created_at", { ascending: true });
     
     if (error) {
       console.error('[ensureSingleCheckout] Query error:', error);
@@ -40,14 +31,26 @@ export async function ensureSingleCheckout(
     }
     
     if (data?.length) {
-      console.log('[ensureSingleCheckout] Found auto-created checkout:', data[0].id);
+      // ✅ AGUARDAR mais 2 iterações para garantir que o trigger terminou
+      if (i < 3) {
+        console.log(`[ensureSingleCheckout] Found ${data.length} checkout(s), waiting to ensure trigger completed (attempt ${i+1}/3)...`);
+        await new Promise((r) => setTimeout(r, delayMs));
+        continue;
+      }
+      
+      console.log(`[ensureSingleCheckout] Confirmed ${data.length} checkout(s) after stabilization`);
+      
+      // ✅ Se houver mais de 1 checkout, algo deu errado
+      if (data.length > 1) {
+        console.error(`[ensureSingleCheckout] ERRO: ${data.length} checkouts encontrados para o produto ${id}. Esperado: 1`);
+      }
+      
       return data[0];
     }
     
     await new Promise((r) => setTimeout(r, delayMs));
   }
 
-  // Se após todas as tentativas não encontrou, algo está errado com o trigger
   throw new Error(
     `Timeout: Nenhum checkout foi criado automaticamente para o produto ${id}. ` +
     `Verifique o trigger create_default_checkout no banco.`

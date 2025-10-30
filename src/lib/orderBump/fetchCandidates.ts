@@ -11,8 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type OrderBumpCandidate = {
   id: string;
   name: string;
-  // A base do projeto trabalha com centavos (price_cents).
-
+  price: number; // Preço normalizado da view
   status?: string | null;
 };
 
@@ -27,7 +26,7 @@ export async function fetchOrderBumpCandidates(opts?: {
 
   // Monta a query base a partir da VIEW canônica (filtrada no servidor)
   let query = supabase
-    .from("v_order_bump_products")
+    .from("v_order_bump_products" as any)
     .select("id,name,price,updated_at"); // 'price' já normalizado na view
 
   // Se quiser excluir o produto atual:
@@ -46,5 +45,5 @@ export async function fetchOrderBumpCandidates(opts?: {
   }
 
   // Defesa extra: view já filtra, mas garantimos sanidade no cliente
-  return (data ?? []).filter((p: any) => p && p.id && p.name) as OrderBumpCandidate[];
+  return (data ?? []).filter((p: any) => p && p.id && p.name) as unknown as OrderBumpCandidate[];
 }

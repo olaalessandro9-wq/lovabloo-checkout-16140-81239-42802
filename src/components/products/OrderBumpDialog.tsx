@@ -26,8 +26,8 @@ interface Product {
 
 // Usamos o tipo do helper para a lista de produtos
 export interface OrderBumpProduct extends OrderBumpCandidate {
-  // price: number; // Removido, pois o preço vem da oferta, não do produto.
-  image_url?: string; // Adicionamos 'image_url' para manter compatibilidade (Linha 21, 499, 502)
+  price: number; // Preço normalizado que vem da view
+  image_url?: string;
 }
 
 interface Offer {

@@ -11,10 +11,10 @@ export async function duplicateCheckout(checkoutId: string) {
   // Sanitiza caso venha "checkout-<id>" de algum lugar
   const srcId = checkoutId.replace(/^checkout-/, "");
 
-  // 1) Ler checkout de origem (liste apenas colunas REAIS)
+  // 1) Ler checkout de origem (SELECT * para pegar todos os campos)
   const { data: src, error: eSrc } = await supabase
     .from("checkouts")
-    .select("id, product_id, name, is_default, components, design")
+    .select("*")
     .eq("id", srcId)
     .single();
   if (eSrc || !src) throw eSrc ?? new Error("Checkout origem não encontrado");
@@ -23,14 +23,16 @@ export async function duplicateCheckout(checkoutId: string) {
   const baseName = `${src.name} (Cópia)`;
   const newName = await ensureUniqueCheckoutName(supabase, src.product_id, baseName);
 
-  // 3) Montar insert do ZERO (sem cores/slug/id/etc.)
-  const insertCk = {
+  // 3) Montar insert do ZERO (sem cores/slug/id/etc.) + layout defensivo
+  const insertCk: any = {
     product_id: src.product_id,
     name: newName,
     is_default: false,
-    components: src.components ?? null, // copia layout
-    design: src.design ?? null,         // copia design/tema
   };
+  const LAYOUT_KEYS = ["components","design","layout","lines","settings","theme","sections","schema","blocks"];
+  for (const k of LAYOUT_KEYS) {
+    if (k in src) insertCk[k] = (src as any)[k] ?? null;
+  }
 
   const { data: created, error: eIns } = await supabase
     .from("checkouts")

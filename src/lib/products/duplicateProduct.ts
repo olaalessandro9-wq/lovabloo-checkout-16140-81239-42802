@@ -1,6 +1,5 @@
 import { ensureUniqueSlug, toSlug } from "@/lib/utils/slug";
 import { cloneCustomizationWithImages } from "@/lib/checkout/cloneCustomization";
-import { ensureSingleCheckout } from "./ensureSingleCheckout";
 
 type ProductRow = Record<string, any>;
 type CheckoutRow = Record<string, any>;
@@ -94,151 +93,72 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
 
   console.log('[duplicateProductDeep] Clone product created:', newProductId);
 
-  // 3) checkouts da origem
-  const { data: srcCheckouts, error: eC } = await supabase
+  // 🔧 3) LIMPA EFEITOS DO TRIGGER (checkout + offer default criados automaticamente)
+  console.log('[duplicateProductDeep] Cleaning trigger-created checkout and offer...');
+  await supabase.from("checkouts").delete().eq("product_id", newProductId);
+  await supabase.from("offers").delete().eq("product_id", newProductId);
+  console.log('[duplicateProductDeep] Trigger effects cleaned');
+
+  // 4) COPIA AS OFFERS DO PRODUTO DE ORIGEM
+  const { data: srcOffers, error: eOffers } = await supabase
+    .from("offers")
+    .select("*")
+    .eq("product_id", srcProduct.id);
+  if (eOffers) throw eOffers;
+
+  if (srcOffers?.length) {
+    for (const offer of srcOffers) {
+      const offerInsert: any = { ...offer };
+      delete offerInsert.id;
+      delete offerInsert.created_at;
+      delete offerInsert.updated_at;
+      offerInsert.product_id = newProductId;
+      await supabase.from("offers").insert(offerInsert);
+    }
+    console.log("[duplicateProductDeep] Copied", srcOffers.length, "offers to", newProductId);
+  }
+
+  // 5) COPIA OS CHECKOUTS DO PRODUTO DE ORIGEM (mantendo 1–1)
+  const { data: srcCheckouts, error: eCk } = await supabase
     .from("checkouts")
     .select("*")
     .eq("product_id", srcProduct.id)
     .order("created_at", { ascending: true });
-  if (eC) throw eC;
+  if (eCk) throw eCk;
 
-  console.log('[duplicateProductDeep] Source checkouts count:', srcCheckouts?.length ?? 0);
+  if (srcCheckouts?.length) {
+    for (let i = 0; i < srcCheckouts.length; i++) {
+      const ck = srcCheckouts[i];
+      
+      // Clona customização (design contém as imagens)
+      const clonedDesign = await cloneCustomizationWithImages(supabase, ck.design, newProductId);
+      
+      // Slug único
+      const baseSlug = ck.slug || (i === 0 ? toSlug(srcProduct.name) : `${toSlug(srcProduct.name)}-${i + 1}`);
+      const newSlug = await ensureUniqueSlug(supabase, "checkouts", "slug", baseSlug);
 
-  // ✅ AGORA:
-  // Reutiliza o checkout auto-criado quando origem tem 1.
-  // Cria apenas os adicionais quando origem tem N>1.
+      const ckInsert: any = { ...ck };
+      delete ckInsert.id;
+      delete ckInsert.created_at;
+      delete ckInsert.updated_at;
+      ckInsert.product_id = newProductId;
+      ckInsert.slug = newSlug;
+      ckInsert.design = clonedDesign;
 
-  const srcCount = srcCheckouts?.length ?? 0;
-  if (srcCount === 0) {
-    // origem sem checkout → garante 1 (auto ou fallback) e encerra
-    console.log('[duplicateProductDeep] No source checkouts, ensuring single checkout');
-    await ensureSingleCheckout(newProductId);
-    return { newProductId };
-  }
+      const { data: newCk, error: e3 } = await supabase
+        .from("checkouts")
+        .insert(ckInsert)
+        .select("id")
+        .single();
 
-  if (srcCount === 1) {
-    console.log('[duplicateProductDeep] Single checkout, waiting for auto-created and updating');
-    
-    // ✅ Aguarda o checkout auto-criado pelo trigger
-    const autoCheckout = await ensureSingleCheckout(newProductId, { tries: 50, delayMs: 300 });
-    const dstCheckoutId = autoCheckout.id;
+      if (e3) throw e3;
 
-    const src = srcCheckouts[0];
-    
-    // Clona customização (design contém as imagens)
-    const clonedDesign = await cloneCustomizationWithImages(supabase, src.design, newProductId);
-    
-    // Slug único
-    const baseSlug = src.slug || toSlug(srcProduct.name);
-    const newSlug = await ensureUniqueSlug(supabase, "checkouts", "slug", baseSlug);
+      console.log(`[duplicateProductDeep] Copied checkout ${i + 1}/${srcCheckouts.length}:`, newCk.id);
 
-    // ✅ ATUALIZA o checkout auto-criado (não cria novo)
-    await supabase
-      .from("checkouts")
-      .update({
-        name: src.name,
-        slug: newSlug,
-        design: clonedDesign,
-        components: src.components,
-        top_components: src.top_components,
-        bottom_components: src.bottom_components,
-        primary_color: src.primary_color,
-        secondary_color: src.secondary_color,
-        background_color: src.background_color,
-        text_color: src.text_color,
-        button_color: src.button_color,
-        button_text_color: src.button_text_color,
-        form_background_color: src.form_background_color,
-        selected_payment_color: src.selected_payment_color,
-        font: src.font,
-        seller_name: src.seller_name,
-      })
-      .eq("id", dstCheckoutId);
-
-    console.log('[duplicateProductDeep] Checkout updated:', dstCheckoutId);
-
-    // Clona links
-    await cloneCheckoutLinksIfTableExists(supabase, src.id, dstCheckoutId, newSlug);
-
-    return { newProductId };
-  }
-
-  // N > 1 → reutiliza 1 auto (preenchido com o 1º) e cria os (N−1) restantes
-  console.log(`[duplicateProductDeep] Multiple checkouts (${srcCount}), reusing auto-created + cloning others`);
-  
-  const autoCheckout = await ensureSingleCheckout(newProductId, { tries: 50, delayMs: 300 });
-  const dstFirstId = autoCheckout.id;
-
-  // Atualiza o primeiro checkout
-  {
-    const src = srcCheckouts[0];
-    const clonedDesign = await cloneCustomizationWithImages(supabase, src.design, newProductId);
-    const baseSlug = src.slug || toSlug(srcProduct.name);
-    const newSlug = await ensureUniqueSlug(supabase, "checkouts", "slug", baseSlug);
-
-    await supabase
-      .from("checkouts")
-      .update({
-        name: src.name,
-        slug: newSlug,
-        design: clonedDesign,
-        components: src.components,
-        top_components: src.top_components,
-        bottom_components: src.bottom_components,
-        primary_color: src.primary_color,
-        secondary_color: src.secondary_color,
-        background_color: src.background_color,
-        text_color: src.text_color,
-        button_color: src.button_color,
-        button_text_color: src.button_text_color,
-        form_background_color: src.form_background_color,
-        selected_payment_color: src.selected_payment_color,
-        font: src.font,
-        seller_name: src.seller_name,
-      })
-      .eq("id", dstFirstId);
-
-    console.log('[duplicateProductDeep] First checkout updated:', dstFirstId);
-
-    await cloneCheckoutLinksIfTableExists(supabase, src.id, dstFirstId, newSlug);
-  }
-
-  // Insere os demais checkouts (N-1)
-  for (let i = 1; i < srcCheckouts.length; i++) {
-    const src = srcCheckouts[i];
-    const clonedDesign = await cloneCustomizationWithImages(supabase, src.design, newProductId);
-    const baseSlug = src.slug || `${toSlug(srcProduct.name)}-${i + 1}`;
-    const newSlug = await ensureUniqueSlug(supabase, "checkouts", "slug", baseSlug);
-
-    const { data: newCh, error: e3 } = await supabase
-      .from("checkouts")
-      .insert({
-        product_id: newProductId,
-        name: src.name,
-        slug: newSlug,
-        design: clonedDesign,
-        components: src.components,
-        top_components: src.top_components,
-        bottom_components: src.bottom_components,
-        primary_color: src.primary_color,
-        secondary_color: src.secondary_color,
-        background_color: src.background_color,
-        text_color: src.text_color,
-        button_color: src.button_color,
-        button_text_color: src.button_text_color,
-        form_background_color: src.form_background_color,
-        selected_payment_color: src.selected_payment_color,
-        font: src.font,
-        seller_name: src.seller_name,
-      })
-      .select("id")
-      .single();
-
-    if (e3) throw e3;
-
-    console.log(`[duplicateProductDeep] Additional checkout created (${i+1}/${srcCount}):`, newCh!.id);
-
-    await cloneCheckoutLinksIfTableExists(supabase, src.id, newCh!.id, newSlug);
+      // Clona links
+      await cloneCheckoutLinksIfTableExists(supabase, ck.id, newCk.id, newSlug);
+    }
+    console.log("[duplicateProductDeep] Copied", srcCheckouts.length, "checkouts to", newProductId);
   }
 
   console.log('[duplicateProductDeep] Duplication completed successfully');

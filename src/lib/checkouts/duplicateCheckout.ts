@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ensureUniqueCheckoutName } from "@/lib/utils/uniqueCheckoutName";
+import { cloneCheckoutDeep } from "@/lib/checkouts/cloneCheckoutDeep";
 
 /**
  * Duplica um checkout de um produto.
@@ -31,15 +32,8 @@ export async function duplicateCheckout(checkoutId: string) {
     .single();
   if (eIns || !created) throw eIns ?? new Error("Falha ao duplicar checkout");
 
-  // 4) 🔧 Clonar "deep" (JSON + tabelas filhas/customization se existirem)
-  const { error: eRpc } = await supabase.rpc("clone_checkout_deep", {
-    src_checkout_id: src.id,
-    dst_checkout_id: created.id,
-  });
-  if (eRpc) {
-    console.error('[duplicateCheckout] RPC clone_checkout_deep failed:', eRpc);
-    throw eRpc;
-  }
+  // 4) 🔧 Clonar "deep" usando RPC V5
+  await cloneCheckoutDeep(supabase, src.id, created.id);
 
   const editUrl = `/produtos/checkout/personalizar?id=${created.id}`;
   return { id: created.id, editUrl };

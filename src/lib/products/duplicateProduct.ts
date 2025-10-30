@@ -203,14 +203,31 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
     const baseSlug = srcDefaultCk.slug || toSlug(srcProduct.name);
     const newSlug = await ensureUniqueSlug(supabase, "checkouts", "slug", baseSlug);
     
+    // Copiar layout/tema de forma defensiva
+    const LAYOUT_KEYS = [
+      "components",
+      "design",
+      "layout",
+      "lines",
+      "settings",
+      "theme",
+      "sections",
+      "schema",
+      "blocks"
+    ];
     const ckPatch: any = { 
       name: srcDefaultCk.name, 
       slug: newSlug,
       design: clonedDesign,
-      components: srcDefaultCk.components ?? null,
       seller_name: srcDefaultCk.seller_name ?? null,
       is_default: true 
     };
+    // Copiar todos os campos de layout que existirem no checkout de origem
+    for (const k of LAYOUT_KEYS) {
+      if (k in srcDefaultCk && k !== "design") { // design já foi clonado acima
+        ckPatch[k] = (srcDefaultCk as any)[k] ?? null;
+      }
+    }
     const { error: eUpdCk } = await supabase
       .from("checkouts")
       .update(ckPatch)
@@ -243,11 +260,17 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
       name: ck.name,
       slug: newSlug,
       design: clonedDesign,
-      components: ck.components ?? null,
       seller_name: ck.seller_name ?? null,
       is_default: false,
       visits_count: 0,
     };
+    // Copiar layout/tema também para os não-default
+    const LAYOUT_KEYS = ["components","design","layout","lines","settings","theme","sections","schema","blocks"];
+    for (const k of LAYOUT_KEYS) {
+      if (k in ck && k !== "design") { // design já foi clonado acima
+        insertCk[k] = (ck as any)[k] ?? null;
+      }
+    }
     const { data: newCk, error: eIC } = await supabase
       .from("checkouts")
       .insert(insertCk)

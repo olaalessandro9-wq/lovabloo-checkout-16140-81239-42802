@@ -1,40 +1,34 @@
 import { supabase } from "@/integrations/supabase/client";
-import { ensureUniqueCheckoutName } from "@/lib/utils/uniqueCheckoutName";
-import { cloneCheckoutDeep } from "@/lib/checkouts/cloneCheckoutDeep";
 
 /**
- * Duplica um checkout de um produto.
- * - Cria checkout esqueleto com nome único
- * - Chama RPC clone_checkout_deep para copiar layout completo
+ * Duplica um checkout de um produto usando a RPC duplicate_checkout_shallow.
+ * - Cria checkout com layout clonado
  * - Retorna o ID do novo checkout e a URL de edição
  */
 export async function duplicateCheckout(checkoutId: string) {
   // Sanitiza caso venha "checkout-<id>" de algum lugar
   const srcId = checkoutId.replace(/^checkout-/, "");
 
-  // 1) Ler checkout de origem (apenas o mínimo necessário)
-  const { data: src, error: eSrc } = await supabase
-    .from("checkouts")
-    .select("id, product_id, name")
-    .eq("id", srcId)
-    .single();
-  if (eSrc || !src) throw eSrc ?? new Error("Checkout origem não encontrado");
+  console.log('[duplicateCheckout] Calling RPC duplicate_checkout_shallow:', {
+    p_source_checkout_id: srcId,
+  });
 
-  // 2) Gerar nome único no MESMO produto
-  const baseName = `${src.name} (Cópia)`;
-  const newName = await ensureUniqueCheckoutName(supabase, src.product_id, baseName);
+  // Chama a RPC que cria o checkout e retorna o ID
+  const { data: newId, error } = await supabase.rpc("duplicate_checkout_shallow", {
+    p_source_checkout_id: srcId,
+  });
 
-  // 3) Criar esqueleto do checkout destino
-  const { data: created, error: eIns } = await supabase
-    .from("checkouts")
-    .insert({ product_id: src.product_id, name: newName, is_default: false })
-    .select("id")
-    .single();
-  if (eIns || !created) throw eIns ?? new Error("Falha ao duplicar checkout");
+  if (error) {
+    console.error('[duplicateCheckout] RPC failed:', error);
+    throw error;
+  }
 
-  // 4) 🔧 Clonar "deep" usando RPC V5
-  await cloneCheckoutDeep(supabase, src.id, created.id);
+  if (!newId) {
+    throw new Error("RPC não retornou o ID do novo checkout");
+  }
 
-  const editUrl = `/produtos/checkout/personalizar?id=${created.id}`;
-  return { id: created.id, editUrl };
+  console.log('[duplicateCheckout] RPC succeeded, new checkout ID:', newId);
+
+  const editUrl = `/produtos/checkout/personalizar?id=${newId}`;
+  return { id: newId, editUrl };
 }

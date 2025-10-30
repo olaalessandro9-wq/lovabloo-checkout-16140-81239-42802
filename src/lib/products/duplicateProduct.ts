@@ -1,6 +1,7 @@
 import { ensureUniqueSlug, toSlug } from "@/lib/utils/slug";
 import { cloneCustomizationWithImages } from "@/lib/checkout/cloneCustomization";
 import { ensureUniqueName } from "@/lib/utils/uniqueName";
+import { cloneCheckoutDeep } from "@/lib/checkouts/cloneCheckoutDeep";
 
 type ProductRow = Record<string, any>;
 type CheckoutRow = Record<string, any>;
@@ -216,15 +217,8 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
       throw eUpdCk;
     }
     
-    // 🔧 Clona "deep" (JSON + tabelas filhas/customization se existirem)
-    const { error: eRpc } = await supabase.rpc("clone_checkout_deep", {
-      src_checkout_id: srcDefaultCk.id,
-      dst_checkout_id: autoCheckout.id,
-    });
-    if (eRpc) {
-      console.error('[duplicateProductDeep] RPC clone_checkout_deep failed:', eRpc);
-      throw eRpc;
-    }
+    // 🔧 Clona "deep" usando RPC V5
+    await cloneCheckoutDeep(supabase, srcDefaultCk.id, autoCheckout.id);
     
     // Clona links do checkout default
     if (srcDefaultCk.id) {
@@ -260,15 +254,8 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
       throw eIC;
     }
     
-    // 🔧 Clona "deep" (JSON + tabelas filhas/customization se existirem)
-    const { error: eRpc } = await supabase.rpc("clone_checkout_deep", {
-      src_checkout_id: ck.id,
-      dst_checkout_id: newCk.id,
-    });
-    if (eRpc) {
-      console.error('[duplicateProductDeep] RPC clone_checkout_deep failed:', eRpc);
-      throw eRpc;
-    }
+    // 🔧 Clona "deep" usando RPC V5
+    await cloneCheckoutDeep(supabase, ck.id, newCk.id);
     
     // Clona links
     if (ck.id && newCk?.id) {

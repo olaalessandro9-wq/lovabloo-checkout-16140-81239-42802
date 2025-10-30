@@ -75,19 +75,30 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
 
   console.log('[duplicateProductDeep] Source product loaded:', srcProduct.name);
 
-  // 2) cria produto clone
+  // 2) cria produto clone com slug único
+  const baseName = `${srcProduct.name} (Cópia)`;
+  const baseSlug = srcProduct.slug ? srcProduct.slug : toSlug(srcProduct.name);
+  
+  // Garante unicidade do slug
+  const newSlug = await ensureUniqueSlug(supabase, "products", "slug", baseSlug);
+  console.log('[duplicateProductDeep] Unique slug generated:', newSlug);
+
   const productInsert: ProductRow = { ...srcProduct };
   delete productInsert.id;
   delete productInsert.created_at;
   delete productInsert.updated_at;
-  productInsert.name = `${srcProduct.name} (Cópia)`;
+  productInsert.name = baseName;
+  productInsert.slug = newSlug;
 
   const { data: newProd, error: eDst } = await supabase
     .from("products")
     .insert(productInsert)
     .select("*")
     .single();
-  if (eDst || !newProd) throw new Error("Falha ao criar produto clone");
+  if (eDst || !newProd) {
+    console.error('[duplicateProductDeep] Insert product failed:', eDst);
+    throw new Error("Falha ao criar produto clone");
+  }
 
   const newProductId = newProd.id;
 

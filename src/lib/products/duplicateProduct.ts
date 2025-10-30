@@ -1,4 +1,4 @@
-import { ensureUniqueSlug, toSlug } from "@/lib/slug";
+import { ensureUniqueSlug, toSlug } from "@/lib/utils/slug";
 import { cloneCustomizationWithImages } from "@/lib/checkout/cloneCustomization";
 import { ensureUniqueName } from "@/lib/utils/uniqueName";
 

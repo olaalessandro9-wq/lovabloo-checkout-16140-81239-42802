@@ -1,5 +1,6 @@
-import { ensureUniqueSlug, toSlug } from "@/lib/utils/slug";
+import { ensureUniqueSlug, toSlug } from "@/lib/slug";
 import { cloneCustomizationWithImages } from "@/lib/checkout/cloneCustomization";
+import { ensureUniqueName } from "@/lib/utils/uniqueName";
 
 type ProductRow = Record<string, any>;
 type CheckoutRow = Record<string, any>;
@@ -75,20 +76,18 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
 
   console.log('[duplicateProductDeep] Source product loaded:', srcProduct.name);
 
-  // 2) cria produto clone com slug único
+  // 2) cria produto clone (sem slug, pois a tabela products não tem essa coluna)
   const baseName = `${srcProduct.name} (Cópia)`;
-  const baseSlug = srcProduct.slug ? srcProduct.slug : toSlug(srcProduct.name);
-  
-  // Garante unicidade do slug
-  const newSlug = await ensureUniqueSlug(supabase, "products", "slug", baseSlug);
-  console.log('[duplicateProductDeep] Unique slug generated:', newSlug);
+  // products NÃO tem 'slug' no schema → não enviar campo 'slug'
+  // Apenas garante um 'name' amigável (opcional)
+  const newName = await ensureUniqueName(supabase, baseName);
+  console.log('[duplicateProductDeep] Unique name generated:', newName);
 
   const productInsert: ProductRow = { ...srcProduct };
   delete productInsert.id;
   delete productInsert.created_at;
   delete productInsert.updated_at;
-  productInsert.name = baseName;
-  productInsert.slug = newSlug;
+  productInsert.name = newName; // ✅ apenas o nome
 
   const { data: newProd, error: eDst } = await supabase
     .from("products")

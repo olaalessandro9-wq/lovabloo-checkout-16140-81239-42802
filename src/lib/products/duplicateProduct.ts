@@ -196,38 +196,17 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
   // 6.1 Atualiza o checkout default criado por trigger para espelhar o default do origem
   const srcDefaultCk = (srcCheckouts ?? []).find((c: any) => c.is_default);
   if (srcDefaultCk && autoCheckout) {
-    // Clona customização (design contém as imagens)
-    const clonedDesign = await cloneCustomizationWithImages(supabase, srcDefaultCk.design, newProductId);
-    
     // Slug único
     const baseSlug = srcDefaultCk.slug || toSlug(srcProduct.name);
     const newSlug = await ensureUniqueSlug(supabase, "checkouts", "slug", baseSlug);
     
-    // Copiar layout/tema de forma defensiva
-    const LAYOUT_KEYS = [
-      "components",
-      "design",
-      "layout",
-      "lines",
-      "settings",
-      "theme",
-      "sections",
-      "schema",
-      "blocks"
-    ];
+    // Atualiza campos básicos
     const ckPatch: any = { 
       name: srcDefaultCk.name, 
       slug: newSlug,
-      design: clonedDesign,
       seller_name: srcDefaultCk.seller_name ?? null,
       is_default: true 
     };
-    // Copiar todos os campos de layout que existirem no checkout de origem
-    for (const k of LAYOUT_KEYS) {
-      if (k in srcDefaultCk && k !== "design") { // design já foi clonado acima
-        ckPatch[k] = (srcDefaultCk as any)[k] ?? null;
-      }
-    }
     const { error: eUpdCk } = await supabase
       .from("checkouts")
       .update(ckPatch)
@@ -235,6 +214,16 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
     if (eUpdCk) {
       console.error('[duplicateProductDeep] update auto checkout failed:', eUpdCk);
       throw eUpdCk;
+    }
+    
+    // 🔧 Clona "deep" (JSON + tabelas filhas/customization se existirem)
+    const { error: eRpc } = await supabase.rpc("clone_checkout_deep", {
+      src_checkout_id: srcDefaultCk.id,
+      dst_checkout_id: autoCheckout.id,
+    });
+    if (eRpc) {
+      console.error('[duplicateProductDeep] RPC clone_checkout_deep failed:', eRpc);
+      throw eRpc;
     }
     
     // Clona links do checkout default
@@ -248,29 +237,19 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
     const ck = srcCheckouts[i];
     if (ck.is_default) continue; // já foi atualizado acima
     
-    // Clona customização (design contém as imagens)
-    const clonedDesign = await cloneCustomizationWithImages(supabase, ck.design, newProductId);
-    
     // Slug único
     const baseSlug = ck.slug || `${toSlug(srcProduct.name)}-${i + 1}`;
     const newSlug = await ensureUniqueSlug(supabase, "checkouts", "slug", baseSlug);
     
+    // Cria esqueleto do checkout
     const insertCk: any = {
       product_id: newProductId,
       name: ck.name,
       slug: newSlug,
-      design: clonedDesign,
       seller_name: ck.seller_name ?? null,
       is_default: false,
       visits_count: 0,
     };
-    // Copiar layout/tema também para os não-default
-    const LAYOUT_KEYS = ["components","design","layout","lines","settings","theme","sections","schema","blocks"];
-    for (const k of LAYOUT_KEYS) {
-      if (k in ck && k !== "design") { // design já foi clonado acima
-        insertCk[k] = (ck as any)[k] ?? null;
-      }
-    }
     const { data: newCk, error: eIC } = await supabase
       .from("checkouts")
       .insert(insertCk)
@@ -279,6 +258,16 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
     if (eIC) {
       console.error('[duplicateProductDeep] insert checkout failed:', eIC, insertCk);
       throw eIC;
+    }
+    
+    // 🔧 Clona "deep" (JSON + tabelas filhas/customization se existirem)
+    const { error: eRpc } = await supabase.rpc("clone_checkout_deep", {
+      src_checkout_id: ck.id,
+      dst_checkout_id: newCk.id,
+    });
+    if (eRpc) {
+      console.error('[duplicateProductDeep] RPC clone_checkout_deep failed:', eRpc);
+      throw eRpc;
     }
     
     // Clona links

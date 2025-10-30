@@ -5,6 +5,7 @@ import { formatCentsToBRL } from "@/utils/money";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AddProductDialog } from "./AddProductDialog";
+import { useBusy } from "@/ui/BusyProvider";
 import {
   Select,
   SelectContent,
@@ -37,6 +38,7 @@ interface Product {
 export function ProductsTable() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const busy = useBusy();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -49,8 +51,13 @@ export function ProductsTable() {
   const duplicateMutation = useMutation({
     mutationFn: async (productId: string) => {
       console.log('[ProductsTable] Duplicating product:', productId);
-      const { newProductId } = await duplicateProductDeep(supabase, productId);
-      return newProductId;
+      return await busy.run(
+        async () => {
+          const { newProductId } = await duplicateProductDeep(supabase, productId);
+          return newProductId;
+        },
+        "Duplicando produto..."
+      );
     },
     onSuccess: async () => {
       toast.success("Produto duplicado com sucesso!");

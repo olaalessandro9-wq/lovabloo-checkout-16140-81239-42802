@@ -205,7 +205,6 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
     
     const ckPatch: any = { 
       name: srcDefaultCk.name, 
-      cores: srcDefaultCk.cores ?? null,
       slug: newSlug,
       design: clonedDesign,
       components: srcDefaultCk.components ?? null,
@@ -242,7 +241,6 @@ export async function duplicateProductDeep(supabase: any, rawProductId: string |
     const insertCk: any = {
       product_id: newProductId,
       name: ck.name,
-      cores: ck.cores ?? null,
       slug: newSlug,
       design: clonedDesign,
       components: ck.components ?? null,

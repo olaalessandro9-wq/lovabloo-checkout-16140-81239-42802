@@ -814,16 +814,22 @@ const ProductEdit = () => {
     setCheckoutConfigDialogOpen(true);
   };
 
-  const handleDuplicateCheckout = (checkout: Checkout) => {
-    const duplicated: Checkout = {
-      ...checkout,
-      id: `checkout-${Date.now()}`,
-      name: `${checkout.name} (Cópia)`,
-      isDefault: false,
-      visits: 0,
-    };
-    setCheckouts([...checkouts, duplicated]);
-    toast.error("Uma cópia do checkout foi criada");
+  const handleDuplicateCheckout = async (checkout: Checkout) => {
+    try {
+      const { duplicateCheckout } = await import("@/lib/checkouts/duplicateCheckout");
+      const { id, editUrl } = await duplicateCheckout(checkout.id);
+      
+      // Recarregar checkouts
+      await loadCheckouts();
+      
+      toast.success("Checkout duplicado com sucesso!");
+      
+      // Navegar para personalização do novo checkout
+      navigate(editUrl);
+    } catch (error) {
+      console.error("Error duplicating checkout:", error);
+      toast.error("Não foi possível duplicar o checkout");
+    }
   };
 
   const handleDeleteCheckout = async (id: string) => {

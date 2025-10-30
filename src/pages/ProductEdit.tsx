@@ -26,10 +26,12 @@ import { LinksTable, type PaymentLink } from "@/components/products/LinksTable";
 import { OffersManager, type Offer } from "@/components/products/OffersManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useBusy } from "@/ui/BusyProvider";
 
 const ProductEdit = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const busy = useBusy();
   const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, loadProduct, productId } = useProduct();
   
   // Estado para a seção Geral
@@ -816,16 +818,21 @@ const ProductEdit = () => {
 
   const handleDuplicateCheckout = async (checkout: Checkout) => {
     try {
-      const { duplicateCheckout } = await import("@/lib/checkouts/duplicateCheckout");
-      const { id, editUrl } = await duplicateCheckout(checkout.id);
-      
-      // Recarregar checkouts
-      await loadCheckouts();
-      
-      toast.success("Checkout duplicado com sucesso!");
-      
-      // Navegar para personalização do novo checkout
-      navigate(editUrl);
+      await busy.run(
+        async () => {
+          const { duplicateCheckout } = await import("@/lib/checkouts/duplicateCheckout");
+          const { id, editUrl } = await duplicateCheckout(checkout.id);
+          
+          // Recarregar checkouts
+          await loadCheckouts();
+          
+          toast.success("Checkout duplicado com sucesso!");
+          
+          // Navegar para personalização do novo checkout
+          navigate(editUrl);
+        },
+        "Duplicando checkout..."
+      );
     } catch (error) {
       console.error("Error duplicating checkout:", error);
       toast.error("Não foi possível duplicar o checkout");

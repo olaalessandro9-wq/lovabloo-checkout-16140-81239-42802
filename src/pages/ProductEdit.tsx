@@ -31,6 +31,8 @@ import { useBusy } from "@/ui/BusyProvider";
 import { useConfirmDelete } from "@/components/common/ConfirmDelete";
 import { UnsavedChangesProvider, useUnsavedChanges } from "@/providers/unsaved-changes";
 import UnsavedChangesDialog from "@/components/common/UnsavedChangesDialog";
+import { UnsavedChangesGuard } from "@/providers/UnsavedChangesGuard";
+import { useConfirmDiscard } from "@/hooks/useConfirmDiscard";
 import { ConfirmDeleteProductDialog } from "@/components/common/ConfirmDeleteProductDialog";
 import { useDirtyOnChange } from "@/hooks/useMarkDirty";
 
@@ -39,6 +41,7 @@ const ProductEditInner = () => {
   const { user } = useAuth();
   const busy = useBusy();
   const { confirm, Bridge } = useConfirmDelete();
+  const { confirm: confirmDiscard, ConfirmRenderer } = useConfirmDiscard();
   const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, loadProduct, productId } = useProduct();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { setDirty, confirmOrRun } = useUnsavedChanges();
@@ -1139,10 +1142,20 @@ const ProductEditInner = () => {
     );
   }
 
+  // Guard ativo em todas as abas, EXCETO "checkout" e "links"
+  const guardEnabled = activeTab !== "checkout" && activeTab !== "links";
+  const isDirty = generalModified || imageModified || paymentSettingsModified || checkoutFieldsModified || upsellModified || affiliateModified;
+
   return (
     <>
       <Bridge />
-      <MainLayout>
+      <UnsavedChangesGuard
+        enabled={guardEnabled}
+        dirty={isDirty}
+        confirm={confirmDiscard}
+        message="Se você sair agora, perderá as alterações não salvas. O que deseja fazer?"
+      >
+        <MainLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Button 
@@ -1764,9 +1777,11 @@ const ProductEditInner = () => {
           coupon={editingCoupon || undefined}
         />
       </div>
-    </MainLayout>
+        </MainLayout>
+      </UnsavedChangesGuard>
+      <ConfirmRenderer />
     
-    <ConfirmDeleteProductDialog
+      <ConfirmDeleteProductDialog
       open={deleteDialogOpen}
       onOpenChange={setDeleteDialogOpen}
       productName={product?.name}

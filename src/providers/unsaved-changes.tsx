@@ -86,6 +86,33 @@ export const UnsavedChangesProvider: React.FC<{ children: React.ReactNode }> = (
   // Removido: alerta de beforeunload (F5/reload)
   // Comportamento padrão do navegador será mantido
 
+  // Intercepta navegação do botão de voltar do navegador
+  useEffect(() => {
+    if (!dirty) return;
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (location.pathname.startsWith(productEditPrefix)) {
+        // Bloqueia a navegação
+        e.preventDefault();
+        window.history.pushState(null, "", location.pathname + location.search);
+        
+        // Armazena a navegação pendente (voltar)
+        (window as any).__pendingNavigation = () => window.history.back();
+        
+        // Mostra o modal
+        setBlocking(true);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    // Adiciona um estado no histórico para interceptar o back
+    window.history.pushState(null, "", location.pathname + location.search);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [dirty, location, productEditPrefix]);
+
   // Bloqueia navegação entre rotas (apenas se for SAIR de /produtos/editar)
   useBlocker(
     ({ currentLocation, nextLocation }) => {

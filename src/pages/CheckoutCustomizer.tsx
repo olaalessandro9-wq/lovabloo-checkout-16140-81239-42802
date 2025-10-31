@@ -6,9 +6,11 @@ import { ArrowLeft, Monitor, Smartphone, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CheckoutPreview } from "@/components/checkout/CheckoutPreview";
 import { CheckoutCustomizationPanel } from "@/components/checkout/CheckoutCustomizationPanel";
+import { CheckoutOfferSelector } from "@/components/products/CheckoutOfferSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export type ViewMode = "desktop" | "mobile";
 
@@ -134,6 +136,8 @@ const CheckoutCustomizer = () => {
   const [selectedColumn, setSelectedColumn] = useState<number>(0);
   const [productData, setProductData] = useState<any>(null);
   const [orderBumps, setOrderBumps] = useState<any[]>([]);
+  const [productOffers, setProductOffers] = useState<any[]>([]);
+  const [currentLinks, setCurrentLinks] = useState<any[]>([]);
   
   // Flags para controlar resync/auto-save
   const [isDirty, setIsDirty] = useState(false);
@@ -226,6 +230,39 @@ const CheckoutCustomizer = () => {
         };
         setCustomization(loadedCustomization);
         setProductData(checkout.products);
+
+        // Load product offers
+        if (checkout.product_id) {
+          const { data: offers, error: offersError } = await supabase
+            .from("offers")
+            .select("*")
+            .eq("product_id", checkout.product_id)
+            .order("created_at");
+          
+          if (!offersError && offers) {
+            setProductOffers(offers);
+          }
+        }
+
+        // Load current links for this checkout
+        const { data: links, error: linksError } = await supabase
+          .from("checkout_links")
+          .select(`
+            *,
+            payment_links (
+              *,
+              offers (
+                id,
+                name,
+                price
+              )
+            )
+          `)
+          .eq("checkout_id", id);
+
+        if (!linksError && links) {
+          setCurrentLinks(links);
+        }
       }
 
       // Load order bumps with product data
@@ -879,21 +916,58 @@ const CheckoutCustomizer = () => {
 
           {/* Customization Panel */}
           {!isPreviewMode && (
-            <CheckoutCustomizationPanel
-              customization={customization}
-              selectedComponent={getSelectedComponentData()}
-              onUpdateComponent={handleUpdateComponent}
-              onRemoveComponent={handleRemoveComponent}
-              onDuplicateComponent={handleDuplicateComponent}
-              onMoveComponentUp={handleMoveComponentUp}
-              onMoveComponentDown={handleMoveComponentDown}
-              onUpdateDesign={handleUpdateDesign}
-              onAddRow={handleAddRow}
-              onRemoveRow={handleRemoveRow}
-              onBack={() => setSelectedComponent(null)}
-              rows={customization.rows}
-              selectedRowId={selectedRow}
-            />
+            <div className="w-[400px] border-l bg-card overflow-auto">
+              <div className="p-6 space-y-6">
+                {/* Offer Selection Section */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium">Oferta do Checkout</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <CheckoutOfferSelector
+                      checkoutId={checkoutId!}
+                      offers={productOffers}
+                      onLinked={(result) => {
+                        console.log('[CheckoutCustomizer] Link associado:', result);
+                        // Reload links
+                        loadCheckoutData(checkoutId!);
+                      }}
+                    />
+                    
+                    {/* Current Links Display */}
+                    {currentLinks.length > 0 && (
+                      <div className="mt-4 p-3 bg-muted rounded-lg">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">
+                          Links Associados:
+                        </p>
+                        {currentLinks.map((cl: any) => (
+                          <div key={cl.id} className="text-xs text-foreground">
+                            • {cl.payment_links?.offers?.name} - /{cl.payment_links?.slug}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Original Customization Panel */}
+                <CheckoutCustomizationPanel
+                  customization={customization}
+                  selectedComponent={getSelectedComponentData()}
+                  onUpdateComponent={handleUpdateComponent}
+                  onRemoveComponent={handleRemoveComponent}
+                  onDuplicateComponent={handleDuplicateComponent}
+                  onMoveComponentUp={handleMoveComponentUp}
+                  onMoveComponentDown={handleMoveComponentDown}
+                  onUpdateDesign={handleUpdateDesign}
+                  onAddRow={handleAddRow}
+                  onRemoveRow={handleRemoveRow}
+                  onBack={() => setSelectedComponent(null)}
+                  rows={customization.rows}
+                  selectedRowId={selectedRow}
+                />
+              </div>
+            </div>
           )}
         </div>
       </div>

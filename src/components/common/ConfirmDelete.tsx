@@ -22,6 +22,7 @@ type BaseProps = {
   confirmLabel?: string; // default: "Excluir"
   description?: string; // texto opcional abaixo do título
   onConfirm: () => Promise<void> | void;
+  onCancel?: () => void;
 };
 
 type DeclarativeProps = BaseProps & {
@@ -40,6 +41,7 @@ export function ConfirmDeleteDialog(props: DeclarativeProps) {
     confirmLabel = "Excluir",
     description,
     onConfirm,
+    onCancel,
     children,
   } = props;
 
@@ -59,11 +61,17 @@ export function ConfirmDeleteDialog(props: DeclarativeProps) {
     }
   };
 
+  const handleCancel = () => {
+    setOpen(false);
+    setTypeWord("");
+    onCancel?.();
+  };
+
   const confirmDisabled =
     busy || (requireTypeToConfirm && typeWord.trim().toUpperCase() !== "EXCLUIR");
 
   return (
-    <AlertDialog open={open} onOpenChange={(v) => !busy && setOpen(v)}>
+    <AlertDialog open={open} onOpenChange={(v) => !busy && (v ? setOpen(v) : handleCancel())}>
       <AlertDialogTrigger asChild>
         {children ?? (
           <Button variant="destructive" size="sm">
@@ -105,7 +113,9 @@ export function ConfirmDeleteDialog(props: DeclarativeProps) {
         )}
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={busy} onClick={handleCancel}>
+            Cancelar
+          </AlertDialogCancel>
           <AlertDialogAction
             disabled={confirmDisabled}
             className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
@@ -123,25 +133,30 @@ export function ConfirmDeleteDialog(props: DeclarativeProps) {
 }
 
 /** Uso imperativo em menus/ações */
-type ConfirmArgs = Omit<BaseProps, "resourceName" | "resourceType" | "onConfirm"> & {
+type ConfirmArgs = {
   resourceType: string;
   resourceName: string;
+  requireTypeToConfirm?: boolean;
+  confirmLabel?: string;
+  description?: string;
   onConfirm: () => Promise<void> | void;
 };
 
 export function useConfirmDelete() {
-  const [state, setState] = React.useState<null | ConfirmArgs>(null);
+  const [state, setState] = React.useState<null | (ConfirmArgs & { open: boolean })>(null);
 
   const confirm = React.useCallback((args: ConfirmArgs) => {
-    return new Promise<void>((resolve, reject) => {
+    return new Promise<boolean>((resolve) => {
       setState({
         ...args,
+        open: true,
         onConfirm: async () => {
           try {
             await args.onConfirm();
-            resolve();
+            resolve(true);
           } catch (e) {
-            reject(e);
+            resolve(false);
+            throw e; // Re-throw para o toast de erro
           } finally {
             setState(null);
           }
@@ -153,14 +168,80 @@ export function useConfirmDelete() {
   const Bridge = () => {
     if (!state) return null;
     return (
-      <ConfirmDeleteDialog
-        resourceType={state.resourceType}
-        resourceName={state.resourceName}
-        onConfirm={state.onConfirm}
-        requireTypeToConfirm={state.requireTypeToConfirm}
-        confirmLabel={state.confirmLabel}
-        description={state.description}
-      />
+      <AlertDialog
+        open={state.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setState(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Excluir {state.resourceType}?{" "}
+              <span className="font-normal">({state.resourceName})</span>
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {state.description ?? (
+                <>
+                  Essa ação é irreversível e removerá permanentemente o{" "}
+                  {state.resourceType.toLowerCase()} selecionado.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {state.requireTypeToConfirm && (
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Para confirmar, digite{" "}
+                <span className="font-semibold">EXCLUIR</span>:
+              </p>
+              <Input
+                autoFocus
+                placeholder="EXCLUIR"
+                id="confirm-delete-input"
+              />
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setState(null);
+              }}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+              onClick={async (e) => {
+                e.preventDefault();
+                
+                if (state.requireTypeToConfirm) {
+                  const input = document.getElementById("confirm-delete-input") as HTMLInputElement;
+                  if (input?.value.trim().toUpperCase() !== "EXCLUIR") {
+                    toast.error("Digite EXCLUIR para confirmar");
+                    return;
+                  }
+                }
+
+                try {
+                  await state.onConfirm();
+                  toast.success(`${state.resourceType} excluído com sucesso!`);
+                } catch (err: any) {
+                  toast.error(`Falha ao excluir ${state.resourceType.toLowerCase()}`, {
+                    description: err?.message ?? "Tente novamente.",
+                  });
+                }
+              }}
+            >
+              {state.confirmLabel ?? "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     );
   };
 

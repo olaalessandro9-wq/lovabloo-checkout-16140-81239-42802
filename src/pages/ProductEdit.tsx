@@ -9,7 +9,7 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProductCheckoutSettings } from "@/components/products/ProductCheckoutSettings";
+import ProductSettingsPanel from "@/components/products/ProductSettingsPanel";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
@@ -29,8 +29,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useBusy } from "@/ui/BusyProvider";
 import { useConfirmDelete } from "@/components/common/ConfirmDelete";
+import { UnsavedChangesProvider } from "@/providers/unsaved-changes";
+import UnsavedChangesDialog from "@/components/common/UnsavedChangesDialog";
 
-const ProductEdit = () => {
+const ProductEditInner = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const busy = useBusy();
@@ -1412,9 +1414,7 @@ const ProductEdit = () => {
           </TabsContent>
 
           <TabsContent value="configuracoes" className="space-y-6">
-            <div className="bg-card border border-border rounded-lg p-6">
-              <ProductCheckoutSettings productId={productId} />
-            </div>
+            <ProductSettingsPanel productId={productId} />
           </TabsContent>
 
           <TabsContent value="order-bump" className="space-y-6">
@@ -1749,6 +1749,15 @@ const ProductEdit = () => {
       </div>
     </MainLayout>
     </>
+  );
+};
+
+const ProductEdit = () => {
+  return (
+    <UnsavedChangesProvider>
+      <ProductEditInner />
+      <UnsavedChangesDialog />
+    </UnsavedChangesProvider>
   );
 };
 

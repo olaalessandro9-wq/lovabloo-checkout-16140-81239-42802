@@ -27,11 +27,13 @@ import { OffersManager, type Offer } from "@/components/products/OffersManager";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useBusy } from "@/ui/BusyProvider";
+import { useConfirmDelete } from "@/components/common/ConfirmDelete";
 
 const ProductEdit = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const busy = useBusy();
+  const { confirm, Bridge } = useConfirmDelete();
   const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, loadProduct, productId } = useProduct();
   
   // Estado para a seção Geral
@@ -882,21 +884,27 @@ const ProductEdit = () => {
     }
   };
 
-  const handleDeleteCheckout = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("checkouts")
-        .delete()
-        .eq("id", id);
+  const handleDeleteCheckout = async (id: string, name: string) => {
+    await confirm({
+      resourceType: "Checkout",
+      resourceName: name,
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase
+            .from("checkouts")
+            .delete()
+            .eq("id", id);
 
-      if (error) throw error;
+          if (error) throw error;
 
-      setCheckouts(checkouts.filter(c => c.id !== id));
-      toast.error("O checkout foi removido");
-    } catch (error) {
-      console.error("Error deleting checkout:", error);
-      toast.error("Não foi possível excluir o checkout");
-    }
+          setCheckouts(checkouts.filter(c => c.id !== id));
+          toast.success("Checkout excluído com sucesso!");
+        } catch (error) {
+          console.error("Error deleting checkout:", error);
+          throw new Error("Não foi possível excluir o checkout");
+        }
+      },
+    });
   };
 
   const handleConfigureCheckout = async (checkout: Checkout) => {
@@ -1112,7 +1120,9 @@ const ProductEdit = () => {
   }
 
   return (
-    <MainLayout>
+    <>
+      <Bridge />
+      <MainLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Button 
@@ -1886,6 +1896,7 @@ const ProductEdit = () => {
         />
       </div>
     </MainLayout>
+    </>
   );
 };
 

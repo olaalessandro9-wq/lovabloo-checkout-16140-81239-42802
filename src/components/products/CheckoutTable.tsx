@@ -33,7 +33,7 @@ interface CheckoutTableProps {
   checkouts: Checkout[];
   onAdd: () => void;
   onDuplicate: (checkout: Checkout) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, name: string) => void;
   onConfigure: (checkout: Checkout) => void;
   onCustomize: (checkout: Checkout) => void;
 }
@@ -145,7 +145,7 @@ export const CheckoutTable = ({
                             Duplicar
                           </DropdownMenuItem>
                           <DropdownMenuItem
-                            onClick={() => onDelete(checkout.id)}
+                            onClick={() => onDelete(checkout.id, checkout.name)}
                             className="gap-2 cursor-pointer text-destructive focus:text-destructive"
                           >
                             <Trash2 className="w-4 h-4" />

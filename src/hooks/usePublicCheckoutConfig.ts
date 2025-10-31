@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export async function loadPublicCheckoutData(slug: string) {
-  // Busca o payment_link pelo slug
+  // Busca o payment_link pelo slug (tolerante a 0 linhas)
   const { data: linkData, error: linkError } = await supabase
     .from('payment_links')
     .select(`
@@ -24,13 +24,17 @@ export async function loadPublicCheckoutData(slug: string) {
       )
     `)
     .eq('slug', slug)
-    .single();
+    .maybeSingle(); // Tolerante a 0 linhas
 
-  if (linkError || !linkData) {
-    throw linkError ?? new Error('Link de pagamento não encontrado');
+  if (linkError) {
+    throw linkError;
   }
 
-  // Busca o checkout associado a este payment_link
+  if (!linkData) {
+    throw new Error('Link de pagamento não encontrado');
+  }
+
+  // Busca o checkout associado a este payment_link (tolerante a 0 linhas)
   const { data: checkoutLinkData, error: checkoutLinkError } = await supabase
     .from('checkout_links')
     .select(`
@@ -53,10 +57,14 @@ export async function loadPublicCheckoutData(slug: string) {
       )
     `)
     .eq('link_id', linkData.id)
-    .single();
+    .maybeSingle(); // Tolerante a 0 linhas
 
-  if (checkoutLinkError || !checkoutLinkData) {
-    throw checkoutLinkError ?? new Error('Checkout não encontrado para este link');
+  if (checkoutLinkError) {
+    throw checkoutLinkError;
+  }
+
+  if (!checkoutLinkData) {
+    throw new Error('Checkout não encontrado para este link');
   }
 
   const product = linkData.offers.products;

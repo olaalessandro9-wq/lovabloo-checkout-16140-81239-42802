@@ -1,9 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-// React Router v6 API
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import { unstable_useBlocker as useBlocker } from "react-router-dom";
+import { useLocation, useNavigate, UNSAFE_NavigationContext } from "react-router-dom";
 
 type UnsavedChangesContextType = {
   dirty: boolean;
@@ -29,6 +25,44 @@ export function useUnsavedChanges() {
   const ctx = useContext(UnsavedChangesContext);
   if (!ctx) throw new Error("useUnsavedChanges must be used within UnsavedChangesProvider");
   return ctx;
+}
+
+// Hook customizado para bloquear navegação (compatível com React Router v6)
+function useBlocker(blocker: (args: { currentLocation: any; nextLocation: any }) => boolean, when = true) {
+  const { navigator } = useContext(UNSAFE_NavigationContext);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!when) return;
+
+    const originalPush = navigator.push;
+    const originalReplace = navigator.replace;
+
+    navigator.push = (...args: any[]) => {
+      const shouldBlock = blocker({
+        currentLocation: location,
+        nextLocation: { pathname: args[0]?.pathname || args[0], search: args[0]?.search || "" },
+      });
+      if (!shouldBlock) {
+        originalPush.apply(navigator, args);
+      }
+    };
+
+    navigator.replace = (...args: any[]) => {
+      const shouldBlock = blocker({
+        currentLocation: location,
+        nextLocation: { pathname: args[0]?.pathname || args[0], search: args[0]?.search || "" },
+      });
+      if (!shouldBlock) {
+        originalReplace.apply(navigator, args);
+      }
+    };
+
+    return () => {
+      navigator.push = originalPush;
+      navigator.replace = originalReplace;
+    };
+  }, [navigator, blocker, when, location]);
 }
 
 export const UnsavedChangesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

@@ -49,6 +49,9 @@ function useBlocker(blocker: (args: { currentLocation: any; nextLocation: any })
       });
       if (!shouldBlock) {
         originalPush.apply(navigator, args);
+      } else {
+        // Armazena a navegação pendente para ser executada depois
+        (window as any).__pendingNavigation = () => originalPush.apply(navigator, args);
       }
     };
 
@@ -73,6 +76,7 @@ export const UnsavedChangesProvider: React.FC<{ children: React.ReactNode }> = (
   const [dirty, setDirty] = useState(false);
   const [blocking, setBlocking] = useState(false);
   const nextLocationRef = useRef<null | { pathname: string; search?: string }>(null);
+  const pendingNavigationRef = useRef<null | (() => void)>(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -145,6 +149,14 @@ export const UnsavedChangesProvider: React.FC<{ children: React.ReactNode }> = (
       const action = pendingActionRef.current;
       pendingActionRef.current = null;
       action();
+    } else if ((window as any).__pendingNavigation) {
+      // Executa a navegação que foi bloqueada
+      const pendingNav = (window as any).__pendingNavigation;
+      (window as any).__pendingNavigation = null;
+      nextLocationRef.current = null;
+      setBlocking(false);
+      pendingNav();
+      return; // Retorna aqui para evitar fechar o modal duas vezes
     } else if (nextLocationRef.current) {
       const { pathname, search } = nextLocationRef.current;
       nextLocationRef.current = null;

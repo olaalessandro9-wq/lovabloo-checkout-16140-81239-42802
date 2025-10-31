@@ -14,8 +14,7 @@ import { Loader2, AlertCircle } from "lucide-react";
  * 2. Busca o link no banco de dados
  * 3. Verifica se o link está ativo
  * 4. Verifica se o produto está ativo
- * 5. Busca o checkout padrão associado ao link
- * 6. Redireciona para /pay/:checkout_slug
+ * 5. Redireciona para /pay/:slug (usando o slug do payment_link)
  */
 const PaymentLinkRedirect = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -31,7 +30,7 @@ const PaymentLinkRedirect = () => {
       }
 
       try {
-        // 1. Buscar o payment_link pelo slug com status e produto
+        // 1. Buscar o payment_link pelo slug com status e produto (tolerante a 0 linhas)
         const { data: linkData, error: linkError } = await supabase
           .from("payment_links")
           .select(`
@@ -49,10 +48,16 @@ const PaymentLinkRedirect = () => {
             )
           `)
           .eq("slug", slug)
-          .single();
+          .maybeSingle(); // Tolerante a 0 linhas
 
-        if (linkError || !linkData) {
-          console.error("Link não encontrado:", linkError);
+        if (linkError) {
+          console.error("Erro ao buscar link:", linkError);
+          setError("Erro ao processar link de pagamento");
+          return;
+        }
+
+        if (!linkData) {
+          console.error("Link não encontrado");
           setError("Link de pagamento não encontrado");
           return;
         }
@@ -76,7 +81,7 @@ const PaymentLinkRedirect = () => {
           return;
         }
 
-        // 4. Buscar checkouts associados a este link
+        // 4. Verificar se existe checkout associado (opcional, apenas para validação)
         const { data: checkoutLinksData, error: checkoutLinksError } = await supabase
           .from("checkout_links")
           .select(`
@@ -98,46 +103,9 @@ const PaymentLinkRedirect = () => {
           return;
         }
 
-        // 5. Extrair checkouts dos dados
-        const checkouts = checkoutLinksData
-          .map((cl: any) => cl.checkouts)
-          .filter((c: any) => c !== null);
-
-        console.log("[PaymentLinkRedirect] Checkouts extraídos:", checkouts);
-
-        if (checkouts.length === 0) {
-          console.error("Nenhum checkout encontrado");
-          setError("Nenhum checkout válido encontrado");
-          return;
-        }
-
-        const checkoutsData = checkouts;
-
-        // IMPORTANTE: Usar o PRIMEIRO checkout associado ao link
-        // (que é o checkout personalizado escolhido pelo usuário)
-        let targetCheckout = checkoutsData[0];
-
-        // Se não houver checkout associado, buscar o padrão como fallback
-        if (!targetCheckout) {
-          const { data: offerData } = await supabase
-            .from("offers")
-            .select("product_id")
-            .eq("id", (linkData as any).offers?.id)
-            .maybeSingle();
-
-          const productId = offerData?.product_id;
-          
-          targetCheckout = checkoutsData.find(
-            (c: any) => c.is_default && c.product_id === productId
-          );
-        }
-
-        // 6. Redirecionar para o checkout
-        if (targetCheckout && targetCheckout.slug) {
-          navigate(`/pay/${targetCheckout.slug}`, { replace: true });
-        } else {
-          setError("Checkout inválido");
-        }
+        // 5. Redirecionar para /pay/:slug (usando o slug do payment_link)
+        // O checkout público agora busca pelo slug do payment_link, não do checkout
+        navigate(`/pay/${linkData.slug}`, { replace: true });
       } catch (err) {
         console.error("Erro ao processar link:", err);
         setError("Erro ao processar link de pagamento");
@@ -222,4 +190,3 @@ const PaymentLinkRedirect = () => {
 };
 
 export default PaymentLinkRedirect;
-

@@ -27,6 +27,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { duplicateProductDeep } from "@/lib/products/duplicateProduct";
 import { deleteProductCascade } from "@/lib/products/deleteProduct";
+import { useConfirmDelete } from "@/components/common/ConfirmDelete";
 
 interface Product {
   id: string;
@@ -47,6 +48,7 @@ export function ProductsTable() {
   const [activeTab, setActiveTab] = useState("products");
 
   const qc = useQueryClient();
+  const { confirm, Bridge } = useConfirmDelete();
 
   const duplicateMutation = useMutation({
     mutationFn: async (productId: string) => {
@@ -120,11 +122,16 @@ export function ProductsTable() {
     duplicateMutation.mutate(productId);
   };
 
-  const handleDelete = (productId: string) => {
-    const ok = window.confirm("Tem certeza que deseja excluir este produto?");
-    if (!ok) return;
+  const handleDelete = async (productId: string, productName: string) => {
     console.log('[handleDelete] Called with ID:', productId, 'Type:', typeof productId);
-    deleteMutation.mutate(productId);
+    await confirm({
+      resourceType: "Produto",
+      resourceName: productName,
+      requireTypeToConfirm: true,
+      onConfirm: async () => {
+        deleteMutation.mutate(productId);
+      },
+    });
   };
 
   const filteredProducts = products.filter(product => 
@@ -141,7 +148,9 @@ export function ProductsTable() {
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <Bridge />
+      <div className="space-y-6">
       {/* Header com botão Adicionar Produto */}
       <div className="flex justify-end">
         <Button 
@@ -244,7 +253,7 @@ export function ProductsTable() {
                         </DropdownMenuItem>
                         <DropdownMenuItem 
                           className="text-destructive"
-                          onClick={() => handleDelete(product.id)}
+                          onClick={() => handleDelete(product.id, product.name)}
                           disabled={duplicateMutation.isPending || deleteMutation.isPending}
                         >
                           {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
@@ -282,6 +291,7 @@ export function ProductsTable() {
         onProductAdded={loadProducts}
       />
     </div>
+    </>
   );
 }
 

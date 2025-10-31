@@ -24,6 +24,13 @@ interface CheckoutData {
     price: number;
     image_url: string | null;
     support_name?: string;
+    required_fields?: {
+      name: boolean;
+      email: boolean;
+      phone: boolean;
+      cpf: boolean;
+    };
+    default_payment_method?: 'pix' | 'credit_card';
   };
   font?: string;
   background_color?: string;
@@ -85,7 +92,9 @@ const PublicCheckout = () => {
             description,
             price,
             image_url,
-            support_name
+            support_name,
+            required_fields,
+            default_payment_method
           )
         `)
         .eq("slug", slug)
@@ -102,7 +111,7 @@ const PublicCheckout = () => {
         return;
       }
 
-      setCheckout({
+      const checkoutData = {
         id: data.id,
         name: data.name,
         slug: data.slug,
@@ -115,6 +124,13 @@ const PublicCheckout = () => {
           price: data.products.price,
           image_url: data.products.image_url,
           support_name: data.products.support_name,
+          required_fields: data.products.required_fields || {
+            name: true,
+            email: true,
+            phone: false,
+            cpf: false,
+          },
+          default_payment_method: data.products.default_payment_method || 'pix',
         },
         font: data.font,
         background_color: data.background_color,
@@ -125,7 +141,12 @@ const PublicCheckout = () => {
         components: parseJsonSafely(data.components, []),
         top_components: parseJsonSafely(data.top_components, []),
         bottom_components: parseJsonSafely(data.bottom_components, []),
-      });
+      };
+      
+      setCheckout(checkoutData);
+      
+      // Define método de pagamento padrão baseado na configuração
+      setSelectedPayment(checkoutData.product.default_payment_method);
     } catch (error) {
       console.error("Error:", error);
       setNotFound(true);
@@ -279,32 +300,36 @@ const PublicCheckout = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      CPF/CNPJ
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.document}
-                      onChange={(e) => setFormData({...formData, document: e.target.value})}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
-                      required
-                    />
-                  </div>
+                  {checkout?.product.required_fields?.cpf && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        CPF/CNPJ
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.document}
+                        onChange={(e) => setFormData({...formData, document: e.target.value})}
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+                        required
+                      />
+                    </div>
+                  )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Celular
-                    </label>
-                    <input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
-                      placeholder="+55 (00) 00000-0000"
-                      required
-                    />
-                  </div>
+                  {checkout?.product.required_fields?.phone && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Celular
+                      </label>
+                      <input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+                        placeholder="+55 (00) 00000-0000"
+                        required
+                      />
+                    </div>
+                  )}
                 </form>
                   </div>
                 </div>

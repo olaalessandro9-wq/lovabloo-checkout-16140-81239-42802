@@ -1,5 +1,6 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate, UNSAFE_NavigationContext } from "react-router-dom";
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+import UnsavedChangesDialog from "@/components/common/UnsavedChangesDialog";
 
 type UnsavedChangesContextType = {
   dirty: boolean;
@@ -31,128 +32,19 @@ export function useUnsavedChanges() {
   return ctx;
 }
 
-// Hook customizado para bloquear navegação (compatível com React Router v6)
-function useBlocker(blocker: (args: { currentLocation: any; nextLocation: any }) => boolean, when = true) {
-  const { navigator } = useContext(UNSAFE_NavigationContext);
-  const location = useLocation();
-
-  useEffect(() => {
-    if (!when) return;
-
-    const originalPush = navigator.push;
-    const originalReplace = navigator.replace;
-
-    navigator.push = (...args: any[]) => {
-      const shouldBlock = blocker({
-        currentLocation: location,
-        nextLocation: { pathname: args[0]?.pathname || args[0], search: args[0]?.search || "" },
-      });
-      if (!shouldBlock) {
-        originalPush.apply(navigator, args);
-      } else {
-        // Armazena a navegação pendente para ser executada depois
-        (window as any).__pendingNavigation = () => originalPush.apply(navigator, args);
-      }
-    };
-
-    navigator.replace = (...args: any[]) => {
-      const shouldBlock = blocker({
-        currentLocation: location,
-        nextLocation: { pathname: args[0]?.pathname || args[0], search: args[0]?.search || "" },
-      });
-      if (!shouldBlock) {
-        originalReplace.apply(navigator, args);
-      }
-    };
-
-    return () => {
-      navigator.push = originalPush;
-      navigator.replace = originalReplace;
-    };
-  }, [navigator, blocker, when, location]);
-}
-
 export const UnsavedChangesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [dirty, setDirty] = useState(false);
-  const [blocking, setBlocking] = useState(false);
-  const nextLocationRef = useRef<null | { pathname: string; search?: string }>(null);
-  const pendingNavigationRef = useRef<null | (() => void)>(null);
+  const pendingActionRef = useRef<null | (() => void)>(null);
 
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const productEditPrefix = "/produtos/editar"; // ajuste se sua rota base for outra
-
-  // Removido: alerta de beforeunload (F5/reload)
-  // Comportamento padrão do navegador será mantido
-
-  // Intercepta navegação do botão de voltar do navegador
-  useEffect(() => {
-    if (!dirty) return;
-
-    const handlePopState = (e: PopStateEvent) => {
-      if (location.pathname.startsWith(productEditPrefix)) {
-        // Bloqueia a navegação
-        e.preventDefault();
-        window.history.pushState(null, "", location.pathname + location.search);
-        
-        // Armazena a navegação pendente (voltar)
-        (window as any).__pendingNavigation = () => window.history.back();
-        
-        // Mostra o modal
-        setBlocking(true);
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    // Adiciona um estado no histórico para interceptar o back
-    window.history.pushState(null, "", location.pathname + location.search);
-
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
-  }, [dirty, location, productEditPrefix]);
-
-  // Bloqueia navegação entre rotas (apenas se for SAIR de /produtos/editar)
-  useBlocker(
-    ({ currentLocation, nextLocation }) => {
-      if (!dirty) return false;
-
-      const isLeavingProductPage =
-        currentLocation.pathname.startsWith(productEditPrefix) &&
-        !nextLocation.pathname.startsWith(productEditPrefix);
-
-      // troca de subtabs (mesma rota base) -> não bloqueia
-      if (!isLeavingProductPage) return false;
-
-      // bloqueia e mostra modal
-      nextLocationRef.current = { pathname: nextLocation.pathname, search: nextLocation.search };
-      setBlocking(true);
-      return true;
-    },
-    dirty // reavalia quando mudar dirty
-  );
-
-  const forceNavigate = useCallback(() => {
-    if (!nextLocationRef.current) {
-      setBlocking(false);
-      return;
-    }
-    const { pathname, search } = nextLocationRef.current;
-    nextLocationRef.current = null;
-    setBlocking(false);
-    setDirty(false); // descartou alterações
-    navigate(`${pathname}${search ?? ""}`, { replace: false });
-  }, [navigate]);
-
-  const cancelNavigate = useCallback(() => {
-    nextLocationRef.current = null;
-    setBlocking(false);
-  }, []);
+  // NUNCA bloquear nas abas de Checkout e Links
+  const guard = useUnsavedChangesGuard({
+    dirty,
+    disableInPaths: [
+      (path, search) => path.includes("/produtos/editar") && /tab=(checkout|links)/.test(search || ""),
+    ],
+  });
 
   const markSaved = useCallback(() => setDirty(false), []);
-
-  const pendingActionRef = useRef<null | (() => void)>(null);
 
   const confirmOrRun = useCallback(
     (action: () => void) => {
@@ -160,63 +52,50 @@ export const UnsavedChangesProvider: React.FC<{ children: React.ReactNode }> = (
         action();
       } else {
         pendingActionRef.current = action;
-        setBlocking(true);
+        // O guard vai abrir o modal automaticamente quando houver dirty=true
       }
     },
     [dirty]
   );
 
-  // Atualizar forceNavigate para executar ação pendente
-  const forceNavigateUpdated = useCallback(() => {
-    // 1️⃣ Limpar estado de alterações primeiro
+  // Força navegação descartando alterações
+  const forceNavigate = useCallback(() => {
     setDirty(false);
-
-    // 2️⃣ Executar ação pendente ou navegação
+    
+    // Se há ação pendente (confirmOrRun), executa ela
     if (pendingActionRef.current) {
       const action = pendingActionRef.current;
       pendingActionRef.current = null;
       action();
-    } else if ((window as any).__pendingNavigation) {
-      // Executa a navegação que foi bloqueada
-      const pendingNav = (window as any).__pendingNavigation;
-      (window as any).__pendingNavigation = null;
-      nextLocationRef.current = null;
-      setBlocking(false);
-      pendingNav();
-      return; // Retorna aqui para evitar fechar o modal duas vezes
-    } else if (nextLocationRef.current) {
-      const { pathname, search } = nextLocationRef.current;
-      nextLocationRef.current = null;
-      navigate(`${pathname}${search ?? ""}`, { replace: false });
+    } else {
+      // Senão, prossegue com a navegação bloqueada pelo guard
+      guard.discardAndExit();
     }
+  }, [guard]);
 
-    // 3️⃣ Fechar modal por último
-    setBlocking(false);
-  }, [navigate]);
-
-  // Atualizar cancelNavigate para limpar ação pendente
-  const cancelNavigateUpdated = useCallback(() => {
+  // Cancela navegação e continua editando
+  const cancelNavigate = useCallback(() => {
     pendingActionRef.current = null;
-    nextLocationRef.current = null;
-    setBlocking(false);
-  }, []);
+    guard.stay();
+  }, [guard]);
 
   const value = useMemo(
     () => ({
       dirty,
       setDirty,
       markSaved,
-      blocking,
-      forceNavigate: forceNavigateUpdated,
-      cancelNavigate: cancelNavigateUpdated,
+      blocking: guard.isOpen,
+      forceNavigate,
+      cancelNavigate,
       confirmOrRun,
     }),
-    [dirty, blocking, forceNavigateUpdated, cancelNavigateUpdated, markSaved, confirmOrRun]
+    [dirty, guard.isOpen, forceNavigate, cancelNavigate, markSaved, confirmOrRun]
   );
 
   return (
     <UnsavedChangesContext.Provider value={value}>
       {children}
+      <UnsavedChangesDialog />
     </UnsavedChangesContext.Provider>
   );
 };

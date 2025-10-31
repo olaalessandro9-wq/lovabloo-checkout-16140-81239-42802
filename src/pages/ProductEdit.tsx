@@ -85,12 +85,6 @@ const ProductEditInner = () => {
     }
   }, [product]);
 
-  // Sincronizar estados de modificação com isDirty (exceto Checkout e Links)
-  useEffect(() => {
-    const hasChanges = generalModified || imageModified || offersModified || upsellModified;
-    setDirty(hasChanges);
-  }, [generalModified, imageModified, offersModified, upsellModified, setDirty]);
-
   const [paymentSettings, setPaymentSettings] = useState({
     pixEnabled: true,
     creditCardEnabled: true,
@@ -393,6 +387,12 @@ const ProductEditInner = () => {
       }
     }
   }, [productId]);
+
+  // Sincronizar estados de modificação com isDirty (exceto Checkout e Links)
+  useEffect(() => {
+    const hasChanges = generalModified || imageModified || offersModified || upsellModified || affiliateModified;
+    setDirty(hasChanges);
+  }, [generalModified, imageModified, offersModified, upsellModified, affiliateModified, setDirty]);
 
   // Salvar aba ativa no sessionStorage quando mudar
   const handleTabChange = (value: string) => {

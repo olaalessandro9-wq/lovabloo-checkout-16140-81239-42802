@@ -31,6 +31,7 @@ import { useBusy } from "@/ui/BusyProvider";
 import { useConfirmDelete } from "@/components/common/ConfirmDelete";
 import { UnsavedChangesProvider } from "@/providers/unsaved-changes";
 import UnsavedChangesDialog from "@/components/common/UnsavedChangesDialog";
+import { ConfirmDeleteProductDialog } from "@/components/common/ConfirmDeleteProductDialog";
 
 const ProductEditInner = () => {
   const navigate = useNavigate();
@@ -38,6 +39,7 @@ const ProductEditInner = () => {
   const busy = useBusy();
   const { confirm, Bridge } = useConfirmDelete();
   const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, loadProduct, productId } = useProduct();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   // Estado para a seção Geral
   const [generalData, setGeneralData] = useState({
@@ -836,6 +838,7 @@ const ProductEditInner = () => {
   const handleDelete = async () => {
     const success = await deleteProduct();
     if (success) {
+      setDeleteDialogOpen(false);
       navigate("/produtos");
     }
   };
@@ -1397,7 +1400,7 @@ const ProductEditInner = () => {
               <div className="flex justify-between items-center pt-6 border-t border-border">
                 <Button 
                   variant="destructive"
-                  onClick={handleDelete}
+                  onClick={() => setDeleteDialogOpen(true)}
                 >
                   Excluir Produto
                 </Button>
@@ -1748,6 +1751,13 @@ const ProductEditInner = () => {
         />
       </div>
     </MainLayout>
+    
+    <ConfirmDeleteProductDialog
+      open={deleteDialogOpen}
+      onOpenChange={setDeleteDialogOpen}
+      productName={product?.name}
+      onConfirm={handleDelete}
+    />
     </>
   );
 };

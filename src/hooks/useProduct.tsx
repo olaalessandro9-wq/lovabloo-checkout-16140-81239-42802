@@ -206,16 +206,14 @@ export const useProduct = () => {
     if (!productId || !user) return false;
 
     try {
-      const res = await fetch("/api/products/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId })
-      });
+      // Remove o produto usando Supabase diretamente (cascade cuida das relações)
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", productId);
 
-      const json = await res.json();
-      
-      if (!res.ok) {
-        toast.error("Erro ao excluir produto", { description: json.error || "Erro desconhecido" });
+      if (error) {
+        toast.error("Erro ao excluir produto", { description: error.message });
         return false;
       }
 

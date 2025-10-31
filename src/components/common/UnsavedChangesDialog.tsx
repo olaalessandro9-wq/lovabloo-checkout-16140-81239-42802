@@ -18,12 +18,12 @@ export default function UnsavedChangesDialog() {
             Se você sair agora, <strong>perderá</strong> as alterações não salvas. O que deseja fazer?
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="secondary" onClick={cancelNavigate}>
-            Continuar edição
-          </Button>
+        <DialogFooter className="gap-2 sm:gap-0 flex justify-end">
           <Button variant="destructive" onClick={forceNavigate}>
             Descartar e sair
+          </Button>
+          <Button variant="secondary" onClick={cancelNavigate}>
+            Continuar edição
           </Button>
         </DialogFooter>
       </DialogContent>

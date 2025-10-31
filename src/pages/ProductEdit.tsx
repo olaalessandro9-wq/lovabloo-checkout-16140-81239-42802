@@ -121,6 +121,7 @@ const ProductEdit = () => {
       loadCoupons();
       loadOrderBumps();
       loadOffers();
+      loadAvailableOffers();
     }
   }, [productId]);
 
@@ -222,21 +223,32 @@ const ProductEdit = () => {
           products (
             name,
             price
+          ),
+          checkout_links (
+            payment_links (
+              offers (
+                name,
+                price
+              )
+            )
           )
         `)
         .eq("product_id", productId)
         .order("created_at", { ascending: false });
       
       if (error) throw error;
-      setCheckouts((data || []).map(checkout => ({
-        id: checkout.id,
-        name: checkout.name,
-        price: checkout.products?.price || 0,
-        visits: (checkout as any).visits_count || 0,
-        offer: checkout.products?.name || "",
-        isDefault: (checkout as any).is_default || false,
-        linkId: "",
-      })));
+      setCheckouts((data || []).map(checkout => {
+        const offerData = (checkout as any)?.checkout_links?.[0]?.payment_links?.offers;
+        return {
+          id: checkout.id,
+          name: checkout.name,
+          price: offerData?.price || checkout.products?.price || 0,
+          visits: (checkout as any).visits_count || 0,
+          offer: offerData?.name || checkout.products?.name || "",
+          isDefault: (checkout as any).is_default || false,
+          linkId: "",
+        };
+      }));
     } catch (error) {
       console.error("Error loading checkouts:", error);
     }
@@ -299,6 +311,28 @@ const ProductEdit = () => {
     }
   };
 
+  const loadAvailableOffers = async () => {
+    if (!productId) return;
+    try {
+      const { data, error } = await supabase
+        .from("offers")
+        .select("id, name, price, is_default")
+        .eq("product_id", productId)
+        .order("is_default", { ascending: false }); // Oferta padrão primeiro
+      
+      if (error) throw error;
+      
+      setAvailableOffers((data || []).map(offer => ({
+        id: offer.id,
+        name: offer.name,
+        price: Number(offer.price),
+        is_default: offer.is_default || false,
+      })));
+    } catch (error) {
+      console.error("Error loading available offers:", error);
+    }
+  };
+
   const [affiliateSettings, setAffiliateSettings] = useState({
     enabled: false,
     requireApproval: false,
@@ -322,6 +356,14 @@ const ProductEdit = () => {
 
   // Estado para links associados ao checkout em edição
   const [currentCheckoutLinkIds, setCurrentCheckoutLinkIds] = useState<string[]>([]);
+  
+  // Estado para ofertas disponíveis para seleção em checkouts
+  const [availableOffers, setAvailableOffers] = useState<Array<{
+    id: string;
+    name: string;
+    price: number;
+    is_default: boolean;
+  }>>([]);
 
   // Estado para aba ativa (persistido no sessionStorage)
   const [activeTab, setActiveTab] = useState<string>("geral");
@@ -590,6 +632,7 @@ const ProductEdit = () => {
         try {
           await loadProduct(false);
           await loadOffers();
+          await loadAvailableOffers();
           await loadPaymentLinks(); // Atualizar links também
         } catch (reloadError) {
           console.error("Erro ao recarregar dados:", reloadError);
@@ -859,22 +902,28 @@ const ProductEdit = () => {
   const handleConfigureCheckout = async (checkout: Checkout) => {
     setEditingCheckout(checkout);
     
-    // Carregar links associados a este checkout
+    // Carregar oferta associada a este checkout via checkout_links -> payment_links -> offers
     try {
       const { data, error } = await supabase
         .from("checkout_links")
-        .select("link_id")
-        .eq("checkout_id", checkout.id);
+        .select(`
+          link_id,
+          payment_links (
+            offer_id
+          )
+        `)
+        .eq("checkout_id", checkout.id)
+        .limit(1)
+        .single();
       
       if (error) throw error;
       
-      const linkIds = (data || []).map(cl => cl.link_id);
+      const offerId = (data as any)?.payment_links?.offer_id || "";
       console.log("[handleConfigureCheckout] Checkout ID:", checkout.id);
-      console.log("[handleConfigureCheckout] Links associados:", linkIds);
-      console.log("[handleConfigureCheckout] Payment links disponíveis:", paymentLinks.map(pl => ({ id: pl.id, offer_name: pl.offer_name })));
-      setCurrentCheckoutLinkIds(linkIds);
+      console.log("[handleConfigureCheckout] Oferta associada:", offerId);
+      setCurrentCheckoutLinkIds([offerId]); // Reutilizando estado
     } catch (error) {
-      console.error("Error loading checkout links:", error);
+      console.error("Error loading checkout offer:", error);
       setCurrentCheckoutLinkIds([]);
     }
     
@@ -907,81 +956,68 @@ const ProductEdit = () => {
     }
   };
 
-  const handleSaveCheckout = async (checkout: Checkout, selectedLinkIds: string[]) => {
+  const handleSaveCheckout = async (checkout: Checkout, selectedOfferId: string) => {
     if (!productId) return;
 
     try {
-      let checkoutId = checkout.id;
+      await busy.run(
+        async () => {
+          const { attachOfferToCheckoutSmart } = await import("@/lib/links/attachOfferToCheckoutSmart");
+          let checkoutId = checkout.id;
 
-      if (editingCheckout) {
-        // Atualizar checkout existente
-        const { error } = await supabase
-          .from("checkouts")
-          .update({
-            name: checkout.name,
-            is_default: checkout.isDefault,
-          })
-          .eq("id", checkout.id);
+          if (editingCheckout) {
+            // Atualizar checkout existente
+            const { error } = await supabase
+              .from("checkouts")
+              .update({
+                name: checkout.name,
+                is_default: checkout.isDefault,
+              })
+              .eq("id", checkout.id);
 
-        if (error) throw error;
+            if (error) throw error;
 
-        // Atualizar associações de links
-        // Primeiro, remover associações antigas
-        const { error: deleteError } = await supabase
-          .from("checkout_links")
-          .delete()
-          .eq("checkout_id", checkout.id);
+            // Remover associações antigas
+            const { error: deleteError } = await supabase
+              .from("checkout_links")
+              .delete()
+              .eq("checkout_id", checkout.id);
 
-        if (deleteError) throw deleteError;
+            if (deleteError) throw deleteError;
 
-        // Depois, criar novas associações
-        const checkoutLinks = selectedLinkIds.map(linkId => ({
-          checkout_id: checkout.id,
-          link_id: linkId,
-        }));
+            // Associar nova oferta usando RPC (cria/reutiliza link automaticamente)
+            await attachOfferToCheckoutSmart(checkout.id, selectedOfferId);
+            
+            setCheckouts(checkouts.map(c => c.id === checkout.id ? checkout : c));
+            toast.success("O checkout foi atualizado com sucesso");
+          } else {
+            // Criar novo checkout
+            const { data: newCheckout, error } = await supabase
+              .from("checkouts")
+              .insert({
+                name: checkout.name,
+                product_id: productId,
+                is_default: checkout.isDefault,
+              })
+              .select()
+              .single();
 
-        const { error: insertError } = await supabase
-          .from("checkout_links")
-          .insert(checkoutLinks);
+            if (error) throw error;
+            if (!newCheckout) throw new Error("Checkout não foi criado");
 
-        if (insertError) throw insertError;
-        
-        setCheckouts(checkouts.map(c => c.id === checkout.id ? checkout : c));
-        toast.success("O checkout foi atualizado com sucesso");
-      } else {
-        // Criar novo checkout
-        const { data: newCheckout, error } = await supabase
-          .from("checkouts")
-          .insert({
-            name: checkout.name,
-            product_id: productId,
-            is_default: checkout.isDefault,
-          })
-          .select()
-          .single();
+            checkoutId = newCheckout.id;
 
-        if (error) throw error;
-        if (!newCheckout) throw new Error("Checkout não foi criado");
-
-        checkoutId = newCheckout.id;
-
-        // Criar associações de links
-        const checkoutLinks = selectedLinkIds.map(linkId => ({
-          checkout_id: checkoutId,
-          link_id: linkId,
-        }));
-
-        const { error: insertError } = await supabase
-          .from("checkout_links")
-          .insert(checkoutLinks);
-
-        if (insertError) throw insertError;
-        
-        toast.success("O checkout foi adicionado com sucesso");
-      }
-      
-      loadCheckouts();
-      loadPaymentLinks(); // Atualiza a aba Links também
+            // Associar oferta usando RPC (cria/reutiliza link automaticamente)
+            await attachOfferToCheckoutSmart(checkoutId, selectedOfferId);
+            
+            toast.success("O checkout foi adicionado com sucesso");
+          }
+          
+          loadCheckouts();
+          loadPaymentLinks();
+        },
+        "Salvando checkout..."
+      );
     } catch (error) {
       console.error("Error saving checkout:", error);
       toast.error("Não foi possível salvar o checkout");
@@ -1835,8 +1871,8 @@ const ProductEdit = () => {
           }}
           onSave={handleSaveCheckout}
           checkout={editingCheckout || undefined}
-          availableLinks={paymentLinks}
-          currentLinkIds={currentCheckoutLinkIds}
+          availableOffers={availableOffers}
+          currentOfferId={currentCheckoutLinkIds[0] || ""}
         />
 
         <CouponDialog

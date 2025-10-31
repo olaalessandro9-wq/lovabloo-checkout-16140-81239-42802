@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Sheet,
   SheetContent,
@@ -13,22 +13,20 @@ import {
 } from "@/components/ui/sheet";
 import type { Checkout } from "./CheckoutTable";
 
-interface PaymentLink {
+interface Offer {
   id: string;
-  slug: string;
-  url: string;
-  offer_name: string;
-  offer_price: number;
+  name: string;
+  price: number;
   is_default: boolean;
 }
 
 interface CheckoutConfigDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (checkout: Checkout, selectedLinkIds: string[]) => void;
+  onSave: (checkout: Checkout, selectedOfferId: string) => void;
   checkout?: Checkout;
-  availableLinks: PaymentLink[];
-  currentLinkIds?: string[];
+  availableOffers: Offer[];
+  currentOfferId?: string;
 }
 
 export const CheckoutConfigDialog = ({
@@ -36,55 +34,41 @@ export const CheckoutConfigDialog = ({
   onOpenChange,
   onSave,
   checkout,
-  availableLinks,
-  currentLinkIds = [],
+  availableOffers,
+  currentOfferId = "",
 }: CheckoutConfigDialogProps) => {
   const [name, setName] = useState("");
   const [isDefault, setIsDefault] = useState(false);
-  const [selectedLinkIds, setSelectedLinkIds] = useState<string[]>([]);
+  const [selectedOfferId, setSelectedOfferId] = useState<string>("");
 
   useEffect(() => {
     if (checkout) {
       setName(checkout.name);
       setIsDefault(checkout.isDefault);
-      setSelectedLinkIds(currentLinkIds);
+      setSelectedOfferId(currentOfferId);
     } else {
       setName("");
       setIsDefault(false);
-      // Selecionar automaticamente o link padrão para novos checkouts
-      const defaultLink = availableLinks.find(link => link.is_default);
-      setSelectedLinkIds(defaultLink ? [defaultLink.id] : []);
+      // Selecionar automaticamente a oferta padrão para novos checkouts
+      const defaultOffer = availableOffers.find(offer => offer.is_default);
+      setSelectedOfferId(defaultOffer ? defaultOffer.id : (availableOffers[0]?.id || ""));
     }
-  }, [checkout, open, currentLinkIds, availableLinks]);
-
-  const handleToggleLink = (linkId: string) => {
-    setSelectedLinkIds(prev => {
-      if (prev.includes(linkId)) {
-        // Não permitir desmarcar se for o último link
-        if (prev.length === 1) {
-          return prev;
-        }
-        return prev.filter(id => id !== linkId);
-      } else {
-        return [...prev, linkId];
-      }
-    });
-  };
+  }, [checkout, open, currentOfferId, availableOffers]);
 
   const handleSave = () => {
-    if (!name || selectedLinkIds.length === 0) return;
+    if (!name || !selectedOfferId) return;
 
     const updatedCheckout: Checkout = {
       id: checkout?.id || `checkout-${Date.now()}`,
       name,
       isDefault,
-      linkId: selectedLinkIds[0], // Manter compatibilidade
+      linkId: "", // Não mais usado
       price: checkout?.price || 0,
       offer: checkout?.offer || "",
       visits: checkout?.visits || 0,
     };
 
-    onSave(updatedCheckout, selectedLinkIds);
+    onSave(updatedCheckout, selectedOfferId);
     onOpenChange(false);
   };
 
@@ -134,16 +118,16 @@ export const CheckoutConfigDialog = ({
             />
           </div>
 
-          {/* Seleção de Links */}
+          {/* Seleção de Oferta */}
           <div className="space-y-3">
             <Label className="text-foreground font-medium">
-              Links de Pagamento
+              Oferta do Checkout
             </Label>
             <p className="text-sm text-muted-foreground">
-              Selecione quais ofertas estarão disponíveis neste checkout
+              Selecione qual oferta será vendida neste checkout
             </p>
 
-            {availableLinks.length === 0 ? (
+            {availableOffers.length === 0 ? (
               <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                 <div>
@@ -156,43 +140,34 @@ export const CheckoutConfigDialog = ({
                 </div>
               </div>
             ) : (
-              <div className="space-y-2 border border-border rounded-lg p-4">
-                {availableLinks.map((link) => (
-                  <div
-                    key={link.id}
-                    className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <Checkbox
-                      id={`link-${link.id}`}
-                      checked={selectedLinkIds.includes(link.id)}
-                      onCheckedChange={() => handleToggleLink(link.id)}
-                      disabled={selectedLinkIds.length === 1 && selectedLinkIds.includes(link.id)}
-                    />
-                    <div className="flex-1">
-                      <Label
-                        htmlFor={`link-${link.id}`}
-                        className="text-sm font-medium text-foreground cursor-pointer"
-                      >
-                        {link.offer_name}
-                      </Label>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        R$ {link.offer_price.toFixed(2)}
-                      </p>
-                      <code className="text-xs text-muted-foreground/70 mt-1 block">
-                        /{link.slug}
-                      </code>
+              <RadioGroup value={selectedOfferId} onValueChange={setSelectedOfferId}>
+                <div className="space-y-2 border border-border rounded-lg p-4">
+                  {availableOffers.map((offer) => (
+                    <div
+                      key={offer.id}
+                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <RadioGroupItem value={offer.id} id={`offer-${offer.id}`} />
+                      <div className="flex-1">
+                        <Label
+                          htmlFor={`offer-${offer.id}`}
+                          className="text-sm font-medium text-foreground cursor-pointer"
+                        >
+                          {offer.name}
+                        </Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          R$ {offer.price.toFixed(2)}
+                        </p>
+                        {offer.is_default && (
+                          <span className="text-xs text-primary">
+                            (Oferta Principal)
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {selectedLinkIds.length === 1 && (
-              <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <p className="text-xs text-blue-400">
-                  💡 Você precisa ter pelo menos um link associado ao checkout.
-                </p>
-              </div>
+                  ))}
+                </div>
+              </RadioGroup>
             )}
           </div>
 
@@ -215,7 +190,7 @@ export const CheckoutConfigDialog = ({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!name || selectedLinkIds.length === 0}
+            disabled={!name || !selectedOfferId}
             className="flex-1 bg-primary hover:bg-primary/90"
           >
             Salvar

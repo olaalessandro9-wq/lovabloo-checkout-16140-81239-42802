@@ -17,6 +17,10 @@ type UnsavedChangesContextType = {
    * cancela a navegação pendente (continua editando)
    */
   cancelNavigate: () => void;
+  /**
+   * executa ação se não houver alterações, ou abre o modal se houver
+   */
+  confirmOrRun: (action: () => void) => void;
 };
 
 const UnsavedChangesContext = createContext<UnsavedChangesContextType | null>(null);
@@ -117,9 +121,57 @@ export const UnsavedChangesProvider: React.FC<{ children: React.ReactNode }> = (
 
   const markSaved = useCallback(() => setDirty(false), []);
 
+  const pendingActionRef = useRef<null | (() => void)>(null);
+
+  const confirmOrRun = useCallback(
+    (action: () => void) => {
+      if (!dirty) {
+        action();
+      } else {
+        pendingActionRef.current = action;
+        setBlocking(true);
+      }
+    },
+    [dirty]
+  );
+
+  // Atualizar forceNavigate para executar ação pendente
+  const forceNavigateUpdated = useCallback(() => {
+    if (pendingActionRef.current) {
+      const action = pendingActionRef.current;
+      pendingActionRef.current = null;
+      setBlocking(false);
+      setDirty(false);
+      action();
+    } else if (nextLocationRef.current) {
+      const { pathname, search } = nextLocationRef.current;
+      nextLocationRef.current = null;
+      setBlocking(false);
+      setDirty(false);
+      navigate(`${pathname}${search ?? ""}`, { replace: false });
+    } else {
+      setBlocking(false);
+    }
+  }, [navigate]);
+
+  // Atualizar cancelNavigate para limpar ação pendente
+  const cancelNavigateUpdated = useCallback(() => {
+    pendingActionRef.current = null;
+    nextLocationRef.current = null;
+    setBlocking(false);
+  }, []);
+
   const value = useMemo(
-    () => ({ dirty, setDirty, markSaved, blocking, forceNavigate, cancelNavigate }),
-    [dirty, blocking, forceNavigate, cancelNavigate, markSaved]
+    () => ({
+      dirty,
+      setDirty,
+      markSaved,
+      blocking,
+      forceNavigate: forceNavigateUpdated,
+      cancelNavigate: cancelNavigateUpdated,
+      confirmOrRun,
+    }),
+    [dirty, blocking, forceNavigateUpdated, cancelNavigateUpdated, markSaved, confirmOrRun]
   );
 
   return (

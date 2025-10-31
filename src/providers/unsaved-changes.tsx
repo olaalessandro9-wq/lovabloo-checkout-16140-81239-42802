@@ -137,21 +137,22 @@ export const UnsavedChangesProvider: React.FC<{ children: React.ReactNode }> = (
 
   // Atualizar forceNavigate para executar ação pendente
   const forceNavigateUpdated = useCallback(() => {
+    // 1️⃣ Limpar estado de alterações primeiro
+    setDirty(false);
+
+    // 2️⃣ Executar ação pendente ou navegação
     if (pendingActionRef.current) {
       const action = pendingActionRef.current;
       pendingActionRef.current = null;
-      setBlocking(false);
-      setDirty(false);
       action();
     } else if (nextLocationRef.current) {
       const { pathname, search } = nextLocationRef.current;
       nextLocationRef.current = null;
-      setBlocking(false);
-      setDirty(false);
       navigate(`${pathname}${search ?? ""}`, { replace: false });
-    } else {
-      setBlocking(false);
     }
+
+    // 3️⃣ Fechar modal por último
+    setBlocking(false);
   }, [navigate]);
 
   // Atualizar cancelNavigate para limpar ação pendente

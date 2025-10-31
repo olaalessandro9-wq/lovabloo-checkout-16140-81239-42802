@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { unstable_useBlocker, useLocation } from "react-router-dom";
+import { useBlocker, useLocation } from "react-router-dom";
 
 type GuardOptions = {
   /** Quando true, o guard bloqueia a navegação */
@@ -18,7 +18,7 @@ export function useUnsavedChangesGuard({ dirty, disableInPaths = [] }: GuardOpti
   }, [dirty, disableInPaths, location.pathname, location.search]);
 
   // Bloqueia tudo (programático + back/forward) quando NÃO estiver desabilitado
-  const blocker = unstable_useBlocker(!disabled);
+  const blocker = useBlocker(!disabled);
 
   useEffect(() => {
     if (blocker.state === "blocked") setIsOpen(true);

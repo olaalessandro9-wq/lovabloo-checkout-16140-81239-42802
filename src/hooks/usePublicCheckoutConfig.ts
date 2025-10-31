@@ -61,7 +61,15 @@ export async function loadPublicCheckoutData(slug: string) {
 
   const product = linkData.offers.products;
   const checkout = checkoutLinkData.checkouts;
-  const fields = (product?.required_fields ?? {}) as { phone?: boolean; cpf?: boolean };
+
+  // Endurece leitura dos campos opcionais
+  const rf = (product?.required_fields ?? {}) as Partial<{ phone: boolean; cpf: boolean }>;
+  const requirePhone = rf.phone === true;
+  const requireCpf   = rf.cpf   === true;
+
+  // **CORREÇÃO**: banco usa "credit_card", nunca "card"
+  const defaultMethod =
+    product?.default_payment_method === 'credit_card' ? 'credit_card' : 'pix';
 
   return {
     checkout: {
@@ -88,8 +96,8 @@ export async function loadPublicCheckoutData(slug: string) {
       image_url: product.image_url,
       support_name: product.support_name,
     },
-    requirePhone: !!fields.phone,
-    requireCpf: !!fields.cpf,
-    defaultMethod: (product?.default_payment_method === 'card' ? 'card' : 'pix') as 'pix' | 'card',
+    requirePhone,
+    requireCpf,
+    defaultMethod, // 'pix' | 'credit_card'
   };
 }

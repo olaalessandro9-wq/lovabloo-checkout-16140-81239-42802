@@ -29,9 +29,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useBusy } from "@/ui/BusyProvider";
 import { useConfirmDelete } from "@/components/common/ConfirmDelete";
-import { UnsavedChangesProvider } from "@/providers/unsaved-changes";
+import { UnsavedChangesProvider, useUnsavedChanges } from "@/providers/unsaved-changes";
 import UnsavedChangesDialog from "@/components/common/UnsavedChangesDialog";
 import { ConfirmDeleteProductDialog } from "@/components/common/ConfirmDeleteProductDialog";
+import { useDirtyOnChange } from "@/hooks/useMarkDirty";
 
 const ProductEditInner = () => {
   const navigate = useNavigate();
@@ -40,6 +41,8 @@ const ProductEditInner = () => {
   const { confirm, Bridge } = useConfirmDelete();
   const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, loadProduct, productId } = useProduct();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { setDirty, confirmOrRun } = useUnsavedChanges();
+  const markDirty = useDirtyOnChange();
   
   // Estado para a seção Geral
   const [generalData, setGeneralData] = useState({
@@ -81,6 +84,12 @@ const ProductEditInner = () => {
       setPendingImageRemoval(false);
     }
   }, [product]);
+
+  // Sincronizar estados de modificação com isDirty (exceto Checkout e Links)
+  useEffect(() => {
+    const hasChanges = generalModified || imageModified || offersModified || upsellModified;
+    setDirty(hasChanges);
+  }, [generalModified, imageModified, offersModified, upsellModified, setDirty]);
 
   const [paymentSettings, setPaymentSettings] = useState({
     pixEnabled: true,
@@ -387,11 +396,13 @@ const ProductEditInner = () => {
 
   // Salvar aba ativa no sessionStorage quando mudar
   const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    // Salvar apenas se productId existir
-    if (productId) {
-      sessionStorage.setItem(`product-edit-tab-${productId}`, value);
-    }
+    confirmOrRun(() => {
+      setActiveTab(value);
+      // Salvar apenas se productId existir
+      if (productId) {
+        sessionStorage.setItem(`product-edit-tab-${productId}`, value);
+      }
+    });
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -633,6 +644,7 @@ const ProductEditInner = () => {
       setPendingImageRemoval(false);
       setImageFile(null);
       setImageUrl("");
+      setDirty(false); // Limpar estado de alterações pendentes
       
       // Recarregar produto e ofertas para atualizar a interface
       if (productId) {
@@ -844,7 +856,9 @@ const ProductEditInner = () => {
   };
 
   const handleBack = () => {
-    navigate("/produtos");
+    confirmOrRun(() => {
+      navigate("/produtos");
+    });
   };
 
   const handleAddOrderBump = () => {

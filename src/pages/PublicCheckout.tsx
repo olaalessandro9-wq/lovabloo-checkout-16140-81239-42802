@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, User, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { parseJsonSafely } from "@/lib/utils";
+import { loadPublicCheckoutData } from "@/hooks/usePublicCheckoutConfig";
 import CheckoutComponentRenderer from "@/components/checkout/CheckoutComponentRenderer";
 import { ImageIcon } from "@/components/icons/ImageIcon";
 import { LockIcon } from "@/components/icons/LockIcon";
@@ -69,84 +70,39 @@ const PublicCheckout = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase
-        .from("checkouts")
-        .select(`
-          id,
-          name,
-          slug,
-          visits_count,
-          seller_name,
-          font,
-          background_color,
-          text_color,
-          primary_color,
-          button_color,
-          button_text_color,
-          components,
-          top_components,
-          bottom_components,
-          products (
-            id,
-            name,
-            description,
-            price,
-            image_url,
-            support_name,
-            required_fields,
-            default_payment_method
-          )
-        `)
-        .eq("slug", slug)
-        .single();
+      const { checkout: checkoutData, product, requirePhone, requireCpf, defaultMethod } = await loadPublicCheckoutData(slug!);
 
-      if (error) {
-        console.error("Error loading checkout:", error);
-        setNotFound(true);
-        return;
-      }
-
-      if (!data) {
-        setNotFound(true);
-        return;
-      }
-
-      const checkoutData = {
-        id: data.id,
-        name: data.name,
-        slug: data.slug,
-        visits_count: data.visits_count,
-        seller_name: data.seller_name,
+      const fullCheckoutData = {
+        id: checkoutData.id,
+        name: checkoutData.name,
+        slug: checkoutData.slug,
+        visits_count: checkoutData.visits_count,
+        seller_name: checkoutData.seller_name,
         product: {
-          id: data.products.id,
-          name: data.products.name,
-          description: data.products.description,
-          price: data.products.price,
-          image_url: data.products.image_url,
-          support_name: data.products.support_name,
-          required_fields: data.products.required_fields || {
+          ...product,
+          required_fields: {
             name: true,
             email: true,
-            phone: false,
-            cpf: false,
+            phone: requirePhone,
+            cpf: requireCpf,
           },
-          default_payment_method: data.products.default_payment_method || 'pix',
+          default_payment_method: defaultMethod,
         },
-        font: data.font,
-        background_color: data.background_color,
-        text_color: data.text_color,
-        primary_color: data.primary_color,
-        button_color: data.button_color,
-        button_text_color: data.button_text_color,
-        components: parseJsonSafely(data.components, []),
-        top_components: parseJsonSafely(data.top_components, []),
-        bottom_components: parseJsonSafely(data.bottom_components, []),
+        font: checkoutData.font,
+        background_color: checkoutData.background_color,
+        text_color: checkoutData.text_color,
+        primary_color: checkoutData.primary_color,
+        button_color: checkoutData.button_color,
+        button_text_color: checkoutData.button_text_color,
+        components: parseJsonSafely(checkoutData.components, []),
+        top_components: parseJsonSafely(checkoutData.top_components, []),
+        bottom_components: parseJsonSafely(checkoutData.bottom_components, []),
       };
       
-      setCheckout(checkoutData);
+      setCheckout(fullCheckoutData);
       
       // Define método de pagamento padrão baseado na configuração
-      setSelectedPayment(checkoutData.product.default_payment_method);
+      setSelectedPayment(defaultMethod);
     } catch (error) {
       console.error("Error:", error);
       setNotFound(true);

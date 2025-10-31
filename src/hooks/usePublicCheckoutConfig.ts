@@ -1,100 +1,139 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export async function loadPublicCheckoutData(slug: string) {
-  // Estratégia 1: Buscar pelo slug do payment_link (fluxo principal)
+  // Estratégia 1: Buscar pelo slug do payment_link (sem joins rígidos)
   const { data: linkData, error: linkError } = await supabase
     .from('payment_links')
-    .select(`
-      id,
-      slug,
-      offer_id,
-      offers!inner (
-        id,
-        product_id,
-        products!inner (
-          id,
-          name,
-          description,
-          price,
-          image_url,
-          support_name,
-          required_fields,
-          default_payment_method
-        )
-      )
-    `)
+    .select('id, slug, offer_id, status')
     .eq('slug', slug)
+    .eq('status', 'active')
     .maybeSingle();
 
-  // Se encontrou pelo payment_link, segue o fluxo normal
-  if (!linkError && linkData) {
+  if (linkError) {
+    throw linkError;
+  }
+
+  // Se encontrou pelo payment_link, segue o fluxo
+  if (linkData) {
+    // Buscar o checkout associado (sem !inner)
     const { data: checkoutLinkData, error: checkoutLinkError } = await supabase
       .from('checkout_links')
-      .select(`
-        checkout_id,
-        checkouts!inner (
-          id,
-          name,
-          slug,
-          visits_count,
-          seller_name,
-          font,
-          background_color,
-          text_color,
-          primary_color,
-          button_color,
-          button_text_color,
-          components,
-          top_components,
-          bottom_components
-        )
-      `)
+      .select('checkout_id')
       .eq('link_id', linkData.id)
-      .maybeSingle();
+      .limit(1);
 
     if (checkoutLinkError) {
       throw checkoutLinkError;
     }
 
-    if (!checkoutLinkData) {
+    if (!checkoutLinkData || checkoutLinkData.length === 0) {
       throw new Error('Checkout não encontrado para este link');
     }
 
-    const product = linkData.offers.products;
-    const checkout = checkoutLinkData.checkouts;
+    const checkoutId = checkoutLinkData[0].checkout_id;
+
+    // Buscar dados do checkout
+    const { data: checkoutData, error: checkoutError } = await supabase
+      .from('checkouts')
+      .select(`
+        id,
+        name,
+        slug,
+        visits_count,
+        seller_name,
+        product_id,
+        font,
+        background_color,
+        text_color,
+        primary_color,
+        button_color,
+        button_text_color,
+        components,
+        top_components,
+        bottom_components
+      `)
+      .eq('id', checkoutId)
+      .maybeSingle();
+
+    if (checkoutError) {
+      throw checkoutError;
+    }
+
+    if (!checkoutData) {
+      throw new Error('Checkout não encontrado');
+    }
+
+    // Buscar dados da oferta
+    const { data: offerData, error: offerError } = await supabase
+      .from('offers')
+      .select('id, product_id')
+      .eq('id', linkData.offer_id)
+      .maybeSingle();
+
+    if (offerError) {
+      throw offerError;
+    }
+
+    if (!offerData) {
+      throw new Error('Oferta não encontrada');
+    }
+
+    // Buscar dados do produto
+    const { data: productData, error: productError } = await supabase
+      .from('products')
+      .select(`
+        id,
+        name,
+        description,
+        price,
+        image_url,
+        support_name,
+        required_fields,
+        default_payment_method
+      `)
+      .eq('id', offerData.product_id)
+      .maybeSingle();
+
+    if (productError) {
+      throw productError;
+    }
+
+    if (!productData) {
+      throw new Error('Produto não encontrado');
+    }
 
     // Endurece leitura dos campos opcionais
-    const rf = (product?.required_fields ?? {}) as Partial<{ phone: boolean; cpf: boolean }>;
+    const rf = (productData?.required_fields ?? {}) as Partial<{ phone: boolean; cpf: boolean }>;
     const requirePhone = rf.phone === true;
     const requireCpf   = rf.cpf   === true;
 
     const defaultMethod =
-      product?.default_payment_method === 'credit_card' ? 'credit_card' : 'pix';
+      productData?.default_payment_method === 'credit_card' ? 'credit_card' : 'pix';
 
     return {
       checkout: {
-        id: checkout.id,
-        name: checkout.name,
-        slug: checkout.slug,
-        visits_count: checkout.visits_count,
-        seller_name: checkout.seller_name,
-        font: checkout.font,
-        background_color: checkout.background_color,
-        text_color: checkout.text_color,
-        primary_color: checkout.primary_color,
-        button_color: checkout.button_color,
-        button_text_color: checkout.button_text_color,
-        components: checkout.components,
-        top_components: checkout.top_components,
-        bottom_components: checkout.bottom_components,
+        id: checkoutData.id,
+        name: checkoutData.name,
+        slug: checkoutData.slug,
+        visits_count: checkoutData.visits_count,
+        seller_name: checkoutData.seller_name,
+        font: checkoutData.font,
+        background_color: checkoutData.background_color,
+        text_color: checkoutData.text_color,
+        primary_color: checkoutData.primary_color,
+        button_color: checkoutData.button_color,
+        button_text_color: checkoutData.button_text_color,
+        components: checkoutData.components,
+        top_components: checkoutData.top_components,
+        bottom_components: checkoutData.bottom_components,
       },
       product: {
-        id: product.id,
-        name: product.name,
-        description: product.description,
-        price: product.price,
-        image_url: product.image_url,
-        support_name: product.support_name,
+        id: productData.id,
+        name: productData.name,
+        description: productData.description,
+        price: productData.price,
+        image_url: productData.image_url,
+        support_name: productData.support_name,
       },
       requirePhone,
       requireCpf,
@@ -120,17 +159,7 @@ export async function loadPublicCheckoutData(slug: string) {
       button_text_color,
       components,
       top_components,
-      bottom_components,
-      products!inner (
-        id,
-        name,
-        description,
-        price,
-        image_url,
-        support_name,
-        required_fields,
-        default_payment_method
-      )
+      bottom_components
     `)
     .eq('slug', slug)
     .maybeSingle();
@@ -143,15 +172,37 @@ export async function loadPublicCheckoutData(slug: string) {
     throw new Error('Link de pagamento não encontrado');
   }
 
-  const product = checkoutData.products;
+  // Buscar dados do produto
+  const { data: productData, error: productError } = await supabase
+    .from('products')
+    .select(`
+      id,
+      name,
+      description,
+      price,
+      image_url,
+      support_name,
+      required_fields,
+      default_payment_method
+    `)
+    .eq('id', checkoutData.product_id)
+    .maybeSingle();
+
+  if (productError) {
+    throw productError;
+  }
+
+  if (!productData) {
+    throw new Error('Produto não encontrado');
+  }
 
   // Endurece leitura dos campos opcionais
-  const rf = (product?.required_fields ?? {}) as Partial<{ phone: boolean; cpf: boolean }>;
+  const rf = (productData?.required_fields ?? {}) as Partial<{ phone: boolean; cpf: boolean }>;
   const requirePhone = rf.phone === true;
   const requireCpf   = rf.cpf   === true;
 
   const defaultMethod =
-    product?.default_payment_method === 'credit_card' ? 'credit_card' : 'pix';
+    productData?.default_payment_method === 'credit_card' ? 'credit_card' : 'pix';
 
   return {
     checkout: {
@@ -171,12 +222,12 @@ export async function loadPublicCheckoutData(slug: string) {
       bottom_components: checkoutData.bottom_components,
     },
     product: {
-      id: product.id,
-      name: product.name,
-      description: product.description,
-      price: product.price,
-      image_url: product.image_url,
-      support_name: product.support_name,
+      id: productData.id,
+      name: productData.name,
+      description: productData.description,
+      price: productData.price,
+      image_url: productData.image_url,
+      support_name: productData.support_name,
     },
     requirePhone,
     requireCpf,

@@ -9,6 +9,7 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProductCheckoutSettings } from "@/components/products/ProductCheckoutSettings";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
@@ -1411,157 +1412,8 @@ const ProductEdit = () => {
           </TabsContent>
 
           <TabsContent value="configuracoes" className="space-y-6">
-            <div className="bg-card border border-border rounded-lg p-6 space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-foreground mb-6">Métodos de Pagamento</h3>
-
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Arraste os elementos abaixo para definir a ordem que aparecerá no checkout e clique no botão 
-                      "Método padrão" para definir como pagamento padrão do checkout se o método de pagamento estiver selecionado
-                    </p>
-
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="border border-primary bg-primary/10 rounded-lg p-4 text-center">
-                        <div className="flex items-center justify-center mb-2">
-                          <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-                            <PixIcon className="text-primary" size={24} />
-                          </div>
-                        </div>
-                        <p className="text-sm font-medium text-foreground mb-1">PIX</p>
-                        <p className="text-xs text-muted-foreground mb-3">Valor líquido: R$ 43,58</p>
-                        <Button 
-                          size="sm" 
-                          variant={paymentSettings.defaultPaymentMethod === "pix" ? "default" : "outline"}
-                          onClick={() => {
-                            setPaymentSettings({ ...paymentSettings, defaultPaymentMethod: "pix" });
-                            setPaymentSettingsModified(true);
-                          }}
-                          className="w-full"
-                        >
-                          {paymentSettings.defaultPaymentMethod === "pix" ? "Método padrão" : "Definir como padrão"}
-                        </Button>
-                      </div>
-
-                      <div className="border border-primary bg-primary/10 rounded-lg p-4 text-center">
-                        <div className="flex items-center justify-center mb-2">
-                          <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-                            <CreditCardIcon className="text-primary" size={24} />
-                          </div>
-                        </div>
-                        <p className="text-sm font-medium text-foreground mb-1">Cartão de Crédito</p>
-                        <p className="text-xs text-muted-foreground mb-3">Valor líquido: R$ 42,10</p>
-                        <Button 
-                          size="sm" 
-                          variant={paymentSettings.defaultPaymentMethod === "credit_card" ? "default" : "outline"}
-                          onClick={() => {
-                            setPaymentSettings({ ...paymentSettings, defaultPaymentMethod: "credit_card" });
-                            setPaymentSettingsModified(true);
-                          }}
-                          className="w-full"
-                        >
-                          {paymentSettings.defaultPaymentMethod === "credit_card" ? "Método padrão" : "Definir como padrão"}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="default-method" className="text-foreground">
-                        Método de pagamento padrão do Checkout
-                      </Label>
-                      <Select
-                        value={paymentSettings.defaultPaymentMethod}
-                        onValueChange={(value) => {
-                          setPaymentSettings({ ...paymentSettings, defaultPaymentMethod: value });
-                          setPaymentSettingsModified(true);
-                        }}
-                      >
-                        <SelectTrigger className="bg-background border-border text-foreground">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pix">PIX</SelectItem>
-                          <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-border pt-6 mt-6">
-                    <h4 className="text-base font-medium text-foreground mb-4">Dados do Checkout</h4>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Selecione os campos que serão solicitados no checkout
-                    </p>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="fullName" 
-                          checked={checkoutFields.fullName}
-                          onCheckedChange={(checked) => {
-                            setCheckoutFields({ ...checkoutFields, fullName: checked as boolean });
-                            setCheckoutFieldsModified(true);
-                          }}
-                        />
-                        <Label htmlFor="fullName" className="text-foreground cursor-pointer">
-                          Nome Completo <span className="text-destructive">*</span>
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="phone" 
-                          checked={checkoutFields.phone}
-                          onCheckedChange={(checked) => {
-                            setCheckoutFields({ ...checkoutFields, phone: checked as boolean });
-                            setCheckoutFieldsModified(true);
-                          }}
-                        />
-                        <Label htmlFor="phone" className="text-foreground cursor-pointer">
-                          Telefone <span className="text-destructive">*</span>
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="email" 
-                          checked={checkoutFields.email}
-                          onCheckedChange={(checked) => {
-                            setCheckoutFields({ ...checkoutFields, email: checked as boolean });
-                            setCheckoutFieldsModified(true);
-                          }}
-                        />
-                        <Label htmlFor="email" className="text-foreground cursor-pointer">
-                          Email <span className="text-destructive">*</span>
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id="cpf" 
-                          checked={checkoutFields.cpf}
-                          onCheckedChange={(checked) => {
-                            setCheckoutFields({ ...checkoutFields, cpf: checked as boolean });
-                            setCheckoutFieldsModified(true);
-                          }}
-                        />
-                        <Label htmlFor="cpf" className="text-foreground cursor-pointer">
-                          CPF (Opcional)
-                        </Label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center pt-6 border-t border-border">
-                <div />
-                <Button 
-                  onClick={handleSavePaymentSettings}
-                  disabled={isSaving || !paymentSettingsModified && !checkoutFieldsModified}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {isSaving ? "Salvando..." : "Salvar Alterações"}
-                </Button>
-              </div>
+            <div className="bg-card border border-border rounded-lg p-6">
+              <ProductCheckoutSettings productId={productId} />
             </div>
           </TabsContent>
 

@@ -1,53 +1,51 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import {
+  loadTokenEnvAndPixId,
+  updateOrderStatusFromGateway,
+} from "../_shared/db.ts";
 
-function baseUrl(env: string) {
-  return env === "production"
-    ? Deno.env.get("PUSHINPAY_BASE_URL_PROD") || "https://api.pushinpay.com.br/api"
-    : Deno.env.get("PUSHINPAY_BASE_URL_SANDBOX") || "https://api-sandbox.pushinpay.com.br/api";
-}
+const JSON_HEADER = { "Content-Type": "application/json" };
 
-const STATUS_PATH = Deno.env.get("PUSHINPAY_STATUS_PATH") ?? "/pix/consult";
+serve(async (req) => {
+  if (req.method !== "POST") {
+    return new Response("Method Not Allowed", { status: 405 });
+  }
 
-serve(async (req: Request) => {
   try {
-    if (req.method !== "GET") {
-      return new Response("Method Not Allowed", { status: 405 });
-    }
+    const { orderId } = await req.json();
 
-    const urlObj = new URL(req.url);
-    const id = urlObj.searchParams.get("id");
-    const token = req.headers.get("x-pushinpay-token");
-    const env = (
-      req.headers.get("x-pushinpay-env") ??
-      Deno.env.get("PUSHINPAY_ENV") ??
-      "sandbox"
-    ).toLowerCase();
+    const { token, environment, pixId } = await loadTokenEnvAndPixId(orderId);
+    const baseURL =
+      environment === "sandbox"
+        ? "https://api-sandbox.pushinpay.com.br/api"
+        : "https://api.pushinpay.com.br/api";
 
-    if (!token) {
-      return Response.json({ message: "Faltou token." }, { status: 401 });
-    }
-    if (!id) {
-      return Response.json({ message: "Faltou id." }, { status: 400 });
-    }
-
-    const url = `${baseUrl(env)}${STATUS_PATH}?id=${encodeURIComponent(id)}`;
-    const resp = await fetch(url, {
+    const res = await fetch(`${baseURL}/pix/consult/${pixId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
       },
     });
-    const data = await resp.json().catch(() => ({}));
 
-    if (!resp.ok) {
-      return Response.json(
-        { ok: false, status: resp.status, error: data?.message || "Erro" },
-        { status: resp.status }
-      );
+    if (!res.ok) {
+      const errText = await res.text();
+      return new Response(JSON.stringify({ ok: false, error: errText }), {
+        status: 502,
+        headers: JSON_HEADER,
+      });
     }
 
-    return Response.json({ ok: true, ...data });
-  } catch (err) {
-    return Response.json({ ok: false, error: String(err) }, { status: 500 });
+    const status = await res.json(); // { status: "created" | "paid" | "expired" | "canceled" ... }
+
+    await updateOrderStatusFromGateway(orderId, status);
+
+    return new Response(JSON.stringify({ ok: true, status }), {
+      headers: JSON_HEADER,
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ ok: false, error: String(e) }), {
+      status: 400,
+      headers: JSON_HEADER,
+    });
   }
 });

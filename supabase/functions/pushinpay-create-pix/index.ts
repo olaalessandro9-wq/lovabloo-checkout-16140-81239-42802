@@ -1,57 +1,43 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import {
+  loadGatewaySettingsByOrder,
+  savePaymentMapping,
+} from "../_shared/db.ts";
 
-type CreatePixInput = {
-  value: number; // em centavos (>= 50)
-  webhook_url?: string;
-  split_rules?: Array<{ value: number; account_id: string }>;
-};
+const JSON_HEADER = { "Content-Type": "application/json" };
 
-function baseUrl(env: string) {
-  return env === "production"
-    ? Deno.env.get("PUSHINPAY_BASE_URL_PROD") || "https://api.pushinpay.com.br/api"
-    : Deno.env.get("PUSHINPAY_BASE_URL_SANDBOX") || "https://api-sandbox.pushinpay.com.br/api";
-}
+serve(async (req) => {
+  if (req.method !== "POST") {
+    return new Response("Method Not Allowed", { status: 405 });
+  }
 
-const PIX_CREATE_PATH = Deno.env.get("PUSHINPAY_CREATE_PATH") ?? "/pix/cashIn";
-const DEFAULT_WEBHOOK = Deno.env.get("PUSHINPAY_WEBHOOK_PUBLIC_URL") ?? "";
-
-serve(async (req: Request) => {
   try {
-    if (req.method !== "POST") {
-      return new Response("Method Not Allowed", { status: 405 });
+    const { orderId, valueInCents } = await req.json();
+
+    // 1) Recupera token/env/feePercent do dono do pedido
+    const { token, environment, platformFeePercent, platformAccountId } =
+      await loadGatewaySettingsByOrder(orderId);
+
+    const baseURL =
+      environment === "sandbox"
+        ? "https://api-sandbox.pushinpay.com.br/api"
+        : "https://api.pushinpay.com.br/api";
+
+    // 2) Monta body
+    const body: Record<string, unknown> = { value: valueInCents }; // em centavos
+
+    // Split opcional (sua taxa)
+    if (platformFeePercent && platformFeePercent > 0 && platformAccountId) {
+      const feeValue = Math.floor((valueInCents * platformFeePercent) / 100);
+      if (feeValue > 0) {
+        body.split_rules = [
+          { value: feeValue, account_id: platformAccountId },
+        ];
+      }
     }
 
-    const { value, webhook_url, split_rules }: CreatePixInput = await req.json();
-
-    // Token e ambiente vêm do front no header (do usuário logado)
-    const token = req.headers.get("x-pushinpay-token");
-    const env = (
-      req.headers.get("x-pushinpay-env") ??
-      Deno.env.get("PUSHINPAY_ENV") ??
-      "sandbox"
-    ).toLowerCase();
-
-    if (!token) {
-      return Response.json(
-        { message: "Faltou o token do usuário (x-pushinpay-token)." },
-        { status: 401 }
-      );
-    }
-    if (!value || value < 50) {
-      return Response.json(
-        { message: "O campo value deve ser no mínimo 50 (centavos)." },
-        { status: 422 }
-      );
-    }
-
-    const url = `${baseUrl(env)}${PIX_CREATE_PATH}`;
-    const body = {
-      value,
-      webhook_url: webhook_url ?? DEFAULT_WEBHOOK || undefined,
-      split_rules: Array.isArray(split_rules) ? split_rules : undefined,
-    };
-
-    const resp = await fetch(url, {
+    // 3) Chama PushinPay
+    const res = await fetch(`${baseURL}/pix/cashIn`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -61,23 +47,26 @@ serve(async (req: Request) => {
       body: JSON.stringify(body),
     });
 
-    const data = await resp.json().catch(() => ({}));
-
-    if (!resp.ok) {
-      return Response.json(
-        {
-          ok: false,
-          status: resp.status,
-          error: data?.message || "Erro ao criar PIX",
-          details: data,
-        },
-        { status: resp.status }
-      );
+    if (!res.ok) {
+      const errText = await res.text();
+      return new Response(JSON.stringify({ ok: false, error: errText }), {
+        status: 502,
+        headers: JSON_HEADER,
+      });
     }
 
-    // data esperado: { id, qr_code, status, value, webhook_url, qr_code_base64, ... }
-    return Response.json({ ok: true, ...data });
-  } catch (err) {
-    return Response.json({ ok: false, error: String(err) }, { status: 500 });
+    const data = await res.json(); // { id, qr_code, qr_code_base64, status, ... }
+
+    // 4) Salva mapeamento
+    await savePaymentMapping(orderId, data.id);
+
+    return new Response(JSON.stringify({ ok: true, pix: data }), {
+      headers: JSON_HEADER,
+    });
+  } catch (e) {
+    return new Response(JSON.stringify({ ok: false, error: String(e) }), {
+      status: 400,
+      headers: JSON_HEADER,
+    });
   }
 });

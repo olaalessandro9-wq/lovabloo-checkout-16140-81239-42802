@@ -1,44 +1,27 @@
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
 import { Loader2, Check, AlertCircle } from "lucide-react";
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
+import {
+  savePushinPaySettings,
+  getPushinPaySettings,
+  type PushinPayEnvironment,
+} from "@/services/pushinpay";
 
 export default function Financeiro() {
-  const [apiKey, setApiKey] = useState("");
-  const [useSandbox, setUseSandbox] = useState(false);
+  const [apiToken, setApiToken] = useState("");
+  const [environment, setEnvironment] = useState<PushinPayEnvironment>("sandbox");
+  const [platformFeePercent, setPlatformFeePercent] = useState(0);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  // recupere workspaceId do contexto/autenticação
-  // Por enquanto vamos usar um ID fixo ou pegar do usuário logado
-  const [workspaceId, setWorkspaceId] = useState("");
-
   useEffect(() => {
     (async () => {
       try {
-        // Pega o usuário logado
-        const { data: userData } = await supabase.auth.getUser();
-        if (userData.user) {
-          // Usa o ID do usuário como workspace_id temporariamente
-          setWorkspaceId(userData.user.id);
-
-          // Busca credenciais existentes
-          const { data } = await supabase
-            .from("payment_provider_credentials")
-            .select("*")
-            .eq("workspace_id", userData.user.id)
-            .eq("provider", "pushinpay")
-            .maybeSingle();
-
-          if (data) {
-            setApiKey(data.api_key ?? "");
-            setUseSandbox(Boolean(data.use_sandbox));
-          }
+        const settings = await getPushinPaySettings();
+        if (settings) {
+          setApiToken(settings.pushinpay_token ?? "");
+          setEnvironment(settings.environment ?? "sandbox");
+          setPlatformFeePercent(settings.platform_fee_percent ?? 0);
         }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
@@ -49,8 +32,13 @@ export default function Financeiro() {
   }, []);
 
   async function onSave() {
-    if (!apiKey.trim()) {
+    if (!apiToken.trim()) {
       setMessage({ type: "error", text: "Por favor, informe o API Token" });
+      return;
+    }
+
+    if (platformFeePercent < 0 || platformFeePercent > 100) {
+      setMessage({ type: "error", text: "Taxa da plataforma deve estar entre 0 e 100%" });
       return;
     }
 
@@ -58,28 +46,16 @@ export default function Financeiro() {
     setMessage(null);
 
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        setMessage({ type: "error", text: "Usuário não autenticado" });
-        return;
-      }
+      const result = await savePushinPaySettings({
+        pushinpay_token: apiToken,
+        environment,
+        platform_fee_percent: platformFeePercent,
+      });
 
-      const { error } = await supabase.from("payment_provider_credentials").upsert(
-        {
-          workspace_id: workspaceId,
-          owner_id: userData.user.id,
-          provider: "pushinpay",
-          api_key: apiKey,
-          use_sandbox: useSandbox,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "workspace_id,provider" }
-      );
-
-      if (error) {
-        setMessage({ type: "error", text: `Erro ao salvar: ${error.message}` });
-      } else {
+      if (result.ok) {
         setMessage({ type: "success", text: "Integração PushinPay salva com sucesso!" });
+      } else {
+        setMessage({ type: "error", text: `Erro ao salvar: ${result.error}` });
       }
     } catch (error: any) {
       setMessage({ type: "error", text: `Erro: ${error.message}` });
@@ -101,7 +77,7 @@ export default function Financeiro() {
       <div>
         <h1 className="text-2xl font-semibold">Financeiro</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Configure suas integrações de pagamento
+          Configure suas integrações de pagamento e split de receita
         </p>
       </div>
 
@@ -121,22 +97,43 @@ export default function Financeiro() {
             <label className="block text-sm font-medium mb-2">API Token</label>
             <input
               type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              value={apiToken}
+              onChange={(e) => setApiToken(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               placeholder="Bearer token da PushinPay"
             />
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
+          <div>
+            <label className="block text-sm font-medium mb-2">Ambiente</label>
+            <select
+              value={environment}
+              onChange={(e) => setEnvironment(e.target.value as PushinPayEnvironment)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="sandbox">Sandbox (testes)</option>
+              <option value="production">Produção</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Taxa da Plataforma (%)
+            </label>
             <input
-              type="checkbox"
-              checked={useSandbox}
-              onChange={(e) => setUseSandbox(e.target.checked)}
-              className="rounded border-input"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              value={platformFeePercent}
+              onChange={(e) => setPlatformFeePercent(parseFloat(e.target.value) || 0)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              placeholder="Ex: 5.5 para 5,5%"
             />
-            <span className="text-sm">Usar ambiente Sandbox (testes)</span>
-          </label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Percentual que será retido pela plataforma em cada transação (split de pagamento)
+            </p>
+          </div>
 
           {message && (
             <div
@@ -156,7 +153,7 @@ export default function Financeiro() {
           )}
 
           <button
-            disabled={loading || !apiKey}
+            disabled={loading || !apiToken}
             onClick={onSave}
             className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
@@ -168,9 +165,11 @@ export default function Financeiro() {
         <div className="mt-6 pt-6 border-t border-border">
           <h3 className="text-sm font-medium mb-2">Informações importantes</h3>
           <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-            <li>O token é armazenado de forma segura e criptografada</li>
+            <li>O token é armazenado de forma segura no banco de dados</li>
             <li>Use o ambiente Sandbox para testes antes de ir para produção</li>
             <li>Certifique-se de configurar o webhook no painel da PushinPay</li>
+            <li>A taxa da plataforma é aplicada automaticamente em cada transação PIX</li>
+            <li>Configure o PLATFORM_ACCOUNT_ID nas variáveis de ambiente das Edge Functions</li>
           </ul>
         </div>
       </div>

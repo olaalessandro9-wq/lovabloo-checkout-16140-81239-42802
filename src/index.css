@@ -215,12 +215,8 @@ All colors MUST be HSL.
 }
 
 /* Mapeamento utilitário semântico */
-.bg-shell-bg { background-color: var(--shell-bg); }
-.text-shell-fg { color: var(--shell-fg); }
-.text-muted-fg { color: var(--muted-fg); }
-
-.bg-sidebar-bg { background-color: var(--sidebar-bg); }
-.text-sidebar-fg { color: var(--sidebar-fg); }
-.border-sidebar-border { border-color: var(--sidebar-border); }
-.bg-sidebar-hover { background-color: var(--sidebar-hover); }
-.bg-sidebar-active { background-color: var(--sidebar-active); }
+.bg-app { background: var(--shell-bg); }
+.bg-sidebar { background-color: var(--sidebar-bg); }
+.text-sidebar { color: var(--sidebar-fg); }
+.text-sidebar-muted { color: var(--sidebar-fg-muted); }
+.border-sidebar { border-color: var(--sidebar-border); }

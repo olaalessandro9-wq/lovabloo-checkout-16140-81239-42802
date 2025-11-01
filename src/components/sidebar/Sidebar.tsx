@@ -21,7 +21,7 @@ const SYS: Item[] = [
 function Section({ title, items }: { title: string; items: Item[] }) {
   return (
     <div className="mt-6 first:mt-0">
-      <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-sidebar-muted">
+      <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/60">
         {title}
       </div>
       <nav className="space-y-1">
@@ -34,8 +34,8 @@ function Section({ title, items }: { title: string; items: Item[] }) {
               end={it.exact}
               className={({ isActive }) =>
                 [
-                  'group flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar hover:bg-sidebar-active transition',
-                  isActive ? 'bg-sidebar-active font-semibold' : ''
+                  'group flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent transition',
+                  isActive ? 'bg-sidebar-accent font-semibold' : ''
                 ].join(' ')
               }
             >
@@ -53,7 +53,7 @@ export default function Sidebar() {
   return (
     <aside
       className="
-        bg-sidebar text-sidebar border-sidebar
+        bg-sidebar text-sidebar-foreground border-sidebar-border
         fixed inset-y-0 left-0 z-40 w-64 shrink-0 border-r px-3 py-4
       "
     >
@@ -67,7 +67,7 @@ export default function Sidebar() {
 
       <div className="mt-auto pt-4">
         <div className="h-px w-full bg-sidebar-border opacity-50" />
-        <div className="mt-3 px-2 text-xs text-sidebar-muted">© 2025 Rise Checkout</div>
+        <div className="mt-3 px-2 text-xs text-sidebar-foreground/60">© 2025 Rise Checkout</div>
       </div>
     </aside>
   );

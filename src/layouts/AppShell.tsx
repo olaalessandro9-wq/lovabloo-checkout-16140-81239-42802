@@ -4,9 +4,9 @@ import ThemeToggle from '@/components/ThemeToggle';
 
 export default function AppShell() {
   return (
-    <div className="bg-app text-app">
+    <div className="bg-background text-foreground min-h-screen">
       <Sidebar />
-      <header className="sticky top-0 z-30 ml-64 border-b border-app bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/70">
+      <header className="sticky top-0 z-30 ml-64 border-b border-border bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/70">
         <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-end gap-2 px-4">
           <ThemeToggle />
         </div>

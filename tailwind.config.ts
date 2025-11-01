@@ -14,15 +14,6 @@ export default {
     },
     extend: {
       colors: {
-        // Eagle Vision Theme
-        bg: 'var(--bg)',
-        text: 'var(--text)',
-        subtext: 'var(--subtext)',
-        brand: { 
-          DEFAULT: 'var(--brand)', 
-          fg: 'var(--brand-fg)', 
-          subtle: 'var(--brand-subtle)' 
-        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -56,11 +47,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        shell: {
-          bg: 'var(--shell-bg)',
-          muted: 'var(--shell-muted)',
-          fg: 'var(--shell-fg)',
-        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -70,16 +56,11 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
-          // New tokens
-          bg: 'var(--sidebar-bg)',
-          fg: 'var(--sidebar-fg)',
-          fgMuted: 'var(--sidebar-fg-muted)',
-          hover: 'var(--sidebar-hover)',
-          // Eagle Vision legacy
-          text: 'var(--sidebar-text)',
-          muted: 'var(--sidebar-muted)',
-          active: 'var(--sidebar-active)'
         },
+        // Aliases de transição (para compatibilidade)
+        app: "hsl(var(--background))",
+        "app-foreground": "hsl(var(--foreground))",
+        "app-border": "hsl(var(--border))",
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
         info: "hsl(var(--info))",

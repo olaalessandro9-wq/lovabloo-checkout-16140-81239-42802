@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
+import AppShell from "./layouts/AppShell";
 import Index from "./pages/Index";
 import Produtos from "./pages/Produtos";
 import ProductEdit from "./pages/ProductEdit";
@@ -28,16 +29,22 @@ const App = () => (
         <Toaster />
         <Sonner />
         <Routes>
+          {/* Public routes without sidebar */}
           <Route path="/auth" element={<Auth />} />
           <Route path="/c/:slug" element={<PaymentLinkRedirect />} />
           <Route path="/pay/:slug" element={<PublicCheckout />} />
-          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-          <Route path="/produtos" element={<ProtectedRoute><Produtos /></ProtectedRoute>} />
-          <Route path="/produtos/editar" element={<ProtectedRoute><ProductEdit /></ProtectedRoute>} />
-          <Route path="/produtos/checkout/personalizar" element={<ProtectedRoute><CheckoutCustomizer /></ProtectedRoute>} />
-          <Route path="/afiliados" element={<ProtectedRoute><Afiliados /></ProtectedRoute>} />
-          <Route path="/financeiro" element={<ProtectedRoute><EmBreve titulo="Financeiro" /></ProtectedRoute>} />
-          <Route path="/integracoes" element={<ProtectedRoute><Integracoes /></ProtectedRoute>} />
+          
+          {/* Protected routes with AppShell (sidebar) */}
+          <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
+            <Route path="/" element={<Index />} />
+            <Route path="/produtos" element={<Produtos />} />
+            <Route path="/produtos/editar" element={<ProductEdit />} />
+            <Route path="/produtos/checkout/personalizar" element={<CheckoutCustomizer />} />
+            <Route path="/afiliados" element={<Afiliados />} />
+            <Route path="/financeiro" element={<EmBreve titulo="Financeiro" />} />
+            <Route path="/integracoes" element={<Integracoes />} />
+          </Route>
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

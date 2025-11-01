@@ -1,0 +1,18 @@
+/* Sidebar tokens - garantindo compatibilidade com o Rise Insights */
+:root {
+  --sidebar-bg: #0a0a0a;
+  --sidebar-border: #27272a;
+  --sidebar-item: #d4d4d8;
+  --sidebar-item-active: #18181b;
+  --sidebar-ghost: #a1a1aa;
+  --ring: #3f3f46;
+}
+
+.dark,
+[data-theme="dark"] {
+  --sidebar-bg: #111827;
+  --sidebar-border: #1F2937;
+  --sidebar-item: #F3F4F6;
+  --sidebar-item-active: #1F2937;
+  --sidebar-ghost: #9CA3AF;
+}

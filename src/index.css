@@ -66,11 +66,20 @@ All colors MUST be HSL.
     --brand-fg: #FFFFFF;
     --brand-subtle: #C8A951;
 
-    --sidebar-bg: #F9FAFB;
+    /* Shell tokens - Light */
+    --shell-bg: #ffffff;
+    --shell-muted: #f6f7f9;
+    --shell-fg: #0f172a;
+
+    /* Sidebar tokens - Light */
+    --sidebar-bg: #ffffff;
+    --sidebar-border: #e5e7eb;
+    --sidebar-fg: #0b1324;
+    --sidebar-fg-muted: #64748b;
+    --sidebar-hover: #f3f4f6;
     --sidebar-text: #1E293B;
     --sidebar-muted: #64748B;
     --sidebar-active: #E5E7EB;
-    --sidebar-hover: #EEF2FF;
   }
 
   .dark {
@@ -117,6 +126,18 @@ All colors MUST be HSL.
     --shadow-glow: 0 0 30px hsl(217 91% 60% / 0.25);
     --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.4);
     --shadow-subtle: 0 2px 12px hsl(0 0% 0% / 0.2);
+
+    /* Shell tokens - Dark */
+    --shell-bg: #0b0f1a;
+    --shell-muted: #0f1422;
+    --shell-fg: #f8fafc;
+
+    /* Sidebar tokens - Dark */
+    --sidebar-bg: #0b0f1a;
+    --sidebar-border: #1f2937;
+    --sidebar-fg: #e5e7eb;
+    --sidebar-fg-muted: #94a3b8;
+    --sidebar-hover: #111827;
   }
 
   /* Eagle Vision Theme - Dark */
@@ -130,12 +151,20 @@ All colors MUST be HSL.
     --brand-fg: #0B1220;
     --brand-subtle: #2F3D57;
 
-    --sidebar-bg: #111827;
-    --sidebar-border: #1F2937;
+    /* Shell tokens - Dark */
+    --shell-bg: #0b0f1a;
+    --shell-muted: #0f1422;
+    --shell-fg: #f8fafc;
+
+    /* Sidebar tokens - Dark */
+    --sidebar-bg: #0b0f1a;
+    --sidebar-border: #1f2937;
+    --sidebar-fg: #e5e7eb;
+    --sidebar-fg-muted: #94a3b8;
+    --sidebar-hover: #111827;
     --sidebar-text: #F3F4F6;
     --sidebar-muted: #9CA3AF;
     --sidebar-active: #1F2937;
-    --sidebar-hover: #0A2540;
   }
 
   /* Paletas */

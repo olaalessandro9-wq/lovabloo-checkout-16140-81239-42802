@@ -16,11 +16,10 @@ export function SidebarItem({
   const content = (
     <div
       className={clsx(
-        "flex h-9 items-center gap-3 rounded-md px-2 text-sm outline-none",
+        "flex h-9 items-center gap-3 rounded-md px-2 text-sm outline-none transition-colors",
         active
-          ? "bg-[var(--sidebar-item-active,theme(colors.zinc.800))] text-white ring-1 ring-[var(--ring,theme(colors.zinc.700))]"
-          : "text-[var(--sidebar-item,theme(colors.zinc.300))] hover:bg-zinc-900/60",
-        "transition-colors"
+          ? "bg-sidebar-active text-sidebar-fg font-medium ring-1 ring-sidebar-border"
+          : "text-sidebar-fg hover:bg-sidebar-hover"
       )}
       aria-current={active ? "page" : undefined}
       role="menuitem"
@@ -34,7 +33,7 @@ export function SidebarItem({
       <Icon className="h-4 w-4 shrink-0" aria-hidden />
       <span className={clsx("truncate", collapsed && "sr-only")}>{item.label}</span>
       {item.badge && !collapsed && (
-        <span className="ml-auto inline-flex min-w-[20px] items-center justify-center rounded bg-zinc-800 px-1.5 text-[10px]">
+        <span className="ml-auto inline-flex min-w-[20px] items-center justify-center rounded bg-sidebar-active px-1.5 text-[10px]">
           {item.badge}
         </span>
       )}

@@ -56,6 +56,11 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        shell: {
+          bg: 'var(--shell-bg)',
+          muted: 'var(--shell-muted)',
+          fg: 'var(--shell-fg)',
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -65,12 +70,15 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
-          // Eagle Vision
+          // New tokens
           bg: 'var(--sidebar-bg)',
+          fg: 'var(--sidebar-fg)',
+          fgMuted: 'var(--sidebar-fg-muted)',
+          hover: 'var(--sidebar-hover)',
+          // Eagle Vision legacy
           text: 'var(--sidebar-text)',
           muted: 'var(--sidebar-muted)',
-          active: 'var(--sidebar-active)',
-          hover: 'var(--sidebar-hover)'
+          active: 'var(--sidebar-active)'
         },
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",

@@ -36,15 +36,14 @@ export function Sidebar() {
   return (
     <aside
       className={clsx(
-        "group/sidebar relative z-40 h-dvh border-r",
-        "bg-[var(--sidebar-bg,theme(colors.zinc.950))] border-[var(--sidebar-border,theme(colors.zinc.800))]",
+        "group/sidebar relative z-40 h-screen border-r bg-sidebar-bg border-sidebar-border text-sidebar-fg",
         collapsed ? "w-[72px]" : "w-[260px]",
         "transition-[width] duration-200 ease-out"
       )}
       aria-label="Navegação principal"
     >
       {/* Top brand / toggle */}
-      <div className="flex items-center justify-between px-3 pt-3 pb-2">
+      <div className="flex items-center justify-between px-3 pt-3 pb-2 border-b border-sidebar-border">
         <Link to="/" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-xl bg-brand-subtle/20 grid place-items-center">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -58,7 +57,7 @@ export function Sidebar() {
               />
             </svg>
           </div>
-          <span className={clsx("text-sm font-semibold tracking-tight text-[var(--text)]", collapsed && "sr-only")}>
+          <span className={clsx("text-sm font-semibold tracking-tight", collapsed && "sr-only")}>
             RiseCheckout
           </span>
         </Link>
@@ -82,8 +81,7 @@ export function Sidebar() {
               {section.title && (
                 <div
                   className={clsx(
-                    "px-3 pb-2 text-[11px] uppercase tracking-wider",
-                    "text-[var(--sidebar-ghost,theme(colors.zinc.400))]",
+                    "px-3 pb-2 text-[11px] uppercase tracking-wider text-sidebar-fgMuted",
                     collapsed && "sr-only"
                   )}
                 >
@@ -107,7 +105,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className={clsx("absolute bottom-0 left-0 right-0 p-2", collapsed && "sr-only")}>
-        <div className="rounded-lg border border-[var(--sidebar-border)] p-3 text-xs text-zinc-400">
+        <div className="rounded-lg border border-sidebar-border p-3 text-xs text-sidebar-fgMuted">
           © {new Date().getFullYear()} Rise Checkout
         </div>
       </div>

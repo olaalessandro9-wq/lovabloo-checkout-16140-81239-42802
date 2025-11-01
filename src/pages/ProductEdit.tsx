@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Upload, CreditCard, Link2, Sparkles, X, Loader2 } from "lucide-react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { ImageSelector } from "@/components/products/ImageSelector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1141,11 +1140,11 @@ const ProductEditInner = () => {
 
   if (loading) {
     return (
-      <MainLayout>
+      
         <div className="flex items-center justify-center p-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </MainLayout>
+      
     );
   }
 
@@ -1159,7 +1158,7 @@ const ProductEditInner = () => {
         confirm={confirmDiscard}
         message="Se você sair agora, perderá as alterações não salvas. O que deseja fazer?"
       >
-        <MainLayout>
+        
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Button 
@@ -1784,7 +1783,7 @@ const ProductEditInner = () => {
           coupon={editingCoupon || undefined}
         />
       </div>
-        </MainLayout>
+        
       </UnsavedChangesGuard>
       <ConfirmRenderer />
     

@@ -1,4 +1,3 @@
-import { MainLayout } from "@/components/layout/MainLayout";
 import { Construction } from "lucide-react";
 
 interface EmBreveProps {
@@ -7,7 +6,7 @@ interface EmBreveProps {
 
 export default function EmBreve({ titulo }: EmBreveProps) {
   return (
-    <MainLayout>
+    
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
         <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
           <Construction className="w-10 h-10 text-primary" />
@@ -19,6 +18,6 @@ export default function EmBreve({ titulo }: EmBreveProps) {
           Esta funcionalidade estará disponível em breve. Estamos trabalhando para trazer novidades incríveis!
         </p>
       </div>
-    </MainLayout>
+    
   );
 }

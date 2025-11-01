@@ -1,4 +1,4 @@
-import { MainLayout } from "@/components/layout/MainLayout";
+
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { RecentCustomersTable } from "@/components/dashboard/RecentCustomersTable";
@@ -18,7 +18,6 @@ const Index = () => {
   ];
 
   return (
-    <MainLayout>
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
@@ -53,7 +52,6 @@ const Index = () => {
 
         <RecentCustomersTable />
       </div>
-    </MainLayout>
   );
 };
 

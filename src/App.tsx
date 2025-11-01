@@ -26,28 +26,33 @@ const App = () => (
     <ThemeProvider>
       <BrowserRouter>
         <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          {/* Public routes without sidebar */}
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/c/:slug" element={<PaymentLinkRedirect />} />
-          <Route path="/pay/:slug" element={<PublicCheckout />} />
-          
-          {/* Protected routes with AppShell (sidebar) */}
-          <Route element={<ProtectedRoute><AppShell /></ProtectedRoute>}>
-            <Route path="/" element={<Index />} />
-            <Route path="/produtos" element={<Produtos />} />
-            <Route path="/produtos/editar" element={<ProductEdit />} />
-            <Route path="/produtos/checkout/personalizar" element={<CheckoutCustomizer />} />
-            <Route path="/afiliados" element={<Afiliados />} />
-            <Route path="/financeiro" element={<EmBreve titulo="Financeiro" />} />
-            <Route path="/integracoes" element={<Integracoes />} />
-          </Route>
-          
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            {/* Public routes without sidebar */}
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/c/:slug" element={<PaymentLinkRedirect />} />
+            <Route path="/pay/:slug" element={<PublicCheckout />} />
+            <Route path="*" element={<NotFound />} />
+            
+            {/* Protected routes with AppShell (sidebar) */}
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <AppShell />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Index />} />
+              <Route path="produtos" element={<Produtos />} />
+              <Route path="produtos/editar" element={<ProductEdit />} />
+              <Route path="produtos/checkout/personalizar" element={<CheckoutCustomizer />} />
+              <Route path="afiliados" element={<Afiliados />} />
+              <Route path="financeiro" element={<EmBreve titulo="Financeiro" />} />
+              <Route path="integracoes" element={<Integracoes />} />
+            </Route>
+          </Routes>
         </TooltipProvider>
       </BrowserRouter>
     </ThemeProvider>

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -57,7 +56,7 @@ const Integracoes = () => {
   };
 
   return (
-    <MainLayout>
+    
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--text)' }}>Integrações</h1>
@@ -137,7 +136,7 @@ const Integracoes = () => {
           </Card>
         </div>
       </div>
-    </MainLayout>
+    
   );
 };
 

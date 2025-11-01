@@ -1,4 +1,3 @@
-import { MainLayout } from "@/components/layout/MainLayout";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -86,7 +85,7 @@ const Afiliados = () => {
   };
 
   return (
-    <MainLayout>
+    
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Afiliados</h1>
@@ -257,7 +256,7 @@ const Afiliados = () => {
           </div>
         </Card>
       </div>
-    </MainLayout>
+    
   );
 };
 

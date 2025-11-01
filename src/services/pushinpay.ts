@@ -8,6 +8,15 @@ export interface PushinPaySettings {
   platform_fee_percent: number;
 }
 
+// Função auxiliar para criptografar token no cliente (usando Edge Function)
+async function encryptToken(token: string): Promise<string> {
+  const { data, error } = await supabase.functions.invoke("encrypt-token", {
+    body: { token },
+  });
+  if (error) throw new Error(error.message);
+  return data.encrypted;
+}
+
 export interface PixChargeResponse {
   ok: boolean;
   pix?: {
@@ -43,17 +52,24 @@ export async function savePushinPaySettings(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Usuário não autenticado" };
 
-  const { error } = await supabase
-    .from("payment_gateway_settings")
-    .upsert({
-      user_id: user.id,
-      pushinpay_token: settings.pushinpay_token,
-      environment: settings.environment,
-      platform_fee_percent: settings.platform_fee_percent,
-    });
+  try {
+    // Criptografar token antes de salvar
+    const tokenEncrypted = await encryptToken(settings.pushinpay_token);
 
-  if (error) return { ok: false, error: error.message };
-  return { ok: true };
+    const { error } = await supabase
+      .from("payment_gateway_settings")
+      .upsert({
+        user_id: user.id,
+        token_encrypted: tokenEncrypted,
+        environment: settings.environment,
+        platform_fee_percent: settings.platform_fee_percent,
+      });
+
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: String(e) };
+  }
 }
 
 /**
@@ -67,12 +83,18 @@ export async function getPushinPaySettings(): Promise<PushinPaySettings | null> 
 
   const { data, error } = await supabase
     .from("payment_gateway_settings")
-    .select("pushinpay_token, environment, platform_fee_percent")
+    .select("environment, platform_fee_percent")
     .eq("user_id", user.id)
     .single();
 
   if (error || !data) return null;
-  return data as PushinPaySettings;
+  
+  // Retorna com token vazio (mascarado) - o token real nunca é exposto ao cliente
+  return {
+    pushinpay_token: "••••••••",
+    environment: data.environment,
+    platform_fee_percent: data.platform_fee_percent,
+  } as PushinPaySettings;
 }
 
 /**

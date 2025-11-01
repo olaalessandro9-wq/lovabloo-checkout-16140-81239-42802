@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { decrypt } from "./crypto.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -18,15 +19,18 @@ export async function loadGatewaySettingsByOrder(orderId: string) {
 
   const { data: settings, error: e2 } = await supabase
     .from("payment_gateway_settings")
-    .select("pushinpay_token, environment, platform_fee_percent")
+    .select("token_encrypted, environment, platform_fee_percent")
     .eq("user_id", order.user_id)
     .single();
   if (e2 || !settings) throw new Error("Gateway settings not found");
 
-  const platformAccountId = Deno.env.get("PLATFORM_ACCOUNT_ID") ?? null;
+  const platformAccountId = Deno.env.get("PLATFORM_PUSHINPAY_ACCOUNT_ID") ?? null;
+
+  // Descriptografar token
+  const token = await decrypt(settings.token_encrypted);
 
   return {
-    token: settings.pushinpay_token,
+    token,
     environment: settings.environment,
     platformFeePercent: Number(settings.platform_fee_percent || 0),
     platformAccountId,
@@ -59,13 +63,16 @@ export async function loadTokenEnvAndPixId(orderId: string) {
 
   const { data: settings, error: e3 } = await supabase
     .from("payment_gateway_settings")
-    .select("pushinpay_token, environment")
+    .select("token_encrypted, environment")
     .eq("user_id", order.user_id)
     .single();
   if (e3 || !settings) throw new Error("Gateway settings not found");
 
+  // Descriptografar token
+  const token = await decrypt(settings.token_encrypted);
+
   return {
-    token: settings.pushinpay_token,
+    token,
     environment: settings.environment,
     pixId: map.pix_id,
   };

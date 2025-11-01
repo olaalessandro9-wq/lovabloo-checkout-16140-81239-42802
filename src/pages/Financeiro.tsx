@@ -8,6 +8,8 @@ import {
 
 export default function Financeiro() {
   const [apiToken, setApiToken] = useState("");
+  const [showToken, setShowToken] = useState(false);
+  const [hasExistingToken, setHasExistingToken] = useState(false);
   const [environment, setEnvironment] = useState<PushinPayEnvironment>("sandbox");
   const [platformFeePercent, setPlatformFeePercent] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -19,7 +21,13 @@ export default function Financeiro() {
       try {
         const settings = await getPushinPaySettings();
         if (settings) {
-          setApiToken(settings.pushinpay_token ?? "");
+          // Se retornar token mascarado, significa que já existe
+          if (settings.pushinpay_token === "••••••••") {
+            setHasExistingToken(true);
+            setApiToken(""); // Não preenche o campo
+          } else {
+            setApiToken(settings.pushinpay_token ?? "");
+          }
           setEnvironment(settings.environment ?? "sandbox");
           setPlatformFeePercent(settings.platform_fee_percent ?? 0);
         }
@@ -32,8 +40,15 @@ export default function Financeiro() {
   }, []);
 
   async function onSave() {
-    if (!apiToken.trim()) {
+    // Se já existe token e o campo está vazio, não exigir novo token
+    if (!hasExistingToken && !apiToken.trim()) {
       setMessage({ type: "error", text: "Por favor, informe o API Token" });
+      return;
+    }
+
+    // Se tem token existente e campo vazio, mantém o token existente
+    if (hasExistingToken && !apiToken.trim()) {
+      setMessage({ type: "error", text: "Para atualizar, informe um novo token ou mantenha o atual" });
       return;
     }
 
@@ -95,13 +110,27 @@ export default function Financeiro() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">API Token</label>
-            <input
-              type="password"
-              value={apiToken}
-              onChange={(e) => setApiToken(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Bearer token da PushinPay"
-            />
+            <div className="relative">
+              <input
+                type={showToken ? "text" : "password"}
+                value={apiToken}
+                onChange={(e) => setApiToken(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 pr-20 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                placeholder={hasExistingToken ? "Token configurado (deixe vazio para manter)" : "Bearer token da PushinPay"}
+              />
+              <button
+                type="button"
+                onClick={() => setShowToken(!showToken)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+              >
+                {showToken ? "Ocultar" : "Mostrar"}
+              </button>
+            </div>
+            {hasExistingToken && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Token já configurado. Deixe em branco para manter o atual ou informe um novo para atualizar.
+              </p>
+            )}
           </div>
 
           <div>

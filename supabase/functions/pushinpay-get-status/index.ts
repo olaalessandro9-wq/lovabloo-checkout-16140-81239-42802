@@ -1,67 +1,53 @@
-// deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+function baseUrl(env: string) {
+  return env === "production"
+    ? Deno.env.get("PUSHINPAY_BASE_URL_PROD") || "https://api.pushinpay.com.br/api"
+    : Deno.env.get("PUSHINPAY_BASE_URL_SANDBOX") || "https://api-sandbox.pushinpay.com.br/api";
+}
+
+const STATUS_PATH = Deno.env.get("PUSHINPAY_STATUS_PATH") ?? "/pix/consult";
 
 serve(async (req: Request) => {
   try {
-    if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
-
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } } }
-    );
-
-    const { workspaceId, providerPaymentId } = await req.json();
-
-    if (!workspaceId || !providerPaymentId) {
-      return new Response("Missing fields", { status: 400 });
+    if (req.method !== "GET") {
+      return new Response("Method Not Allowed", { status: 405 });
     }
 
-    // credenciais
-    const { data: cred } = await supabase
-      .from("payment_provider_credentials")
-      .select("*")
-      .eq("workspace_id", workspaceId)
-      .eq("provider", "pushinpay")
-      .single();
+    const urlObj = new URL(req.url);
+    const id = urlObj.searchParams.get("id");
+    const token = req.headers.get("x-pushinpay-token");
+    const env = (
+      req.headers.get("x-pushinpay-env") ??
+      Deno.env.get("PUSHINPAY_ENV") ??
+      "sandbox"
+    ).toLowerCase();
 
-    if (!cred) return new Response("credentials not found", { status: 404 });
+    if (!token) {
+      return Response.json({ message: "Faltou token." }, { status: 401 });
+    }
+    if (!id) {
+      return Response.json({ message: "Faltou id." }, { status: 400 });
+    }
 
-    const baseUrl = cred.use_sandbox
-      ? (Deno.env.get("PUSHINPAY_BASE_URL_SANDBOX") ?? "https://fapi-sandbox.pushinpay.com.br/api")
-      : (Deno.env.get("PUSHINPAY_BASE_URL_PROD") ?? "https://fapi.pushinpay.com.br/api");
-
-    const res = await fetch(`${baseUrl}/pix/${providerPaymentId}`, {
+    const url = `${baseUrl(env)}${STATUS_PATH}?id=${encodeURIComponent(id)}`;
+    const resp = await fetch(url, {
       headers: {
-        Authorization: `Bearer ${cred.api_key}`,
-        Accept: "application/json"
-      }
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+      },
     });
+    const data = await resp.json().catch(() => ({}));
 
-    const text = await res.text();
-    if (!res.ok) return new Response(text, { status: res.status });
+    if (!resp.ok) {
+      return Response.json(
+        { ok: false, status: resp.status, error: data?.message || "Erro" },
+        { status: resp.status }
+      );
+    }
 
-    const json = JSON.parse(text);
-
-    // normaliza status
-    let status = "pending";
-    if (json.status === "paid") status = "paid";
-    if (json.status === "canceled" || json.status === "expired") status = "canceled";
-
-    // atualiza local
-    await supabase.from("pix_transactions")
-      .update({
-        status,
-        payer_name: json.payer_name ?? null,
-        payer_document: json.payer_national_registration ?? null,
-        updated_at: new Date().toISOString()
-      })
-      .eq("provider_payment_id", providerPaymentId);
-
-    return new Response(JSON.stringify({ status }), { headers: { "Content-Type": "application/json" } });
-
-  } catch (e) {
-    return new Response(`Server error: ${e?.message ?? e}`, { status: 500 });
+    return Response.json({ ok: true, ...data });
+  } catch (err) {
+    return Response.json({ ok: false, error: String(err) }, { status: 500 });
   }
 });

@@ -1,12 +1,19 @@
-// deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-type Body = {
-  workspaceId: string;
-  checkoutId: string;
-  amountCents: number;    // em centavos
+type CreatePixInput = {
+  value: number; // em centavos (>= 50)
+  webhook_url?: string;
+  split_rules?: Array<{ value: number; account_id: string }>;
 };
+
+function baseUrl(env: string) {
+  return env === "production"
+    ? Deno.env.get("PUSHINPAY_BASE_URL_PROD") || "https://api.pushinpay.com.br/api"
+    : Deno.env.get("PUSHINPAY_BASE_URL_SANDBOX") || "https://api-sandbox.pushinpay.com.br/api";
+}
+
+const PIX_CREATE_PATH = Deno.env.get("PUSHINPAY_CREATE_PATH") ?? "/pix/cashIn";
+const DEFAULT_WEBHOOK = Deno.env.get("PUSHINPAY_WEBHOOK_PUBLIC_URL") ?? "";
 
 serve(async (req: Request) => {
   try {
@@ -14,89 +21,63 @@ serve(async (req: Request) => {
       return new Response("Method Not Allowed", { status: 405 });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } } }
-    );
+    const { value, webhook_url, split_rules }: CreatePixInput = await req.json();
 
-    const body = await req.json() as Body;
-    if (!body.workspaceId || !body.checkoutId || !body.amountCents) {
-      return new Response("Missing fields", { status: 400 });
+    // Token e ambiente vêm do front no header (do usuário logado)
+    const token = req.headers.get("x-pushinpay-token");
+    const env = (
+      req.headers.get("x-pushinpay-env") ??
+      Deno.env.get("PUSHINPAY_ENV") ??
+      "sandbox"
+    ).toLowerCase();
+
+    if (!token) {
+      return Response.json(
+        { message: "Faltou o token do usuário (x-pushinpay-token)." },
+        { status: 401 }
+      );
     }
-    if (body.amountCents < 50) {
-      return new Response("amount must be >= 50 cents", { status: 422 });
-    }
-
-    // Busca credenciais PushinPay do dono desse workspace
-    const { data: cred, error: credErr } = await supabase
-      .from("payment_provider_credentials")
-      .select("*")
-      .eq("workspace_id", body.workspaceId)
-      .eq("provider", "pushinpay")
-      .single();
-
-    if (credErr || !cred) {
-      return new Response("PushinPay credentials not found", { status: 404 });
+    if (!value || value < 50) {
+      return Response.json(
+        { message: "O campo value deve ser no mínimo 50 (centavos)." },
+        { status: 422 }
+      );
     }
 
-    const baseUrl = cred.use_sandbox
-      ? (Deno.env.get("PUSHINPAY_BASE_URL_SANDBOX") ?? "https://fapi-sandbox.pushinpay.com.br/api")
-      : (Deno.env.get("PUSHINPAY_BASE_URL_PROD") ?? "https://fapi.pushinpay.com.br/api");
+    const url = `${baseUrl(env)}${PIX_CREATE_PATH}`;
+    const body = {
+      value,
+      webhook_url: webhook_url ?? DEFAULT_WEBHOOK || undefined,
+      split_rules: Array.isArray(split_rules) ? split_rules : undefined,
+    };
 
-    // Webhook público da função
-    const webhookUrl = Deno.env.get("PUBLIC_WEBHOOK_URL")!;
-
-    // Cria cobrança na PushinPay
-    const res = await fetch(`${baseUrl}/pix/cashIn`, {
+    const resp = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${cred.api_key}`,
+        Authorization: `Bearer ${token}`,
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        value: body.amountCents,
-        webhook_url: webhookUrl,
-        split_rules: [], // opcional
-      }),
+      body: JSON.stringify(body),
     });
 
-    const text = await res.text();
-    if (!res.ok) {
-      return new Response(`PushinPay error: ${res.status} ${text}`, { status: 502 });
-    }
-    const json = JSON.parse(text);
+    const data = await resp.json().catch(() => ({}));
 
-    // Salva / atualiza transação
-    const payload_emv: string = json.qr_code;
-    const qr_base64: string = (json.qr_code_base64 || "").replace(/^data:image\/png;base64,/, "");
-    const provider_payment_id: string = json.id;
-
-    const { error: upErr } = await supabase.from("pix_transactions").upsert({
-      workspace_id: body.workspaceId,
-      checkout_id: body.checkoutId,
-      provider: "pushinpay",
-      provider_payment_id,
-      status: "pending",     // created -> mapeamos como pending
-      value_cents: body.amountCents,
-      payload_emv,
-      qr_base64,
-      updated_at: new Date().toISOString()
-    }, { onConflict: "provider_payment_id" });
-
-    if (upErr) {
-      return new Response(`DB error: ${upErr.message}`, { status: 500 });
+    if (!resp.ok) {
+      return Response.json(
+        {
+          ok: false,
+          status: resp.status,
+          error: data?.message || "Erro ao criar PIX",
+          details: data,
+        },
+        { status: resp.status }
+      );
     }
 
-    return new Response(JSON.stringify({
-      providerPaymentId: provider_payment_id,
-      qrText: payload_emv,
-      qrBase64: qr_base64,
-      status: json.status
-    }), { headers: { "Content-Type": "application/json" } });
-
-  } catch (e) {
-    return new Response(`Server error: ${e?.message ?? e}`, { status: 500 });
+    // data esperado: { id, qr_code, status, value, webhook_url, qr_code_base64, ... }
+    return Response.json({ ok: true, ...data });
+  } catch (err) {
+    return Response.json({ ok: false, error: String(err) }, { status: 500 });
   }
 });

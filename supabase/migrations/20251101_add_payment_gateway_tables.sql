@@ -6,7 +6,6 @@ create table if not exists public.payment_gateway_settings (
   user_id uuid primary key references auth.users(id) on delete cascade,
   token_encrypted text not null,
   environment text not null check (environment in ('sandbox','production')),
-  platform_fee_percent numeric(5,2) not null default 0.00 check (platform_fee_percent >= 0 and platform_fee_percent <= 50),
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
@@ -70,4 +69,3 @@ comment on table public.payment_gateway_settings is 'Armazena configurações de
 comment on table public.payments_map is 'Mapeia pedidos internos para transações PIX da PushinPay';
 comment on column public.payment_gateway_settings.token_encrypted is 'Token da PushinPay criptografado com pgcrypto';
 comment on column public.payment_gateway_settings.environment is 'Ambiente: sandbox ou production';
-comment on column public.payment_gateway_settings.platform_fee_percent is 'Percentual de taxa da plataforma (0-50%)';

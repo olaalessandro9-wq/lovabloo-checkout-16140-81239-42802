@@ -156,7 +156,7 @@ Os tokens nunca são expostos ao cliente. A página Financeiro exibe `•••�
 
 ## 💰 Split de Pagamento
 
-O split é calculado automaticamente com base na taxa configurada pelo vendedor:
+O split é calculado automaticamente com base na taxa configurada pelo **administrador da plataforma** nas variáveis de ambiente:
 
 ```typescript
 // Exemplo: Pedido de R$ 100,00 com taxa de 10%
@@ -170,6 +170,8 @@ Vendedor recebe: R$ 90,00 (90%)
 - Taxa máxima: **50%**
 - Valor mínimo por transação: **R$ 0,50**
 - Split é aplicado automaticamente em todas as transações
+- Taxa é controlada **apenas pelo administrador** via variável de ambiente `PLATFORM_FEE_PERCENT`
+- Vendedores **não podem** alterar a taxa da plataforma
 
 ## 📊 Fluxo de Pagamento
 

@@ -50,6 +50,9 @@ PUSHINPAY_BASE_URL_PROD=https://api.pushinpay.com.br/api
 PUSHINPAY_BASE_URL_SANDBOX=https://api-sandbox.pushinpay.com.br/api
 PLATFORM_PUSHINPAY_ACCOUNT_ID=<SEU_ACCOUNT_ID_DA_PLATAFORMA>
 
+# Taxa da Plataforma (controlada apenas pelo administrador)
+PLATFORM_FEE_PERCENT=7.5
+
 # Criptografia
 ENCRYPTION_KEY=<CHAVE_GERADA_NO_PASSO_1>
 
@@ -111,8 +114,9 @@ Cada vendedor precisa configurar suas credenciais individualmente:
 1. Acesse a página **Financeiro** no painel
 2. Insira o **API Token** da PushinPay
 3. Selecione o **Ambiente** (Sandbox ou Produção)
-4. Defina a **Taxa da Plataforma** (0-50%)
-5. Clique em **Salvar integração**
+4. Clique em **Salvar integração**
+
+**Nota:** A taxa da plataforma é configurada apenas pelo administrador nas variáveis de ambiente (`PLATFORM_FEE_PERCENT`). Os vendedores não têm acesso a esse campo.
 
 ### Como obter o API Token da PushinPay
 

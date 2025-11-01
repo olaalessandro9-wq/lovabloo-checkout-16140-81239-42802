@@ -19,7 +19,7 @@ export async function loadGatewaySettingsByOrder(orderId: string) {
 
   const { data: settings, error: e2 } = await supabase
     .from("payment_gateway_settings")
-    .select("token_encrypted, environment, platform_fee_percent")
+    .select("token_encrypted, environment")
     .eq("user_id", order.user_id)
     .single();
   if (e2 || !settings) throw new Error("Gateway settings not found");
@@ -32,7 +32,6 @@ export async function loadGatewaySettingsByOrder(orderId: string) {
   return {
     token,
     environment: settings.environment,
-    platformFeePercent: Number(settings.platform_fee_percent || 0),
     platformAccountId,
     amountCents: order.amount_cents,
   };

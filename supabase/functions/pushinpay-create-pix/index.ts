@@ -13,6 +13,9 @@ const BASE_PROD = Deno.env.get("PUSHINPAY_BASE_URL_PROD") || "https://api.pushin
 const BASE_SANDBOX = Deno.env.get("PUSHINPAY_BASE_URL_SANDBOX") || "https://api-sandbox.pushinpay.com.br/api";
 const PLATFORM_ACCOUNT = Deno.env.get("PLATFORM_PUSHINPAY_ACCOUNT_ID");
 
+// Taxa da plataforma fixada no backend (controlada apenas pelo administrador)
+const PLATFORM_FEE_PERCENT = parseFloat(Deno.env.get("PLATFORM_FEE_PERCENT") || "7.5");
+
 serve(async (req) => {
   if (req.method !== "POST") {
     return new Response(
@@ -84,9 +87,8 @@ serve(async (req) => {
     const environment = settings.environment as "sandbox" | "production";
     const baseURL = environment === "production" ? BASE_PROD : BASE_SANDBOX;
 
-    // 5) Calcular split
-    const platformFeePercent = Number(settings.platform_fee_percent || 0);
-    const platformValue = Math.round(value * platformFeePercent / 100);
+    // 5) Calcular split usando taxa fixa do backend
+    const platformValue = Math.round(value * PLATFORM_FEE_PERCENT / 100);
 
     // Validar que split não excede 50%
     if (platformValue > value * 0.5) {

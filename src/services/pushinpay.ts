@@ -5,7 +5,6 @@ export type PushinPayEnvironment = "sandbox" | "production";
 export interface PushinPaySettings {
   pushinpay_token: string;
   environment: PushinPayEnvironment;
-  platform_fee_percent: number;
 }
 
 // Função auxiliar para criptografar token no cliente (usando Edge Function)
@@ -62,7 +61,6 @@ export async function savePushinPaySettings(
         user_id: user.id,
         token_encrypted: tokenEncrypted,
         environment: settings.environment,
-        platform_fee_percent: settings.platform_fee_percent,
       });
 
     if (error) return { ok: false, error: error.message };
@@ -83,7 +81,7 @@ export async function getPushinPaySettings(): Promise<PushinPaySettings | null> 
 
   const { data, error } = await supabase
     .from("payment_gateway_settings")
-    .select("environment, platform_fee_percent")
+    .select("environment")
     .eq("user_id", user.id)
     .single();
 
@@ -93,7 +91,6 @@ export async function getPushinPaySettings(): Promise<PushinPaySettings | null> 
   return {
     pushinpay_token: "••••••••",
     environment: data.environment,
-    platform_fee_percent: data.platform_fee_percent,
   } as PushinPaySettings;
 }
 

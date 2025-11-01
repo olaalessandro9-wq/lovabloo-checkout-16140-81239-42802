@@ -11,7 +11,7 @@ export default function Financeiro() {
   const [showToken, setShowToken] = useState(false);
   const [hasExistingToken, setHasExistingToken] = useState(false);
   const [environment, setEnvironment] = useState<PushinPayEnvironment>("sandbox");
-  const [platformFeePercent, setPlatformFeePercent] = useState(0);
+  // Taxa da plataforma removida da UI - controlada apenas no backend
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -29,7 +29,6 @@ export default function Financeiro() {
             setApiToken(settings.pushinpay_token ?? "");
           }
           setEnvironment(settings.environment ?? "sandbox");
-          setPlatformFeePercent(settings.platform_fee_percent ?? 0);
         }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
@@ -52,11 +51,6 @@ export default function Financeiro() {
       return;
     }
 
-    if (platformFeePercent < 0 || platformFeePercent > 100) {
-      setMessage({ type: "error", text: "Taxa da plataforma deve estar entre 0 e 100%" });
-      return;
-    }
-
     setLoading(true);
     setMessage(null);
 
@@ -64,7 +58,6 @@ export default function Financeiro() {
       const result = await savePushinPaySettings({
         pushinpay_token: apiToken,
         environment,
-        platform_fee_percent: platformFeePercent,
       });
 
       if (result.ok) {
@@ -145,25 +138,6 @@ export default function Financeiro() {
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Taxa da Plataforma (%)
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              value={platformFeePercent}
-              onChange={(e) => setPlatformFeePercent(parseFloat(e.target.value) || 0)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Ex: 5.5 para 5,5%"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Percentual que será retido pela plataforma em cada transação (split de pagamento)
-            </p>
-          </div>
-
           {message && (
             <div
               className={`flex items-center gap-2 rounded-md p-3 text-sm ${
@@ -198,7 +172,6 @@ export default function Financeiro() {
             <li>Use o ambiente Sandbox para testes antes de ir para produção</li>
             <li>Certifique-se de configurar o webhook no painel da PushinPay</li>
             <li>A taxa da plataforma é aplicada automaticamente em cada transação PIX</li>
-            <li>Configure o PLATFORM_ACCOUNT_ID nas variáveis de ambiente das Edge Functions</li>
           </ul>
         </div>
       </div>

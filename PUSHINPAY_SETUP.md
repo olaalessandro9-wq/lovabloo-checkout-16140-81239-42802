@@ -80,11 +80,16 @@ supabase login
 supabase link --project-ref <seu-project-ref>
 
 # Deploy das functions
-supabase functions deploy encrypt-token
-supabase functions deploy pushinpay-create-pix
-supabase functions deploy pushinpay-get-status
+# Functions chamadas pelo frontend precisam de --no-verify-jwt
+supabase functions deploy encrypt-token --no-verify-jwt
+supabase functions deploy pushinpay-create-pix --no-verify-jwt
+supabase functions deploy pushinpay-get-status --no-verify-jwt
+
+# Webhook é server-to-server (mantém JWT padrão)
 supabase functions deploy pushinpay-webhook
 ```
+
+**Importante:** A flag `--no-verify-jwt` é necessária para funções chamadas diretamente do navegador, pois elas não possuem um token JWT válido. A segurança é garantida pela whitelist de origens e criptografia.
 
 Verifique se todas as functions foram implantadas com sucesso:
 

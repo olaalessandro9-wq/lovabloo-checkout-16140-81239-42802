@@ -3,7 +3,7 @@ import {
   findOrderByPixId,
   updateOrderStatusFromGateway,
 } from "../_shared/db.ts";
-import { corsHeaders, handleCorsPreFlight } from "../_shared/cors.ts";
+import { corsHeaders, handleOptions } from "../_shared/cors.ts";
 
 type WebhookPayload = {
   id: string;
@@ -16,19 +16,20 @@ type WebhookPayload = {
 };
 
 serve(async (req: Request) => {
-  // Tratar preflight OPTIONS
+  // 1) Tratar preflight OPTIONS
   if (req.method === "OPTIONS") {
-    return handleCorsPreFlight();
+    return handleOptions(req);
   }
 
+  const origin = req.headers.get("Origin");
+  const headers = { ...corsHeaders(origin), "Content-Type": "application/json" };
+
   try {
+    // 2) Validar método
     if (req.method !== "POST") {
       return new Response(
         JSON.stringify({ error: "Method Not Allowed" }),
-        { 
-          status: 405, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
+        { status: 405, headers }
       );
     }
 
@@ -37,35 +38,26 @@ serve(async (req: Request) => {
     // TODO: (opcional) validar assinatura:
     // const signature = req.headers.get(Deno.env.get('PUSHINPAY_WEBHOOK_HEADER_NAME') || 'X-PushinPay-Signature')
 
-    // 1) Encontrar orderId pelo pixId
+    // 3) Encontrar orderId pelo pixId
     const orderId = await findOrderByPixId(payload.id);
     if (!orderId) {
       return new Response(
         JSON.stringify({ ok: false, error: "Order not found" }),
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
+        { status: 404, headers }
       );
     }
 
-    // 2) Atualizar status do pedido
+    // 4) Atualizar status do pedido
     await updateOrderStatusFromGateway(orderId, payload);
 
     return new Response(
       JSON.stringify({ ok: true }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 200, headers }
     );
   } catch (err) {
     return new Response(
       JSON.stringify({ ok: false, error: String(err) }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
+      { status: 500, headers }
     );
   }
 });

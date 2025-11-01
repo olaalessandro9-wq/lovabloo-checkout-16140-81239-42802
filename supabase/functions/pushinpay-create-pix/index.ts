@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { decrypt } from "../_shared/crypto.ts";
-import { corsHeaders, handleCorsPreFlight } from "../_shared/cors.ts";
+import { corsHeaders, handleOptions } from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -16,15 +16,19 @@ const PLATFORM_ACCOUNT = Deno.env.get("PLATFORM_PUSHINPAY_ACCOUNT_ID");
 const PLATFORM_FEE_PERCENT = parseFloat(Deno.env.get("PLATFORM_FEE_PERCENT") || "7.5");
 
 serve(async (req) => {
-  // Tratar preflight OPTIONS
+  // 1) Tratar preflight OPTIONS
   if (req.method === "OPTIONS") {
-    return handleCorsPreFlight();
+    return handleOptions(req);
   }
 
+  const origin = req.headers.get("Origin");
+  const headers = { ...corsHeaders(origin), "Content-Type": "application/json" };
+
+  // 2) Validar método
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method Not Allowed" }),
-      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 405, headers }
     );
   }
 
@@ -35,14 +39,14 @@ serve(async (req) => {
     if (!orderId) {
       return new Response(
         JSON.stringify({ error: "orderId é obrigatório" }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 422, headers }
       );
     }
 
     if (typeof value !== "number" || value < 50) {
       return new Response(
         JSON.stringify({ error: "Valor mínimo é R$ 0,50 (50 centavos)" }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 422, headers }
       );
     }
 
@@ -56,7 +60,7 @@ serve(async (req) => {
     if (orderErr || !order) {
       return new Response(
         JSON.stringify({ error: "Pedido não encontrado" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 404, headers }
       );
     }
 
@@ -72,7 +76,7 @@ serve(async (req) => {
         JSON.stringify({ 
           error: "Configuração de gateway não encontrada. Configure em Financeiro." 
         }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 404, headers }
       );
     }
 
@@ -83,7 +87,7 @@ serve(async (req) => {
     } catch (e) {
       return new Response(
         JSON.stringify({ error: "Erro ao processar credenciais de pagamento" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 500, headers }
       );
     }
 
@@ -98,7 +102,7 @@ serve(async (req) => {
     if (platformValue > value * 0.5) {
       return new Response(
         JSON.stringify({ error: "Split não pode exceder 50% do valor da transação" }),
-        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 422, headers }
       );
     }
 
@@ -137,7 +141,7 @@ serve(async (req) => {
           JSON.stringify({ 
             error: "Token PushinPay inválido. Verifique suas credenciais em Financeiro." 
           }),
-          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 401, headers }
         );
       }
 
@@ -146,7 +150,7 @@ serve(async (req) => {
           JSON.stringify({ 
             error: "Muitas tentativas. Aguarde alguns segundos e tente novamente." 
           }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 429, headers }
         );
       }
 
@@ -155,7 +159,7 @@ serve(async (req) => {
           JSON.stringify({ 
             error: "Serviço de pagamento temporariamente indisponível. Tente novamente em instantes." 
           }),
-          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          { status: 502, headers }
         );
       }
 
@@ -164,7 +168,7 @@ serve(async (req) => {
           error: "Erro ao criar cobrança PIX", 
           detail: errorText 
         }),
-        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: response.status, headers }
       );
     }
 
@@ -189,7 +193,7 @@ serve(async (req) => {
         qr_code: pixData.qr_code,
         qr_code_base64: pixData.qr_code_base64,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers }
     );
 
   } catch (error) {

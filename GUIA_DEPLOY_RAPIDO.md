@@ -82,11 +82,21 @@ supabase link --project-ref seu-project-ref
 
 Ou manualmente:
 ```bash
-supabase functions deploy encrypt-token
-supabase functions deploy pushinpay-create-pix
-supabase functions deploy pushinpay-get-status
+# Functions chamadas pelo frontend (precisam de --no-verify-jwt)
+supabase functions deploy encrypt-token --no-verify-jwt
+supabase functions deploy pushinpay-create-pix --no-verify-jwt
+supabase functions deploy pushinpay-get-status --no-verify-jwt
+
+# Webhook é server-to-server (mantém verificação JWT padrão)
 supabase functions deploy pushinpay-webhook
 ```
+
+**Por que `--no-verify-jwt`?**
+
+As funções chamadas diretamente do navegador (encrypt-token, create-pix, get-status) não podem exigir JWT porque o formulário do painel chama essas funções sem um Bearer token válido. A segurança é garantida pela:
+- Whitelist de origens (apenas domínios autorizados)
+- Criptografia de tokens no backend
+- Validação de entrada em todas as requisições
 
 ### 5. Verificar Deploy
 

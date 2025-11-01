@@ -3,21 +3,22 @@ import {
   loadTokenEnvAndPixId,
   updateOrderStatusFromGateway,
 } from "../_shared/db.ts";
-import { corsHeaders, handleCorsPreFlight } from "../_shared/cors.ts";
+import { corsHeaders, handleOptions } from "../_shared/cors.ts";
 
 serve(async (req) => {
-  // Tratar preflight OPTIONS
+  // 1) Tratar preflight OPTIONS
   if (req.method === "OPTIONS") {
-    return handleCorsPreFlight();
+    return handleOptions(req);
   }
 
+  const origin = req.headers.get("Origin");
+  const headers = { ...corsHeaders(origin), "Content-Type": "application/json" };
+
+  // 2) Validar método
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method Not Allowed" }),
-      { 
-        status: 405, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
+      { status: 405, headers }
     );
   }
 
@@ -41,10 +42,7 @@ serve(async (req) => {
       const errText = await res.text();
       return new Response(
         JSON.stringify({ ok: false, error: errText }),
-        {
-          status: 502,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 502, headers }
       );
     }
 
@@ -54,18 +52,12 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ ok: true, status }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 200, headers }
     );
   } catch (e) {
     return new Response(
       JSON.stringify({ ok: false, error: String(e) }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 400, headers }
     );
   }
 });

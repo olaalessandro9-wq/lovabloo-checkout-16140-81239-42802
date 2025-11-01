@@ -29,11 +29,24 @@ FUNCTIONS=(
 # Deploy de cada function
 for func in "${FUNCTIONS[@]}"; do
     echo "📦 Fazendo deploy de: $func"
-    if supabase functions deploy "$func"; then
-        echo "✅ $func implantada com sucesso"
+    
+    # Functions chamadas pelo frontend precisam de --no-verify-jwt
+    if [[ "$func" == "encrypt-token" || "$func" == "pushinpay-create-pix" || "$func" == "pushinpay-get-status" ]]; then
+        echo "⚠️  Usando --no-verify-jwt (chamada do frontend)"
+        if supabase functions deploy "$func" --no-verify-jwt; then
+            echo "✅ $func implantada com sucesso"
+        else
+            echo "❌ Erro ao implantar $func"
+            exit 1
+        fi
     else
-        echo "❌ Erro ao implantar $func"
-        exit 1
+        # Webhook é server-to-server, mantém verificação JWT padrão
+        if supabase functions deploy "$func"; then
+            echo "✅ $func implantada com sucesso"
+        else
+            echo "❌ Erro ao implantar $func"
+            exit 1
+        fi
     fi
     echo ""
 done

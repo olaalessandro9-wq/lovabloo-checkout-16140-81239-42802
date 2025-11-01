@@ -1,7 +1,10 @@
 /**
- * Módulo CORS simplificado com whitelist usando Set
+ * Módulo CORS com whitelist e headers completos
  * 
- * Versão otimizada para performance e simplicidade
+ * Corrige os seguintes problemas:
+ * 1. Adiciona x-client-info, apikey e prefer aos headers permitidos
+ * 2. Preflight OPTIONS retorna 204 No Content (padrão HTTP)
+ * 3. Allow-Credentials false para evitar conflitos com origem vazia
  */
 
 /**
@@ -21,26 +24,40 @@ const ALLOWED_ORIGINS = new Set<string>([
  * @returns Headers CORS para incluir na resposta
  */
 export function corsHeaders(origin: string | null): Record<string, string> {
-  const allowOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : '';
+  // Se origem não está na whitelist, usa a origem de produção como fallback
+  const allowOrigin = origin && ALLOWED_ORIGINS.has(origin) 
+    ? origin 
+    : 'https://risecheckout.lovable.app';
+  
   return {
     'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'content-type, authorization, x-requested-with',
-    'Access-Control-Allow-Credentials': 'true',
     'Vary': 'Origin',
+    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Headers': [
+      'authorization',
+      'content-type',
+      'apikey',
+      'x-client-info',      // Adicionado pelo @supabase/supabase-js
+      'prefer',             // Usado pelo PostgREST
+      'x-requested-with',
+    ].join(', '),
+    // false: não usamos cookies/credenciais
+    'Access-Control-Allow-Credentials': 'false',
   };
 }
 
 /**
  * Trata requisições OPTIONS (preflight)
  * 
+ * Retorna 204 No Content (padrão HTTP para preflight)
+ * 
  * @param req - Requisição OPTIONS
- * @returns Response 200 OK com headers CORS
+ * @returns Response 204 No Content com headers CORS
  */
 export function handleOptions(req: Request): Response {
   const origin = req.headers.get('origin');
-  return new Response('ok', { 
-    status: 200, 
+  return new Response(null, { 
+    status: 204, 
     headers: corsHeaders(origin) 
   });
 }

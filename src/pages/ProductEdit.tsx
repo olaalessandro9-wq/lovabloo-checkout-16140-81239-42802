@@ -29,12 +29,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useBusy } from "@/ui/BusyProvider";
 import { useConfirmDelete } from "@/components/common/ConfirmDelete";
-import { UnsavedChangesProvider, useUnsavedChanges } from "@/providers/unsaved-changes";
-import UnsavedChangesDialog from "@/components/common/UnsavedChangesDialog";
 import { UnsavedChangesGuard } from "@/providers/UnsavedChangesGuard";
 import { useConfirmDiscard } from "@/hooks/useConfirmDiscard";
 import { ConfirmDeleteProductDialog } from "@/components/common/ConfirmDeleteProductDialog";
-import { useDirtyOnChange } from "@/hooks/useMarkDirty";
 
 const ProductEditInner = () => {
   const navigate = useNavigate();
@@ -44,8 +41,6 @@ const ProductEditInner = () => {
   const { confirm: confirmDiscard, ConfirmRenderer } = useConfirmDiscard();
   const { product, loading, imageFile, setImageFile, saveProduct, deleteProduct, loadProduct, productId } = useProduct();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const { setDirty, confirmOrRun } = useUnsavedChanges();
-  const markDirty = useDirtyOnChange();
   
   // Estado para a seção Geral
   const [generalData, setGeneralData] = useState({
@@ -391,21 +386,19 @@ const ProductEditInner = () => {
     }
   }, [productId]);
 
-  // Sincronizar estados de modificação com isDirty (exceto Checkout e Links)
-  useEffect(() => {
-    const hasChanges = generalModified || imageModified || offersModified || upsellModified || affiliateModified;
-    setDirty(hasChanges);
-  }, [generalModified, imageModified, offersModified, upsellModified, affiliateModified, setDirty]);
+  // Agregação de dirty state para o guard
+  const isDirty = generalModified || imageModified || offersModified || upsellModified || affiliateModified;
+  
+  // Guard habilitado em todas as tabs EXCETO checkout e links
+  const guardEnabled = activeTab !== "checkout" && activeTab !== "links";
 
   // Salvar aba ativa no sessionStorage quando mudar
   const handleTabChange = (value: string) => {
-    confirmOrRun(() => {
-      setActiveTab(value);
-      // Salvar apenas se productId existir
-      if (productId) {
-        sessionStorage.setItem(`product-edit-tab-${productId}`, value);
-      }
-    });
+    setActiveTab(value);
+    // Salvar apenas se productId existir
+    if (productId) {
+      sessionStorage.setItem(`product-edit-tab-${productId}`, value);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -647,7 +640,6 @@ const ProductEditInner = () => {
       setPendingImageRemoval(false);
       setImageFile(null);
       setImageUrl("");
-      setDirty(false); // Limpar estado de alterações pendentes
       
       // Recarregar produto e ofertas para atualizar a interface
       if (productId) {
@@ -859,9 +851,16 @@ const ProductEditInner = () => {
   };
 
   const handleBack = () => {
-    confirmOrRun(() => {
+    if (isDirty && guardEnabled) {
+      confirmDiscard("Se você sair agora, perderá as alterações não salvas. O que deseja fazer?")
+        .then((confirmed) => {
+          if (confirmed) {
+            navigate("/produtos");
+          }
+        });
+    } else {
       navigate("/produtos");
-    });
+    }
   };
 
   const handleAddOrderBump = () => {
@@ -1147,9 +1146,6 @@ const ProductEditInner = () => {
     );
   }
 
-  // Guard ativo em todas as abas, EXCETO "checkout" e "links"
-  const guardEnabled = activeTab !== "checkout" && activeTab !== "links";
-  const isDirty = generalModified || imageModified || paymentSettingsModified || checkoutFieldsModified || upsellModified || affiliateModified;
 
   return (
     <>
@@ -1796,14 +1792,5 @@ const ProductEditInner = () => {
   );
 };
 
-const ProductEdit = () => {
-  return (
-    <UnsavedChangesProvider>
-      <ProductEditInner />
-      <UnsavedChangesDialog />
-    </UnsavedChangesProvider>
-  );
-};
-
-export default ProductEdit;
+export default ProductEditInner;
 

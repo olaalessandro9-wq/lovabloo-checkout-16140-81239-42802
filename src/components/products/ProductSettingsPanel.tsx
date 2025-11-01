@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUnsavedChanges } from "@/providers/unsaved-changes";
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -23,7 +23,6 @@ type Settings = {
 };
 
 export default function ProductSettingsPanel({ productId }: { productId: string }) {
-  const { setDirty, markSaved } = useUnsavedChanges();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [initial, setInitial] = useState<Settings>({
@@ -53,12 +52,6 @@ export default function ProductSettingsPanel({ productId }: { productId: string 
     })();
   }, [productId]);
 
-  // Dispara "dirty" quando houver diferença
-  const initialJson = useMemo(() => JSON.stringify(initial), [initial]);
-  const currentJson = useMemo(() => JSON.stringify(form), [form]);
-  useEffect(() => {
-    setDirty(initialJson !== currentJson);
-  }, [initialJson, currentJson, setDirty]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -67,7 +60,6 @@ export default function ProductSettingsPanel({ productId }: { productId: string 
     setSaving(false);
     toast.success("Configurações salvas com sucesso.");
     setInitial(form); // Atualiza o estado inicial
-    markSaved();
   };
 
   if (loading) {

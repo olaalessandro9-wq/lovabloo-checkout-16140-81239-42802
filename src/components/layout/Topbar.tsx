@@ -1,6 +1,7 @@
 // src/components/layout/Topbar.tsx
 import { Bell } from "lucide-react";
 import clsx from "clsx";
+import { ThemeToggleButton } from "@/components/theme/ThemeToggleButton";
 
 type TopbarProps = {
   scrolled?: boolean;
@@ -19,7 +20,8 @@ export function Topbar({ scrolled, onNotificationsClick }: TopbarProps) {
         scrolled ? "shadow-sm border-b border-border/60" : "border-b border-transparent"
       )}
     >
-      <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center justify-end px-4">
+      <div className="mx-auto flex h-14 w-full max-w-[1400px] items-center justify-end gap-2 px-4">
+        {/* Notificações */}
         <button
           type="button"
           aria-label="Notificações"
@@ -30,6 +32,9 @@ export function Topbar({ scrolled, onNotificationsClick }: TopbarProps) {
           {/* Badge de não lidas (exemplo opcional) */}
           {/* <span className="absolute -right-0.5 -top-0.5 inline-flex h-2 w-2 rounded-full bg-red-500" /> */}
         </button>
+
+        {/* Toggle de tema */}
+        <ThemeToggleButton />
       </div>
     </header>
   );

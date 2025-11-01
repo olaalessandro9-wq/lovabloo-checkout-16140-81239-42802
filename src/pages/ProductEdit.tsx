@@ -945,9 +945,14 @@ const ProductEditInner = () => {
         `)
         .eq("checkout_id", checkout.id)
         .limit(1)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error loading checkout offer:", error);
+        setCurrentCheckoutLinkIds([]);
+        setCheckoutConfigDialogOpen(true);
+        return;
+      }
       
       const offerId = (data as any)?.payment_links?.offer_id || "";
       console.log("[handleConfigureCheckout] Checkout ID:", checkout.id);

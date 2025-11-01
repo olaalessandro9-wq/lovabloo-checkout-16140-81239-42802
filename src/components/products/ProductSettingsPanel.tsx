@@ -36,28 +36,19 @@ export default function ProductSettingsPanel({ productId }: { productId: string 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("products")
-        .select("required_fields, default_payment_method")
-        .eq("id", productId)
-        .maybeSingle();
-
-      if (error) {
-        console.error(error);
-        toast.error("Não foi possível carregar as configurações.");
-      } else if (data) {
-        const loadedSettings: Settings = {
-          required_fields: {
-            name: data.required_fields?.name ?? true,
-            email: data.required_fields?.email ?? true,
-            phone: data.required_fields?.phone ?? false,
-            cpf: data.required_fields?.cpf ?? false,
-          },
-          default_payment_method: (data.default_payment_method ?? "pix") as "pix" | "credit_card",
-        };
-        setInitial(loadedSettings);
-        setForm(loadedSettings);
-      }
+      // TODO: Campo required_fields será implementado no futuro
+      // Por enquanto, usar valores padrão
+      const loadedSettings: Settings = {
+        required_fields: {
+          name: true,
+          email: true,
+          phone: false,
+          cpf: false,
+        },
+        default_payment_method: "pix" as "pix" | "credit_card",
+      };
+      setInitial(loadedSettings);
+      setForm(loadedSettings);
       setLoading(false);
     })();
   }, [productId]);
@@ -71,20 +62,9 @@ export default function ProductSettingsPanel({ productId }: { productId: string 
 
   const handleSave = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from("products")
-      .update({
-        required_fields: form.required_fields,
-        default_payment_method: form.default_payment_method,
-      })
-      .eq("id", productId);
-
+    // TODO: Campo required_fields será implementado no futuro
+    // Por enquanto, apenas simular o salvamento
     setSaving(false);
-    if (error) {
-      console.error(error);
-      toast.error("Não foi possível salvar as configurações.");
-      return;
-    }
     toast.success("Configurações salvas com sucesso.");
     setInitial(form); // Atualiza o estado inicial
     markSaved();

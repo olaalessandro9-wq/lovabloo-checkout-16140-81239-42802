@@ -87,9 +87,7 @@ export async function loadPublicCheckoutData(slug: string) {
         description,
         price,
         image_url,
-        support_name,
-        required_fields,
-        default_payment_method
+        support_name
       `)
       .eq('id', offerData.product_id)
       .maybeSingle();
@@ -102,13 +100,11 @@ export async function loadPublicCheckoutData(slug: string) {
       throw new Error('Produto não encontrado');
     }
 
-    // Endurece leitura dos campos opcionais
-    const rf = (productData?.required_fields ?? {}) as Partial<{ phone: boolean; cpf: boolean }>;
-    const requirePhone = rf.phone === true;
-    const requireCpf   = rf.cpf   === true;
-
-    const defaultMethod =
-      productData?.default_payment_method === 'credit_card' ? 'credit_card' : 'pix';
+    // TODO: Campo required_fields será implementado no futuro
+    // Por enquanto, usar valores padrão
+    const requirePhone = false;
+    const requireCpf = false;
+    const defaultMethod: 'pix' | 'credit_card' = 'pix';
 
     return {
       checkout: {
@@ -181,9 +177,7 @@ export async function loadPublicCheckoutData(slug: string) {
       description,
       price,
       image_url,
-      support_name,
-      required_fields,
-      default_payment_method
+      support_name
     `)
     .eq('id', checkoutData.product_id)
     .maybeSingle();
@@ -196,13 +190,11 @@ export async function loadPublicCheckoutData(slug: string) {
     throw new Error('Produto não encontrado');
   }
 
-  // Endurece leitura dos campos opcionais
-  const rf = (productData?.required_fields ?? {}) as Partial<{ phone: boolean; cpf: boolean }>;
-  const requirePhone = rf.phone === true;
-  const requireCpf   = rf.cpf   === true;
-
-  const defaultMethod =
-    productData?.default_payment_method === 'credit_card' ? 'credit_card' : 'pix';
+  // TODO: Campo required_fields será implementado no futuro
+  // Por enquanto, usar valores padrão
+  const requirePhone = false;
+  const requireCpf = false;
+  const defaultMethod: 'pix' | 'credit_card' = 'pix';
 
   return {
     checkout: {

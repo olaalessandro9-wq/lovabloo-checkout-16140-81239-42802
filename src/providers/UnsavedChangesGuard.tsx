@@ -18,7 +18,7 @@ export function UnsavedChangesGuard({
   message = "Se você sair agora, perderá as alterações não salvas. O que deseja fazer?",
   children,
 }: GuardProps) {
-  const navigation = useContext(UNSAFE_NavigationContext).navigator as {
+  const navigation = useContext(UNSAFE_NavigationContext).navigator as unknown as {
     block: (tx: (tx: { action: NavigationType; location: Location; retry(): void }) => void) => () => void;
   };
 

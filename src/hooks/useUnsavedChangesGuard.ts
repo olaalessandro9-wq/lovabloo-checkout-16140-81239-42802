@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { useBlocker, useLocation } from "react-router-dom";
+import { useState } from "react";
 
 type GuardOptions = {
   /** Quando true, o guard bloqueia a navegação */
@@ -9,34 +8,21 @@ type GuardOptions = {
 };
 
 export function useUnsavedChangesGuard({ dirty, disableInPaths = [] }: GuardOptions) {
-  const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen] = useState(false);
 
-  const disabled = useMemo(() => {
-    if (!dirty) return true;
-    return disableInPaths.some(fn => fn(location.pathname, location.search));
-  }, [dirty, disableInPaths, location.pathname, location.search]);
-
-  // Bloqueia tudo (programático + back/forward) quando NÃO estiver desabilitado
-  const blocker = useBlocker(!disabled);
-
-  useEffect(() => {
-    if (blocker.state === "blocked") setIsOpen(true);
-    else setIsOpen(false);
-  }, [blocker.state]);
-
+  // TEMPORARIAMENTE DESABILITADO: useBlocker requer data router
+  // TODO: Migrar para createBrowserRouter no futuro
+  
   return {
     /** Mostrar/ocultar modal */
     isOpen,
     /** Cancelar saída e ficar na página */
     stay: () => {
-      setIsOpen(false);
-      blocker.reset?.();        // desfaz a navegação que estava bloqueada
+      // No-op
     },
     /** Prosseguir e sair (1 clique apenas) */
     discardAndExit: () => {
-      setIsOpen(false);
-      blocker.proceed?.();      // conclui a navegação pendente (inclui back do navegador)
+      // No-op
     },
   };
 }

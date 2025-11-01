@@ -1,21 +1,28 @@
-import { Outlet } from 'react-router-dom';
-import Sidebar from '@/components/sidebar/Sidebar';
-import ThemeToggle from '@/components/ThemeToggle';
+// src/layouts/AppShell.tsx
+import { Outlet } from "react-router-dom";
+import { Sidebar } from "@/components/layout/Sidebar";
+import { Topbar } from "@/components/layout/Topbar";
+import { useScrollShadow } from "@/hooks/useScrollShadow";
 
 export default function AppShell() {
+  const { sentinelRef, scrolled } = useScrollShadow();
+
+  const handleNotificationsClick = () => {
+    // TODO: Implementar lógica de notificações
+    console.log("Notificações clicadas");
+  };
+
   return (
-    <div className="bg-background text-foreground min-h-screen">
+    <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
       <Sidebar />
-      <header className="sticky top-0 z-30 ml-64 border-b border-border bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/70">
-        <div className="mx-auto flex h-14 max-w-screen-2xl items-center justify-end gap-2 px-4">
-          <ThemeToggle />
-        </div>
-      </header>
-      <main className="ml-64">
-        <div className="mx-auto max-w-screen-2xl p-4">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <Topbar scrolled={scrolled} onNotificationsClick={handleNotificationsClick} />
+        {/* Sentinel invisível para ativar a sombra ao rolar */}
+        <div ref={sentinelRef} className="h-1 w-full" />
+        <main className="relative mx-auto w-full max-w-[1400px] flex-1 overflow-y-auto px-4 pb-8 pt-6">
           <Outlet />
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

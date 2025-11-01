@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { decrypt } from "../_shared/crypto.ts";
-import { corsHeaders, handleOptions } from "../_shared/cors.ts";
+import { handleOptions, withCorsError, withCorsJson } from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -21,15 +21,9 @@ serve(async (req) => {
     return handleOptions(req);
   }
 
-  const origin = req.headers.get("Origin");
-  const headers = { ...corsHeaders(origin), "Content-Type": "application/json" };
-
   // 2) Validar método
   if (req.method !== "POST") {
-    return new Response(
-      JSON.stringify({ error: "Method Not Allowed" }),
-      { status: 405, headers }
-    );
+    return withCorsError(req, "Method not allowed", 405);
   }
 
   try {
@@ -37,17 +31,11 @@ serve(async (req) => {
 
     // Validações de entrada
     if (!orderId) {
-      return new Response(
-        JSON.stringify({ error: "orderId é obrigatório" }),
-        { status: 422, headers }
-      );
+      return withCorsError(req, "orderId é obrigatório", 422);
     }
 
     if (typeof value !== "number" || value < 50) {
-      return new Response(
-        JSON.stringify({ error: "Valor mínimo é R$ 0,50 (50 centavos)" }),
-        { status: 422, headers }
-      );
+      return withCorsError(req, "Valor mínimo é R$ 0,50 (50 centavos)", 422);
     }
 
     // 1) Buscar o pedido e identificar o vendedor
@@ -58,10 +46,7 @@ serve(async (req) => {
       .single();
 
     if (orderErr || !order) {
-      return new Response(
-        JSON.stringify({ error: "Pedido não encontrado" }),
-        { status: 404, headers }
-      );
+      return withCorsError(req, "Pedido não encontrado", 404);
     }
 
     // 2) Buscar configurações do gateway do vendedor
@@ -72,11 +57,10 @@ serve(async (req) => {
       .single();
 
     if (settingsErr || !settings) {
-      return new Response(
-        JSON.stringify({ 
-          error: "Configuração de gateway não encontrada. Configure em Financeiro." 
-        }),
-        { status: 404, headers }
+      return withCorsError(
+        req,
+        "Configuração de gateway não encontrada. Configure em Financeiro.",
+        404
       );
     }
 
@@ -85,10 +69,7 @@ serve(async (req) => {
     try {
       token = await decrypt(settings.token_encrypted);
     } catch (e) {
-      return new Response(
-        JSON.stringify({ error: "Erro ao processar credenciais de pagamento" }),
-        { status: 500, headers }
-      );
+      return withCorsError(req, "Erro ao processar credenciais de pagamento", 500);
     }
 
     // 4) Determinar URL base
@@ -100,10 +81,7 @@ serve(async (req) => {
 
     // Validar que split não excede 50%
     if (platformValue > value * 0.5) {
-      return new Response(
-        JSON.stringify({ error: "Split não pode exceder 50% do valor da transação" }),
-        { status: 422, headers }
-      );
+      return withCorsError(req, "Split não pode exceder 50% do valor da transação", 422);
     }
 
     // Montar split_rules apenas se houver taxa e PLATFORM_ACCOUNT configurado
@@ -137,39 +115,30 @@ serve(async (req) => {
       
       // Erros específicos
       if (response.status === 401) {
-        return new Response(
-          JSON.stringify({ 
-            error: "Token PushinPay inválido. Verifique suas credenciais em Financeiro." 
-          }),
-          { status: 401, headers }
+        return withCorsError(
+          req,
+          "Token PushinPay inválido. Verifique suas credenciais em Financeiro.",
+          401
         );
       }
 
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ 
-            error: "Muitas tentativas. Aguarde alguns segundos e tente novamente." 
-          }),
-          { status: 429, headers }
+        return withCorsError(
+          req,
+          "Muitas tentativas. Aguarde alguns segundos e tente novamente.",
+          429
         );
       }
 
       if (response.status >= 500) {
-        return new Response(
-          JSON.stringify({ 
-            error: "Serviço de pagamento temporariamente indisponível. Tente novamente em instantes." 
-          }),
-          { status: 502, headers }
+        return withCorsError(
+          req,
+          "Serviço de pagamento temporariamente indisponível. Tente novamente em instantes.",
+          502
         );
       }
 
-      return new Response(
-        JSON.stringify({ 
-          error: "Erro ao criar cobrança PIX", 
-          detail: errorText 
-        }),
-        { status: response.status, headers }
-      );
+      return withCorsError(req, `Erro ao criar cobrança PIX: ${errorText}`, response.status);
     }
 
     const pixData = await response.json();
@@ -185,25 +154,20 @@ serve(async (req) => {
     }
 
     // 9) Retornar dados do PIX
-    return new Response(
-      JSON.stringify({
-        ok: true,
-        pix_id: pixData.id,
-        status: pixData.status,
-        qr_code: pixData.qr_code,
-        qr_code_base64: pixData.qr_code_base64,
-      }),
-      { status: 200, headers }
-    );
+    return withCorsJson(req, {
+      ok: true,
+      pix_id: pixData.id,
+      status: pixData.status,
+      qr_code: pixData.qr_code,
+      qr_code_base64: pixData.qr_code_base64,
+    });
 
   } catch (error) {
     console.error("Erro inesperado:", error);
-    return new Response(
-      JSON.stringify({ 
-        error: "Erro inesperado ao processar pagamento", 
-        detail: String(error) 
-      }),
-      { status: 500, headers: JSON_HEADER }
+    return withCorsError(
+      req,
+      `Erro inesperado ao processar pagamento: ${String(error)}`,
+      500
     );
   }
 });

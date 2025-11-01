@@ -3,7 +3,7 @@ import {
   loadTokenEnvAndPixId,
   updateOrderStatusFromGateway,
 } from "../_shared/db.ts";
-import { corsHeaders, handleOptions } from "../_shared/cors.ts";
+import { handleOptions, withCorsError, withCorsJson } from "../_shared/cors.ts";
 
 serve(async (req) => {
   // 1) Tratar preflight OPTIONS
@@ -11,15 +11,9 @@ serve(async (req) => {
     return handleOptions(req);
   }
 
-  const origin = req.headers.get("Origin");
-  const headers = { ...corsHeaders(origin), "Content-Type": "application/json" };
-
   // 2) Validar método
   if (req.method !== "POST") {
-    return new Response(
-      JSON.stringify({ error: "Method Not Allowed" }),
-      { status: 405, headers }
-    );
+    return withCorsError(req, "Method not allowed", 405);
   }
 
   try {
@@ -40,24 +34,16 @@ serve(async (req) => {
 
     if (!res.ok) {
       const errText = await res.text();
-      return new Response(
-        JSON.stringify({ ok: false, error: errText }),
-        { status: 502, headers }
-      );
+      return withCorsError(req, `PushinPay status error: ${errText}`, 502);
     }
 
     const status = await res.json(); // { status: "created" | "paid" | "expired" | "canceled" ... }
 
     await updateOrderStatusFromGateway(orderId, status);
 
-    return new Response(
-      JSON.stringify({ ok: true, status }),
-      { status: 200, headers }
-    );
+    return withCorsJson(req, { ok: true, status });
   } catch (e) {
-    return new Response(
-      JSON.stringify({ ok: false, error: String(e) }),
-      { status: 400, headers }
-    );
+    console.error("Status error:", e);
+    return withCorsError(req, `Status error: ${e?.message ?? e}`, 400);
   }
 });

@@ -1,82 +1,93 @@
 /**
- * Módulo CORS com whitelist de origens e validação adequada
+ * Módulo CORS simplificado com whitelist usando Set
  * 
- * Este módulo garante que apenas origens autorizadas possam fazer
- * requisições às Edge Functions do frontend.
+ * Versão otimizada para performance e simplicidade
  */
 
 /**
- * Lista de origens permitidas
- * Inclui domínios de produção, preview e desenvolvimento local
+ * Whitelist de origens permitidas usando Set para lookup O(1)
  */
-export const ALLOWED_ORIGINS = [
-  'https://risecheckout.lovable.app',           // Produção
-  'https://preview--risecheckout.lovable.app',  // Preview da Lovable
-  'http://localhost:5173',                      // Vite dev server
-  'http://localhost:3000',                      // Alternativa local
-  'http://127.0.0.1:5173',                      // Localhost alternativo
-  'http://127.0.0.1:3000',                      // Localhost alternativo
-];
+const ALLOWED_ORIGINS = new Set<string>([
+  'https://risecheckout.lovable.app',          // Produção
+  'https://preview--risecheckout.lovable.app', // Preview
+  'http://localhost:5173',                     // Vite dev
+  'http://localhost:3000',                     // Alternativa local
+]);
 
 /**
- * Verifica se uma origem é permitida
- * 
- * Valida contra a whitelist e também permite qualquer subdomínio *.lovable.app
- * para suportar previews dinâmicos da Lovable
- */
-function isAllowedOrigin(origin: string | null): boolean {
-  if (!origin) return false;
-  
-  // Verificar whitelist exata
-  if (ALLOWED_ORIGINS.includes(origin)) return true;
-  
-  // Permitir qualquer subdomínio *.lovable.app
-  try {
-    const url = new URL(origin);
-    return url.hostname.endsWith('.lovable.app');
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Gera headers CORS apropriados baseados na origem da requisição
+ * Gera headers CORS baseados na origem da requisição
  * 
  * @param origin - Origem da requisição (header Origin)
  * @returns Headers CORS para incluir na resposta
  */
 export function corsHeaders(origin: string | null): Record<string, string> {
-  const headers: Record<string, string> = {
-    'Vary': 'Origin',
+  const allowOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : '';
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'content-type, authorization, x-requested-with',
     'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'content-type, authorization, x-client-info, apikey',
+    'Vary': 'Origin',
   };
-  
-  // Só adiciona Access-Control-Allow-Origin se a origem for permitida
-  if (isAllowedOrigin(origin)) {
-    headers['Access-Control-Allow-Origin'] = origin!;
-  }
-  
-  return headers;
 }
 
 /**
  * Trata requisições OPTIONS (preflight)
  * 
- * O navegador envia OPTIONS antes de POST/GET para verificar permissões CORS.
- * Esta função sempre retorna 200 OK com headers CORS apropriados.
- * 
- * @param request - Requisição OPTIONS
+ * @param req - Requisição OPTIONS
  * @returns Response 200 OK com headers CORS
  */
-export function handleOptions(request: Request): Response {
-  const origin = request.headers.get('Origin');
-  const headers = corsHeaders(origin);
-  
-  // IMPORTANTE: Sempre retornar 200 no preflight
-  return new Response(null, { 
+export function handleOptions(req: Request): Response {
+  const origin = req.headers.get('origin');
+  return new Response('ok', { 
     status: 200, 
-    headers 
+    headers: corsHeaders(origin) 
+  });
+}
+
+/**
+ * Helper para retornar resposta JSON com CORS
+ * 
+ * @param req - Requisição original
+ * @param body - Corpo da resposta (será convertido para JSON)
+ * @param init - Opções adicionais de Response
+ * @returns Response com JSON e headers CORS
+ */
+export function withCorsJson(
+  req: Request, 
+  body: unknown, 
+  init?: ResponseInit
+): Response {
+  const origin = req.headers.get('origin');
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { 
+      'Content-Type': 'application/json', 
+      ...corsHeaders(origin) 
+    },
+    ...init,
+  });
+}
+
+/**
+ * Helper para retornar erro JSON com CORS
+ * 
+ * @param req - Requisição original
+ * @param message - Mensagem de erro
+ * @param status - Código HTTP de erro (padrão: 400)
+ * @returns Response com erro JSON e headers CORS
+ */
+export function withCorsError(
+  req: Request, 
+  message: string, 
+  status = 400
+): Response {
+  const origin = req.headers.get('origin');
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { 
+      'Content-Type': 'application/json', 
+      ...corsHeaders(origin) 
+    },
   });
 }

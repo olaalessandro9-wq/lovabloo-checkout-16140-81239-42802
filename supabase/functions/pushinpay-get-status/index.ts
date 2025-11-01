@@ -3,12 +3,22 @@ import {
   loadTokenEnvAndPixId,
   updateOrderStatusFromGateway,
 } from "../_shared/db.ts";
-
-const JSON_HEADER = { "Content-Type": "application/json" };
+import { corsHeaders, handleCorsPreFlight } from "../_shared/cors.ts";
 
 serve(async (req) => {
+  // Tratar preflight OPTIONS
+  if (req.method === "OPTIONS") {
+    return handleCorsPreFlight();
+  }
+
   if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
+    return new Response(
+      JSON.stringify({ error: "Method Not Allowed" }),
+      { 
+        status: 405, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      }
+    );
   }
 
   try {
@@ -29,23 +39,33 @@ serve(async (req) => {
 
     if (!res.ok) {
       const errText = await res.text();
-      return new Response(JSON.stringify({ ok: false, error: errText }), {
-        status: 502,
-        headers: JSON_HEADER,
-      });
+      return new Response(
+        JSON.stringify({ ok: false, error: errText }),
+        {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     const status = await res.json(); // { status: "created" | "paid" | "expired" | "canceled" ... }
 
     await updateOrderStatusFromGateway(orderId, status);
 
-    return new Response(JSON.stringify({ ok: true, status }), {
-      headers: JSON_HEADER,
-    });
+    return new Response(
+      JSON.stringify({ ok: true, status }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   } catch (e) {
-    return new Response(JSON.stringify({ ok: false, error: String(e) }), {
-      status: 400,
-      headers: JSON_HEADER,
-    });
+    return new Response(
+      JSON.stringify({ ok: false, error: String(e) }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   }
 });

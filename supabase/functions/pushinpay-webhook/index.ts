@@ -3,6 +3,7 @@ import {
   findOrderByPixId,
   updateOrderStatusFromGateway,
 } from "../_shared/db.ts";
+import { corsHeaders, handleCorsPreFlight } from "../_shared/cors.ts";
 
 type WebhookPayload = {
   id: string;
@@ -15,9 +16,20 @@ type WebhookPayload = {
 };
 
 serve(async (req: Request) => {
+  // Tratar preflight OPTIONS
+  if (req.method === "OPTIONS") {
+    return handleCorsPreFlight();
+  }
+
   try {
     if (req.method !== "POST") {
-      return new Response("Method Not Allowed", { status: 405 });
+      return new Response(
+        JSON.stringify({ error: "Method Not Allowed" }),
+        { 
+          status: 405, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
     }
 
     const payload = (await req.json()) as WebhookPayload;
@@ -28,14 +40,32 @@ serve(async (req: Request) => {
     // 1) Encontrar orderId pelo pixId
     const orderId = await findOrderByPixId(payload.id);
     if (!orderId) {
-      return Response.json({ ok: false, error: "Order not found" }, { status: 404 });
+      return new Response(
+        JSON.stringify({ ok: false, error: "Order not found" }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" }
+        }
+      );
     }
 
     // 2) Atualizar status do pedido
     await updateOrderStatusFromGateway(orderId, payload);
 
-    return Response.json({ ok: true });
+    return new Response(
+      JSON.stringify({ ok: true }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   } catch (err) {
-    return Response.json({ ok: false, error: String(err) }, { status: 500 });
+    return new Response(
+      JSON.stringify({ ok: false, error: String(err) }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      }
+    );
   }
 });

@@ -1,8 +1,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { decrypt } from "../_shared/crypto.ts";
-
-const JSON_HEADER = { "Content-Type": "application/json" };
+import { corsHeaders, handleCorsPreFlight } from "../_shared/cors.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -17,10 +16,15 @@ const PLATFORM_ACCOUNT = Deno.env.get("PLATFORM_PUSHINPAY_ACCOUNT_ID");
 const PLATFORM_FEE_PERCENT = parseFloat(Deno.env.get("PLATFORM_FEE_PERCENT") || "7.5");
 
 serve(async (req) => {
+  // Tratar preflight OPTIONS
+  if (req.method === "OPTIONS") {
+    return handleCorsPreFlight();
+  }
+
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method Not Allowed" }),
-      { status: 405, headers: JSON_HEADER }
+      { status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 
@@ -31,14 +35,14 @@ serve(async (req) => {
     if (!orderId) {
       return new Response(
         JSON.stringify({ error: "orderId é obrigatório" }),
-        { status: 422, headers: JSON_HEADER }
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (typeof value !== "number" || value < 50) {
       return new Response(
         JSON.stringify({ error: "Valor mínimo é R$ 0,50 (50 centavos)" }),
-        { status: 422, headers: JSON_HEADER }
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -52,7 +56,7 @@ serve(async (req) => {
     if (orderErr || !order) {
       return new Response(
         JSON.stringify({ error: "Pedido não encontrado" }),
-        { status: 404, headers: JSON_HEADER }
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -68,7 +72,7 @@ serve(async (req) => {
         JSON.stringify({ 
           error: "Configuração de gateway não encontrada. Configure em Financeiro." 
         }),
-        { status: 404, headers: JSON_HEADER }
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -79,7 +83,7 @@ serve(async (req) => {
     } catch (e) {
       return new Response(
         JSON.stringify({ error: "Erro ao processar credenciais de pagamento" }),
-        { status: 500, headers: JSON_HEADER }
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -94,7 +98,7 @@ serve(async (req) => {
     if (platformValue > value * 0.5) {
       return new Response(
         JSON.stringify({ error: "Split não pode exceder 50% do valor da transação" }),
-        { status: 422, headers: JSON_HEADER }
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -133,7 +137,7 @@ serve(async (req) => {
           JSON.stringify({ 
             error: "Token PushinPay inválido. Verifique suas credenciais em Financeiro." 
           }),
-          { status: 401, headers: JSON_HEADER }
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -142,7 +146,7 @@ serve(async (req) => {
           JSON.stringify({ 
             error: "Muitas tentativas. Aguarde alguns segundos e tente novamente." 
           }),
-          { status: 429, headers: JSON_HEADER }
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -151,7 +155,7 @@ serve(async (req) => {
           JSON.stringify({ 
             error: "Serviço de pagamento temporariamente indisponível. Tente novamente em instantes." 
           }),
-          { status: 502, headers: JSON_HEADER }
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
@@ -160,7 +164,7 @@ serve(async (req) => {
           error: "Erro ao criar cobrança PIX", 
           detail: errorText 
         }),
-        { status: response.status, headers: JSON_HEADER }
+        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -185,7 +189,7 @@ serve(async (req) => {
         qr_code: pixData.qr_code,
         qr_code_base64: pixData.qr_code_base64,
       }),
-      { headers: JSON_HEADER }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
   } catch (error) {

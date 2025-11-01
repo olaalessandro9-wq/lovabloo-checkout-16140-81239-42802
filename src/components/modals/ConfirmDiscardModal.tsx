@@ -1,4 +1,15 @@
 // src/components/modals/ConfirmDiscardModal.tsx
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle } from "lucide-react";
+
 type Props = {
   text: string;
   isOpen: boolean;
@@ -8,29 +19,43 @@ type Props = {
 };
 
 export function ConfirmDiscardModal({ text, isOpen, onClose, onConfirm, onCancel }: Props) {
-  if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40">
-      <div className="w-[520px] rounded-xl bg-white p-5 shadow-xl">
-        <h3 className="mb-2 text-lg font-semibold">Existem alterações pendentes</h3>
-        <p className="mb-5 text-sm text-gray-600">{text}</p>
-
-        <div className="flex justify-end gap-3">
-          {/* Ordem solicitada: Descartar (vermelho) à esquerda, Continuar (neutro) à direita */}
-          <button
-            className="rounded-md bg-red-600 px-3 py-2 text-white hover:bg-red-700"
-            onClick={() => { onConfirm(); onClose(); }}
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
+      <AlertDialogContent className="max-w-md">
+        <AlertDialogHeader>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+            </div>
+            <AlertDialogTitle className="text-xl">Alterações pendentes</AlertDialogTitle>
+          </div>
+          <AlertDialogDescription className="text-base leading-relaxed">
+            {text}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="gap-2 sm:gap-2">
+          <Button
+            variant="destructive"
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className="sm:w-auto"
           >
             Descartar e sair
-          </button>
-          <button
-            className="rounded-md bg-gray-200 px-3 py-2 hover:bg-gray-300"
-            onClick={() => { onCancel(); onClose(); }}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              onCancel();
+              onClose();
+            }}
+            className="sm:w-auto"
           >
             Continuar edição
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

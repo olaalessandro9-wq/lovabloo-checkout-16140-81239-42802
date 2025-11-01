@@ -386,8 +386,11 @@ const ProductEditInner = () => {
     }
   }, [productId]);
 
+  // Estado para rastrear modificações na aba de configurações
+  const [settingsModified, setSettingsModified] = useState(false);
+
   // Agregação de dirty state para o guard
-  const isDirty = generalModified || imageModified || offersModified || upsellModified || affiliateModified;
+  const isDirty = generalModified || imageModified || offersModified || upsellModified || affiliateModified || settingsModified;
   
   // Guard habilitado em todas as tabs EXCETO checkout e links
   const guardEnabled = activeTab !== "checkout" && activeTab !== "links";
@@ -1445,7 +1448,10 @@ const ProductEditInner = () => {
           </TabsContent>
 
           <TabsContent value="configuracoes" className="space-y-6">
-            <ProductSettingsPanel productId={productId} />
+            <ProductSettingsPanel 
+              productId={productId} 
+              onModifiedChange={setSettingsModified}
+            />
           </TabsContent>
 
           <TabsContent value="order-bump" className="space-y-6">

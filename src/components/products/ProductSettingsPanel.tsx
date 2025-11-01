@@ -22,7 +22,12 @@ type Settings = {
   default_payment_method: "pix" | "credit_card";
 };
 
-export default function ProductSettingsPanel({ productId }: { productId: string }) {
+type Props = {
+  productId: string;
+  onModifiedChange?: (modified: boolean) => void;
+};
+
+export default function ProductSettingsPanel({ productId, onModifiedChange }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [initial, setInitial] = useState<Settings>({
@@ -52,14 +57,21 @@ export default function ProductSettingsPanel({ productId }: { productId: string 
     })();
   }, [productId]);
 
+  // Detectar mudanças e notificar o componente pai
+  useEffect(() => {
+    const hasChanges = JSON.stringify(initial) !== JSON.stringify(form);
+    onModifiedChange?.(hasChanges);
+  }, [form, initial, onModifiedChange]);
+
 
   const handleSave = async () => {
     setSaving(true);
     // TODO: Campo required_fields será implementado no futuro
     // Por enquanto, apenas simular o salvamento
+    await new Promise(resolve => setTimeout(resolve, 500));
     setSaving(false);
     toast.success("Configurações salvas com sucesso.");
-    setInitial(form); // Atualiza o estado inicial
+    setInitial(form); // Atualiza o estado inicial para resetar flag de modificação
   };
 
   if (loading) {

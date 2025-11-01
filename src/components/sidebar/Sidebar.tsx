@@ -1,73 +1,190 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Box, Users, BadgeDollarSign, Link as LinkIcon, Settings } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  LayoutDashboard,
+  PackageSearch,
+  Users,
+  Wallet,
+  Plug,
+  Settings,
+  MessageCircle,
+  LifeBuoy,
+  LogOut,
+} from 'lucide-react';
+import { createClient } from '@supabase/supabase-js';
 
-type Item = { to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean };
+// --- Supabase client ---
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const NAV: Item[] = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { to: '/produtos', label: 'Produtos', icon: Box },
-  { to: '/afiliados', label: 'Afiliados', icon: Users },
-];
+// --- util: link do WhatsApp ---
+const WA_PHONE = import.meta.env.VITE_WA_PHONE_E164 as string | undefined;
+const WA_MSG =
+  (import.meta.env.VITE_WA_DEFAULT_MSG as string | undefined) ??
+  'Olá! Preciso de ajuda com meu checkout. Pode me orientar?';
 
-const OPS: Item[] = [
-  { to: '/financeiro', label: 'Financeiro', icon: BadgeDollarSign },
-  { to: '/integracoes', label: 'Integrações', icon: LinkIcon },
-];
+function buildWhatsAppHref() {
+  if (!WA_PHONE) return null;
+  const msg = encodeURIComponent(WA_MSG);
+  return `https://wa.me/${WA_PHONE}?text=${msg}`;
+}
 
-const SYS: Item[] = [
-  { to: '/config', label: 'Configurações', icon: Settings },
-];
+// --- item base ---
+type ItemProps = {
+  to?: string;
+  icon: React.ElementType;
+  label: string;
+  externalHref?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+};
 
-function Section({ title, items }: { title: string; items: Item[] }) {
+function SidebarItem({ to, icon: Icon, label, externalHref, onClick, disabled }: ItemProps) {
+  const baseCls =
+    'group flex items-center gap-2 rounded-md px-3 py-2 text-sm transition ' +
+    'text-foreground hover:bg-muted aria-[current=page]:bg-muted aria-[current=page]:font-medium';
+
+  if (externalHref) {
+    return (
+      <a
+        href={externalHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`${baseCls} ${disabled ? 'pointer-events-none opacity-50' : ''}`}
+        aria-disabled={disabled ? 'true' : 'false'}
+      >
+        <Icon className="h-4 w-4" />
+        <span>{label}</span>
+      </a>
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={baseCls}>
+        <Icon className="h-4 w-4" />
+        <span>{label}</span>
+      </button>
+    );
+  }
+
   return (
-    <div className="mt-6 first:mt-0">
-      <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-sidebar-foreground/60">
-        {title}
-      </div>
-      <nav className="space-y-1">
-        {items.map((it) => {
-          const Icon = it.icon;
-          return (
-            <NavLink
-              key={it.to}
-              to={it.to}
-              end={it.exact}
-              className={({ isActive }) =>
-                [
-                  'group flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar-foreground hover:bg-sidebar-accent transition',
-                  isActive ? 'bg-sidebar-accent font-semibold' : ''
-                ].join(' ')
-              }
-            >
-              <Icon className="h-4 w-4" />
-              <span>{it.label}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
-    </div>
+    <NavLink to={to!} className={({ isActive }) => (isActive ? `${baseCls} bg-muted font-medium` : baseCls)}>
+      <Icon className="h-4 w-4" />
+      <span>{label}</span>
+    </NavLink>
   );
 }
 
 export default function Sidebar() {
+  const [email, setEmail] = useState<string | null>(null);
+
+  // Carrega o e-mail do usuário logado
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (!mounted) return;
+        setEmail(data.user?.email ?? null);
+      } catch {
+        setEmail(null);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const waHref = useMemo(buildWhatsAppHref, []);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      window.location.assign('/auth');
+    }
+  };
+
   return (
     <aside
       className="
-        bg-sidebar text-sidebar-foreground border-sidebar-border
-        fixed inset-y-0 left-0 z-40 w-64 shrink-0 border-r px-3 py-4
+        fixed inset-y-0 left-0 z-40 w-64 border-r border-border
+        bg-background text-foreground
+        flex flex-col
       "
+      aria-label="Navegação lateral"
     >
-      <div className="mb-3 px-2 text-lg font-semibold">
-        RiseCheckout
+      {/* Branding */}
+      <div className="flex h-14 items-center border-b border-border px-4">
+        <span className="text-sm font-medium text-muted-foreground">RiseCheckout</span>
       </div>
-      
-      <Section title="Navegação" items={NAV} />
-      <Section title="Operações" items={OPS} />
-      <Section title="Sistema" items={SYS} />
 
-      <div className="mt-auto pt-4">
-        <div className="h-px w-full bg-sidebar-border opacity-50" />
-        <div className="mt-3 px-2 text-xs text-sidebar-foreground/60">© 2025 Rise Checkout</div>
+      {/* Conteúdo rolável */}
+      <nav className="flex-1 space-y-6 overflow-y-auto p-3">
+        {/* NAVEGAÇÃO */}
+        <div>
+          <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Navegação
+          </p>
+          <div className="space-y-1">
+            <SidebarItem to="/" icon={LayoutDashboard} label="Dashboard" />
+            <SidebarItem to="/produtos" icon={PackageSearch} label="Produtos" />
+            <SidebarItem to="/afiliados" icon={Users} label="Afiliados" />
+          </div>
+        </div>
+
+        {/* OPERAÇÕES */}
+        <div>
+          <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Operações
+          </p>
+          <div className="space-y-1">
+            <SidebarItem to="/financeiro" icon={Wallet} label="Financeiro" />
+            <SidebarItem to="/integracoes" icon={Plug} label="Integrações" />
+          </div>
+        </div>
+
+        {/* SISTEMA */}
+        <div>
+          <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Sistema
+          </p>
+          <div className="space-y-1">
+            <SidebarItem to="/config" icon={Settings} label="Configurações" />
+            
+            {/* Suporte via WhatsApp */}
+            <SidebarItem
+              icon={MessageCircle}
+              label="Suporte pelo WhatsApp"
+              externalHref={waHref ?? undefined}
+              disabled={!waHref}
+            />
+
+            {/* Ajuda (rota interna) */}
+            <SidebarItem to="/ajuda" icon={LifeBuoy} label="Ajuda" />
+
+            {/* Sair (ação) */}
+            <SidebarItem icon={LogOut} label="Sair" onClick={handleLogout} />
+          </div>
+        </div>
+      </nav>
+
+      {/* Rodapé do sidebar */}
+      <div className="border-t border-border p-3">
+        <div className="mb-2 truncate text-xs text-muted-foreground" title={email ?? ''}>
+          {email ?? 'Usuário'}
+        </div>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-border bg-card px-3 py-2
+                     text-sm text-foreground hover:opacity-85 transition"
+        >
+          <LogOut className="h-4 w-4" />
+          Sair
+        </button>
       </div>
     </aside>
   );

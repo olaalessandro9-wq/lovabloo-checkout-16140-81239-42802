@@ -18,6 +18,9 @@ import PaymentLinkRedirect from "./pages/PaymentLinkRedirect";
 import NotFound from "./pages/NotFound";
 import EmBreve from "./pages/EmBreve";
 import Integracoes from "./pages/Integracoes";
+import Ajuda from "./pages/Ajuda";
+import Financeiro from "./pages/Financeiro";
+import Config from "./pages/Config";
 
 const queryClient = new QueryClient();
 
@@ -49,8 +52,10 @@ const App = () => (
               <Route path="produtos/editar" element={<ProductEdit />} />
               <Route path="produtos/checkout/personalizar" element={<CheckoutCustomizer />} />
               <Route path="afiliados" element={<Afiliados />} />
-              <Route path="financeiro" element={<EmBreve titulo="Financeiro" />} />
+              <Route path="financeiro" element={<Financeiro />} />
               <Route path="integracoes" element={<Integracoes />} />
+              <Route path="config" element={<Config />} />
+              <Route path="ajuda" element={<Ajuda />} />
             </Route>
           </Routes>
         </TooltipProvider>

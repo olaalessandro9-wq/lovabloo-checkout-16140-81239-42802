@@ -60,6 +60,11 @@
   - Valor: `https://api-sandbox.pushinpay.com.br/api`
   - Evidência: Screenshot do painel de secrets
 
+- [ ] **B6.** `PUSHINPAY_WEBHOOK_TOKEN` configurada
+  - Valor: `rise_secure_token_123` (mesmo token da PushinPay)
+  - Usado para: Validação de segurança do webhook
+  - Evidência: Screenshot do painel de secrets
+
 ---
 
 ### **C) Deploy de Edge Functions**

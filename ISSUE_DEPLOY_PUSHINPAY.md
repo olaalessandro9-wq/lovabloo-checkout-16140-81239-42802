@@ -68,6 +68,7 @@ cd /path/to/risecheckout
 # Definir variáveis de ambiente
 export PLATFORM_PUSHINPAY_ACCOUNT_ID="<seu_account_id_aqui>"
 export PLATFORM_FEE_PERCENT="7.5"
+export PUSHINPAY_WEBHOOK_TOKEN="rise_secure_token_123"
 
 # Executar script (gera ENCRYPTION_KEY automaticamente)
 ./scripts/configure-secrets.sh
@@ -86,6 +87,7 @@ export PLATFORM_FEE_PERCENT="7.5"
 | `PLATFORM_FEE_PERCENT` | `7.5` | Taxa da plataforma (%) |
 | `PUSHINPAY_BASE_URL_PROD` | `https://api.pushinpay.com.br/api` | URL de produção |
 | `PUSHINPAY_BASE_URL_SANDBOX` | `https://api-sandbox.pushinpay.com.br/api` | URL de sandbox |
+| `PUSHINPAY_WEBHOOK_TOKEN` | `rise_secure_token_123` | Token de validação do webhook (mesmo da PushinPay) |
 
 **Validação:**
 ```bash

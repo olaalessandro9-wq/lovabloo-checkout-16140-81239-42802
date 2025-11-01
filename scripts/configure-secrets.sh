@@ -120,6 +120,27 @@ supabase secrets set PUSHINPAY_BASE_URL_SANDBOX="$PUSHINPAY_BASE_URL_SANDBOX" --
 echo "✅ PUSHINPAY_BASE_URL_SANDBOX configurada"
 echo ""
 
+# 6. PUSHINPAY_WEBHOOK_TOKEN
+echo "=================================================="
+echo "6. Configurando PUSHINPAY_WEBHOOK_TOKEN"
+echo "=================================================="
+echo ""
+
+if [ -z "$PUSHINPAY_WEBHOOK_TOKEN" ]; then
+    echo "⚠️  PUSHINPAY_WEBHOOK_TOKEN não encontrada no ambiente"
+    echo "Usando token padrão: rise_secure_token_123"
+    echo ""
+    echo "⚠️  IMPORTANTE: Este token deve ser o MESMO configurado no painel da PushinPay!"
+    echo ""
+    PUSHINPAY_WEBHOOK_TOKEN="rise_secure_token_123"
+fi
+
+echo "Token do webhook: $PUSHINPAY_WEBHOOK_TOKEN"
+echo "Configurando no Supabase..."
+supabase secrets set PUSHINPAY_WEBHOOK_TOKEN="$PUSHINPAY_WEBHOOK_TOKEN" --project-ref "$PROJECT_REF"
+echo "✅ PUSHINPAY_WEBHOOK_TOKEN configurada"
+echo ""
+
 # Resumo
 echo "=================================================="
 echo "  ✅ Configuração Concluída com Sucesso!"
@@ -131,6 +152,7 @@ echo "  ✅ PLATFORM_PUSHINPAY_ACCOUNT_ID"
 echo "  ✅ PLATFORM_FEE_PERCENT ($PLATFORM_FEE_PERCENT%)"
 echo "  ✅ PUSHINPAY_BASE_URL_PROD"
 echo "  ✅ PUSHINPAY_BASE_URL_SANDBOX"
+echo "  ✅ PUSHINPAY_WEBHOOK_TOKEN"
 echo ""
 echo "Próximo passo: Deploy das Edge Functions"
 echo "Execute: ./scripts/deploy-functions.sh"

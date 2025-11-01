@@ -20,12 +20,11 @@
     <script>
       (function () {
         try {
-          var k = 'rise:theme';
-          var t = localStorage.getItem(k) || 'system';
-          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = (t === 'dark') || (t === 'system' && prefersDark);
-          document.documentElement.classList.toggle('dark', isDark);
-          document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+          var t = localStorage.getItem('rise:theme');
+          if (t === 'dark') document.documentElement.classList.add('dark');
+          document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+          // Garante layout estável sem "puxão" de scrollbar entre temas:
+          document.documentElement.style.scrollbarGutter = 'stable';
         } catch (e) {}
       })();
     </script>

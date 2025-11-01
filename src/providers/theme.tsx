@@ -1,70 +1,50 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark" | "system";
-type ThemeContextValue = {
+type Theme = "light" | "dark";
+
+type ThemeCtx = {
   theme: Theme;
+  toggle: () => void;
   setTheme: (t: Theme) => void;
-  isDark: boolean;
 };
 
-const ThemeContext = createContext<ThemeContextValue | null>(null);
+const ThemeContext = createContext<ThemeCtx | null>(null);
 const STORAGE_KEY = "rise:theme";
 
-function resolveIsDark(theme: Theme) {
-  if (theme === "dark") return true;
-  if (theme === "light") return false;
-  // system
-  return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-}
-
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    try {
-      return (localStorage.getItem(STORAGE_KEY) as Theme) || "system";
-    } catch {
-      return "system";
-    }
+    // migração: se encontrar "system", trata como "light" por padrão
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw === "dark") return "dark";
+    return "light";
   });
 
-  const [isDark, setIsDark] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return resolveIsDark(theme);
-  });
-
-  // aplica/atualiza .dark no <html>
-  useEffect(() => {
-    const html = document.documentElement;
-    const update = () => {
-      const activeDark = resolveIsDark(theme);
-      setIsDark(activeDark);
-      html.classList.toggle("dark", activeDark);
-      // Manter data-theme para compatibilidade
-      html.setAttribute("data-theme", activeDark ? "dark" : "light");
-    };
-
-    update();
-
-    // quando estiver em "system" reagir às mudanças do SO
-    let mq: MediaQueryList | null = null;
-    if (theme === "system" && window.matchMedia) {
-      mq = window.matchMedia("(prefers-color-scheme: dark)");
-      const listener = () => update();
-      mq.addEventListener?.("change", listener);
-      return () => mq?.removeEventListener?.("change", listener);
-    }
-  }, [theme]);
+  const apply = (t: Theme) => {
+    const root = document.documentElement;
+    if (t === "dark") root.classList.add("dark");
+    else root.classList.remove("dark");
+    root.setAttribute("data-theme", t);
+  };
 
   const setTheme = (t: Theme) => {
     setThemeState(t);
-    try {
-      localStorage.setItem(STORAGE_KEY, t);
-    } catch {}
+    localStorage.setItem(STORAGE_KEY, t);
+    apply(t);
   };
 
-  const value = useMemo(() => ({ theme, setTheme, isDark }), [theme, isDark]);
+  const toggle = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
-};
+  useEffect(() => {
+    // aplica no mount (previne FOUC se index.html já não fizer isso)
+    apply(theme);
+  }, []);
+
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme, toggle }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
 
 export function useTheme() {
   const ctx = useContext(ThemeContext);

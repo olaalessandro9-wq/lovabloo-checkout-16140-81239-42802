@@ -1,38 +1,19 @@
-import { useTheme } from "@/providers/theme";
-import { Sun, Moon, Monitor } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+import { useContext } from 'react';
+import { Moon, Sun } from 'lucide-react';
+import { ThemeCtx } from '@/providers/theme';
 
-export function ThemeToggle() {
-  const { theme, setTheme, isDark } = useTheme();
-
+export default function ThemeToggle() {
+  const { theme, toggle } = useContext(ThemeCtx);
+  const isDark = theme === 'dark';
+  
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Trocar tema">
-          {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Tema</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => setTheme("light")} className={theme === "light" ? "font-semibold" : ""}>
-          <Sun className="mr-2 h-4 w-4" /> Claro
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")} className={theme === "dark" ? "font-semibold" : ""}>
-          <Moon className="mr-2 h-4 w-4" /> Escuro
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")} className={theme === "system" ? "font-semibold" : ""}>
-          <Monitor className="mr-2 h-4 w-4" /> Sistema
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <button
+      aria-label="Alternar tema"
+      onClick={toggle}
+      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-app bg-card text-app hover:opacity-80 transition"
+      title={isDark ? 'Ir para tema claro' : 'Ir para tema escuro'}
+    >
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
   );
 }

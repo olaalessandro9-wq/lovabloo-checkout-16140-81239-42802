@@ -1,18 +1,40 @@
-/* Sidebar tokens - garantindo compatibilidade com o Rise Insights */
+/* Tokens baseados em CSS vars para o layout */
 :root {
-  --sidebar-bg: #0a0a0a;
-  --sidebar-border: #27272a;
-  --sidebar-item: #d4d4d8;
-  --sidebar-item-active: #18181b;
-  --sidebar-ghost: #a1a1aa;
-  --ring: #3f3f46;
+  --bg: 255 255 255;           /* white */
+  --fg: 15 23 42;              /* slate-900 */
+  --muted: 100 116 139;        /* slate-500 */
+  --border: 226 232 240;       /* slate-200 */
+  --card: 255 255 255;
+  --sidebar-bg: 255 255 255;
+  --sidebar-border: 226 232 240;
+  --sidebar-fg: 51 65 85;      /* slate-700 */
+  --sidebar-muted: 100 116 139;
+  --sidebar-active-bg: 241 245 249; /* slate-100 */
 }
 
-.dark,
-[data-theme="dark"] {
-  --sidebar-bg: #111827;
-  --sidebar-border: #1F2937;
-  --sidebar-item: #F3F4F6;
-  --sidebar-item-active: #1F2937;
-  --sidebar-ghost: #9CA3AF;
+.dark {
+  --bg: 2 6 23;                /* slate-950 */
+  --fg: 241 245 249;           /* slate-100 */
+  --muted: 156 163 175;        /* slate-400 */
+  --border: 30 41 59;          /* slate-800 */
+  --card: 15 23 42;            /* slate-900 */
+  --sidebar-bg: 15 23 42;      /* slate-900 */
+  --sidebar-border: 30 41 59;  /* slate-800 */
+  --sidebar-fg: 226 232 240;   /* slate-200 */
+  --sidebar-muted: 156 163 175;/* slate-400 */
+  --sidebar-active-bg: 30 41 59; /* slate-800 */
 }
+
+/* Utilitários semânticos */
+.bg-app     { background-color: rgb(var(--bg)); }
+.text-app   { color: rgb(var(--fg)); }
+.text-muted { color: rgb(var(--muted)); }
+.bg-card    { background-color: rgb(var(--card)); }
+.border-app { border-color: rgb(var(--border)); }
+
+/* Sidebar */
+.bg-sidebar        { background-color: rgb(var(--sidebar-bg)); }
+.text-sidebar      { color: rgb(var(--sidebar-fg)); }
+.text-sidebar-muted{ color: rgb(var(--sidebar-muted)); }
+.border-sidebar    { border-color: rgb(var(--sidebar-border)); }
+.bg-sidebar-active { background-color: rgb(var(--sidebar-active-bg)); }

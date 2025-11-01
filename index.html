@@ -18,16 +18,13 @@
     
     <!-- Anti-FOUC script -->
     <script>
-      (function () {
-        try {
-          var k = 'rise:theme';
-          var t = localStorage.getItem(k) || 'system';
-          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = (t === 'dark') || (t === 'system' && prefersDark);
-          document.documentElement.classList.toggle('dark', isDark);
-          document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-        } catch (e) {}
-      })();
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'dark') document.documentElement.classList.add('dark');
+      } catch (e) {}
+      try {
+        document.documentElement.style.scrollbarGutter = 'stable';
+      } catch (e) {}
     </script>
   </head>
 

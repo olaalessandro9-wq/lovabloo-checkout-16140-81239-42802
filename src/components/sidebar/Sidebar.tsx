@@ -1,56 +1,74 @@
-import { NavLink } from "react-router-dom";
-import { routes } from "./routes";
+import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, Box, Users, BadgeDollarSign, Link as LinkIcon, Settings } from 'lucide-react';
 
-export function Sidebar() {
+type Item = { to: string; label: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean };
+
+const NAV: Item[] = [
+  { to: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { to: '/produtos', label: 'Produtos', icon: Box },
+  { to: '/afiliados', label: 'Afiliados', icon: Users },
+];
+
+const OPS: Item[] = [
+  { to: '/financeiro', label: 'Financeiro', icon: BadgeDollarSign },
+  { to: '/integracoes', label: 'Integrações', icon: LinkIcon },
+];
+
+const SYS: Item[] = [
+  { to: '/config', label: 'Configurações', icon: Settings },
+];
+
+function Section({ title, items }: { title: string; items: Item[] }) {
   return (
-    <div className="h-full flex flex-col">
-      {/* Cabeçalho */}
-      <div className="px-4 py-3 border-b border-sidebar">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-xl bg-brand-subtle/20 grid place-items-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path 
-                d="M13 2L3 14H12L11 22L21 10H12L13 2Z" 
-                stroke="var(--brand)" 
-                strokeWidth="1.5" 
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
-          <div>
-            <div className="text-sm uppercase tracking-wide text-sidebar-muted">RiseCheckout</div>
-            <div className="font-semibold text-sidebar text-xs">Navegação</div>
-          </div>
-        </div>
+    <div className="mt-6 first:mt-0">
+      <div className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-sidebar-muted">
+        {title}
       </div>
-
-      {/* Lista: apenas aqui rola */}
-      <nav className="flex-1 overflow-y-auto px-2 py-2">
-        {routes.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              [
-                "flex items-center gap-3 rounded-lg px-3 py-2 transition-colors",
-                isActive
-                  ? "bg-black/5 dark:bg-white/5 text-sidebar"
-                  : "text-sidebar-muted hover:text-sidebar hover:bg-black/5 dark:hover:bg-white/5"
-              ].join(" ")
-            }
-          >
-            <item.icon className="w-4 h-4" />
-            <span className="text-sm">{item.label}</span>
-          </NavLink>
-        ))}
+      <nav className="space-y-1">
+        {items.map((it) => {
+          const Icon = it.icon;
+          return (
+            <NavLink
+              key={it.to}
+              to={it.to}
+              end={it.exact}
+              className={({ isActive }) =>
+                [
+                  'group flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-sidebar hover:bg-sidebar-active transition',
+                  isActive ? 'bg-sidebar-active font-semibold' : ''
+                ].join(' ')
+              }
+            >
+              <Icon className="h-4 w-4" />
+              <span>{it.label}</span>
+            </NavLink>
+          );
+        })}
       </nav>
-
-      {/* Rodapé */}
-      <div className="px-4 py-3 border-t border-sidebar text-xs text-sidebar-muted">
-        © {new Date().getFullYear()} Rise Checkout
-      </div>
     </div>
+  );
+}
+
+export default function Sidebar() {
+  return (
+    <aside
+      className="
+        bg-sidebar text-sidebar border-sidebar
+        fixed inset-y-0 left-0 z-40 w-64 shrink-0 border-r px-3 py-4
+      "
+    >
+      <div className="mb-3 px-2 text-lg font-semibold">
+        RiseCheckout
+      </div>
+      
+      <Section title="Navegação" items={NAV} />
+      <Section title="Operações" items={OPS} />
+      <Section title="Sistema" items={SYS} />
+
+      <div className="mt-auto pt-4">
+        <div className="h-px w-full bg-sidebar-border opacity-50" />
+        <div className="mt-3 px-2 text-xs text-sidebar-muted">© 2025 Rise Checkout</div>
+      </div>
+    </aside>
   );
 }

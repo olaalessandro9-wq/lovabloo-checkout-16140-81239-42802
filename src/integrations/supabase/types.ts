@@ -62,6 +62,24 @@ export type Database = {
           },
         ]
       }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       checkout_components: {
         Row: {
           component_order: number
@@ -726,6 +744,36 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_gateway_settings: {
+        Row: {
+          created_at: string | null
+          environment: string
+          platform_fee_percent: number | null
+          pushinpay_token: string
+          token_encrypted: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          environment: string
+          platform_fee_percent?: number | null
+          pushinpay_token: string
+          token_encrypted?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          environment?: string
+          platform_fee_percent?: number | null
+          pushinpay_token?: string
+          token_encrypted?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       payment_links: {
         Row: {
           created_at: string | null
@@ -768,14 +816,118 @@ export type Database = {
           },
         ]
       }
+      payment_provider_credentials: {
+        Row: {
+          api_key: string
+          created_at: string | null
+          id: string
+          owner_id: string
+          provider: string
+          updated_at: string | null
+          use_sandbox: boolean
+          workspace_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string | null
+          id?: string
+          owner_id: string
+          provider: string
+          updated_at?: string | null
+          use_sandbox?: boolean
+          workspace_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string | null
+          id?: string
+          owner_id?: string
+          provider?: string
+          updated_at?: string | null
+          use_sandbox?: boolean
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      payments_map: {
+        Row: {
+          created_at: string | null
+          order_id: string
+          pix_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          order_id: string
+          pix_id: string
+        }
+        Update: {
+          created_at?: string | null
+          order_id?: string
+          pix_id?: string
+        }
+        Relationships: []
+      }
+      pix_transactions: {
+        Row: {
+          checkout_id: string
+          created_at: string | null
+          id: string
+          payer_document: string | null
+          payer_name: string | null
+          payload_emv: string | null
+          provider: string
+          provider_payment_id: string
+          qr_base64: string | null
+          status: string
+          updated_at: string | null
+          value_cents: number
+          webhook_raw: Json | null
+          workspace_id: string
+        }
+        Insert: {
+          checkout_id: string
+          created_at?: string | null
+          id?: string
+          payer_document?: string | null
+          payer_name?: string | null
+          payload_emv?: string | null
+          provider?: string
+          provider_payment_id: string
+          qr_base64?: string | null
+          status: string
+          updated_at?: string | null
+          value_cents: number
+          webhook_raw?: Json | null
+          workspace_id: string
+        }
+        Update: {
+          checkout_id?: string
+          created_at?: string | null
+          id?: string
+          payer_document?: string | null
+          payer_name?: string | null
+          payload_emv?: string | null
+          provider?: string
+          provider_payment_id?: string
+          qr_base64?: string | null
+          status?: string
+          updated_at?: string | null
+          value_cents?: number
+          webhook_raw?: Json | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           created_at: string | null
+          default_payment_method: string | null
           description: string | null
           id: string
           image_url: string | null
           name: string
           price: number
+          required_fields: Json | null
           status: string | null
           support_email: string | null
           support_name: string | null
@@ -784,11 +936,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          default_payment_method?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
           name: string
           price: number
+          required_fields?: Json | null
           status?: string | null
           support_email?: string | null
           support_name?: string | null
@@ -797,11 +951,13 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          default_payment_method?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
           name?: string
           price?: number
+          required_fields?: Json | null
           status?: string | null
           support_email?: string | null
           support_name?: string | null
@@ -1073,6 +1229,13 @@ export type Database = {
         Args: { p_offer_id: string }
         Returns: string
       }
+      get_checkout_by_payment_slug: {
+        Args: { p_slug: string }
+        Returns: {
+          checkout_id: string
+          link_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1220,3 +1383,4 @@ export const Constants = {
     },
   },
 } as const
+

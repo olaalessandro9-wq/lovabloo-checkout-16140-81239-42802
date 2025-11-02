@@ -36,7 +36,7 @@ Antes de iniciar, certifique-se de que:
 supabase secrets set ENCRYPTION_KEY="Q1Z6U1VqZEdhV05GYzNsaFpXdz09" --project-ref wivbtmtgpsxupfjwwovf
 
 # 2. PLATFORM_PUSHINPAY_ACCOUNT_ID (ID da conta da plataforma)
-supabase secrets set PLATFORM_PUSHINPAY_ACCOUNT_ID="9c83ed8a-2e48-4bdb-bfb5-4863a527f108" --project-ref wivbtmtgpsxupfjwwovf
+supabase secrets set PLATFORM_PUSHINPAY_ACCOUNT_ID="9F73D854-4DA8-45E1-AFB6-9A8F803EFB7A" --project-ref wivbtmtgpsxupfjwwovf
 
 # 3. PLATFORM_FEE_PERCENT (taxa da plataforma: 7.5%)
 supabase secrets set PLATFORM_FEE_PERCENT="7.5" --project-ref wivbtmtgpsxupfjwwovf
@@ -241,7 +241,7 @@ supabase functions logs pushinpay-webhook --project-ref wivbtmtgpsxupfjwwovf --t
 
 **Resultado esperado:**
 - ✅ Split calculado corretamente
-- ✅ `account_id` da plataforma: `9c83ed8a-2e48-4bdb-bfb5-4863a527f108`
+- ✅ `account_id` da plataforma: `9F73D854-4DA8-45E1-AFB6-9A8F803EFB7A`
 - ✅ Valor do split em centavos correto
 
 ---
@@ -319,7 +319,7 @@ echo "Token: rise_secure_token_123"
 ```bash
 # Etapa 1: Secrets (6 comandos)
 supabase secrets set ENCRYPTION_KEY="Q1Z6U1VqZEdhV05GYzNsaFpXdz09" --project-ref wivbtmtgpsxupfjwwovf
-supabase secrets set PLATFORM_PUSHINPAY_ACCOUNT_ID="9c83ed8a-2e48-4bdb-bfb5-4863a527f108" --project-ref wivbtmtgpsxupfjwwovf
+supabase secrets set PLATFORM_PUSHINPAY_ACCOUNT_ID="9F73D854-4DA8-45E1-AFB6-9A8F803EFB7A" --project-ref wivbtmtgpsxupfjwwovf
 supabase secrets set PLATFORM_FEE_PERCENT="7.5" --project-ref wivbtmtgpsxupfjwwovf
 supabase secrets set PUSHINPAY_BASE_URL_PROD="https://api.pushinpay.com.br/api" --project-ref wivbtmtgpsxupfjwwovf
 supabase secrets set PUSHINPAY_BASE_URL_SANDBOX="https://api-sandbox.pushinpay.com.br/api" --project-ref wivbtmtgpsxupfjwwovf

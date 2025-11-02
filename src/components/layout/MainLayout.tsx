@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { EagleSidebar } from "./EagleSidebar";
+import { Sidebar } from "./Sidebar";
 import { useThemeStore } from "@/contexts/ThemeProvider";
 import { Sun, Moon, Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen flex w-full bg-bg">
-      <EagleSidebar />
+      <Sidebar />
       <div className="flex-1 flex flex-col">
         <header className="h-16 border-b border-sidebar-border flex items-center justify-between px-8 bg-card/30 backdrop-blur-xl sticky top-0 z-10">
           <div className="flex-1"></div>

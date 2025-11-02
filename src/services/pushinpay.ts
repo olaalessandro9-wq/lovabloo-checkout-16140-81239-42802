@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { PaymentGatewaySettings } from "@/integrations/supabase/types-payment-gateway";
 
 export type PushinPayEnvironment = "sandbox" | "production";
 
@@ -20,6 +21,7 @@ export interface PixChargeResponse {
   ok: boolean;
   pix?: {
     id: string;
+    pix_id: string;
     qr_code: string;
     qr_code_base64: string;
     status: string;
@@ -61,7 +63,7 @@ export async function savePushinPaySettings(
         user_id: user.id,
         token_encrypted: tokenEncrypted,
         environment: settings.environment,
-      });
+      } as any);
 
     if (error) return { ok: false, error: error.message };
     return { ok: true };
@@ -83,14 +85,14 @@ export async function getPushinPaySettings(): Promise<PushinPaySettings | null> 
     .from("payment_gateway_settings")
     .select("environment")
     .eq("user_id", user.id)
-    .single();
+    .single() as any;
 
   if (error || !data) return null;
   
   // Retorna com token vazio (mascarado) - o token real nunca é exposto ao cliente
   return {
     pushinpay_token: "••••••••",
-    environment: data.environment,
+    environment: (data as PaymentGatewaySettings).environment,
   } as PushinPaySettings;
 }
 

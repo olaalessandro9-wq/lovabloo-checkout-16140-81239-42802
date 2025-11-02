@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Supabase
+.env
+.env.local
+.env.*.local
+
+# Keys sensíveis (NÃO COMMITAR)
+KEYS_SUPABASE.md

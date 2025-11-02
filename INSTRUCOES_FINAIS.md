@@ -60,16 +60,16 @@ supabase functions deploy pushinpay-webhook --project-ref wivbtmtgpsxupfjwwovf
 
 ```bash
 curl -X POST "https://wivbtmtgpsxupfjwwovf.supabase.co/functions/v1/encrypt-token" \
-  -H "apikey: <SUA_ANON_KEY>" \
+  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndpdmJ0bXRncHN4dXBmand3b3ZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEwNjYzMjgsImV4cCI6MjA3NjY0MjMyOH0.fiSC6Ic4JLO2haISk-qKBe_nyQ2CWOkEJstE2SehEY8" \
   -H "Content-Type: application/json" \
-  -d '{"token": "sandbox_xxxxx"}'
+  -d '{"token": "sandbox_teste_123"}'
 ```
 
 **Esperado:** `{"encrypted":"..."} (200 OK)`
 
-> **Como obter a ANON KEY:**  
-> Acesse: https://supabase.com/dashboard/project/wivbtmtgpsxupfjwwovf/settings/api  
-> Copie a **anon/public key**
+> **Sua ANON KEY já está configurada no comando acima!**  
+> Se precisar consultá-la: `KEYS_SUPABASE.md` ou  
+> https://supabase.com/dashboard/project/wivbtmtgpsxupfjwwovf/settings/api
 
 ---
 

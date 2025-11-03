@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { parseJsonSafely } from "@/lib/utils";
 import { loadPublicCheckoutData } from "@/hooks/usePublicCheckoutConfig";
 import CheckoutComponentRenderer from "@/components/checkout/CheckoutComponentRenderer";
+import PixPayment from "@/components/checkout/PixPayment";
 import { ImageIcon } from "@/components/icons/ImageIcon";
 import { LockIcon } from "@/components/icons/LockIcon";
 import { PixIcon } from "@/components/icons/PixIcon";
@@ -51,6 +52,9 @@ const PublicCheckout = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<'pix' | 'credit_card'>('pix');
+  const [showPixPayment, setShowPixPayment] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -153,12 +157,73 @@ const PublicCheckout = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validações
     if (!formData.name || !formData.email) {
       toast.error("Por favor, preencha todos os campos obrigatórios");
       return;
     }
 
-    toast.success("Processando pagamento...");
+    if (checkout?.product.required_fields?.phone && !formData.phone) {
+      toast.error("Telefone é obrigatório");
+      return;
+    }
+
+    if (checkout?.product.required_fields?.cpf && !formData.document) {
+      toast.error("CPF/CNPJ é obrigatório");
+      return;
+    }
+
+    setProcessingPayment(true);
+
+    try {
+      // 1. Obter vendor_id (dono do produto)
+      const { data: productData, error: productError } = await supabase
+        .from("products")
+        .select("user_id")
+        .eq("id", checkout!.product.id)
+        .single();
+
+      if (productError || !productData) {
+        throw new Error("Erro ao buscar informações do produto");
+      }
+
+      // 2. Calcular valor total (produto + taxa)
+      const productPrice = checkout!.product.price; // em centavos
+      const serviceFee = 99; // R$ 0,99 em centavos
+      const totalCents = productPrice + serviceFee;
+
+      // 3. Criar pedido no banco
+      const { data: newOrder, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          vendor_id: productData.user_id,
+          product_id: checkout!.product.id,
+          customer_email: formData.email,
+          customer_name: formData.name,
+          amount_cents: totalCents,
+          currency: "BRL",
+          payment_method: selectedPayment,
+          gateway: "pushinpay",
+          status: "PENDING",
+        })
+        .select()
+        .single();
+
+      if (orderError || !newOrder) {
+        throw new Error("Erro ao criar pedido: " + (orderError?.message || ""));
+      }
+
+      // 4. Exibir componente PixPayment
+      setOrderId(newOrder.id);
+      setShowPixPayment(true);
+      toast.success("Gerando PIX...");
+
+    } catch (error: any) {
+      console.error("Erro ao processar pagamento:", error);
+      toast.error(error.message || "Erro ao processar pagamento");
+    } finally {
+      setProcessingPayment(false);
+    }
   };
 
   if (loading) {
@@ -439,16 +504,50 @@ const PublicCheckout = () => {
                   </>
                 )}
 
-                <button
-                  onClick={handleSubmit}
-                  className="w-full mt-5 py-3.5 rounded-lg font-bold text-base transition-all duration-200 hover:opacity-90 shadow-sm"
-                  style={{
-                    backgroundColor: checkout.button_color || '#10B981',
-                    color: checkout.button_text_color || '#FFFFFF'
-                  }}
-                >
-                  {selectedPayment === 'pix' ? 'Pagar com PIX' : 'Pagar com Cartão de Crédito'}
-                </button>
+                {/* Componente PixPayment - renderizado condicionalmente */}
+                {selectedPayment === 'pix' && showPixPayment && orderId && (
+                  <div className="mt-6">
+                    <PixPayment
+                      orderId={orderId}
+                      valueInCents={checkout.product.price + 99}
+                      onSuccess={() => {
+                        toast.success("Pagamento confirmado!");
+                        // Redirecionar para página de sucesso ou obrigado
+                      }}
+                      onError={(error) => {
+                        toast.error(error);
+                        setShowPixPayment(false);
+                        setProcessingPayment(false);
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Botão de submissão */}
+                {!showPixPayment && (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={processingPayment}
+                    className={`w-full mt-5 py-3.5 rounded-lg font-bold text-base transition-all duration-200 shadow-sm ${
+                      processingPayment
+                        ? 'opacity-50 cursor-not-allowed'
+                        : 'hover:opacity-90'
+                    }`}
+                    style={{
+                      backgroundColor: checkout.button_color || '#10B981',
+                      color: checkout.button_text_color || '#FFFFFF'
+                    }}
+                  >
+                    {processingPayment ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Processando...
+                      </div>
+                    ) : (
+                      selectedPayment === 'pix' ? 'Pagar com PIX' : 'Pagar com Cartão de Crédito'
+                    )}
+                  </button>
+                )}
 
                 {/* Card de Informações Legais - Unificado sem divisórias */}
                 <div className="bg-white rounded-xl shadow-sm p-5 mt-5 text-center">

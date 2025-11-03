@@ -27,14 +27,14 @@ serve(async (req) => {
   }
 
   try {
-    const { orderId, value } = await req.json();
+    const { orderId, valueInCents } = await req.json();
 
     // Validações de entrada
     if (!orderId) {
       return withCorsError(req, "orderId é obrigatório", 422);
     }
 
-    if (typeof value !== "number" || value < 50) {
+    if (typeof valueInCents !== "number" || valueInCents < 50) {
       return withCorsError(req, "Valor mínimo é R$ 0,50 (50 centavos)", 422);
     }
 
@@ -77,10 +77,10 @@ serve(async (req) => {
     const baseURL = environment === "production" ? BASE_PROD : BASE_SANDBOX;
 
     // 5) Calcular split usando taxa fixa do backend
-    const platformValue = Math.round(value * PLATFORM_FEE_PERCENT / 100);
+    const platformValue = Math.round(valueInCents * PLATFORM_FEE_PERCENT / 100);
 
     // Validar que split não excede 50%
-    if (platformValue > value * 0.5) {
+    if (platformValue > valueInCents * 0.5) {
       return withCorsError(req, "Split não pode exceder 50% do valor da transação", 422);
     }
 
@@ -94,7 +94,7 @@ serve(async (req) => {
 
     // 7) Criar cobrança na PushinPay
     const requestBody = {
-      value,
+      value: valueInCents, // API PushinPay espera "value" em centavos
       webhook_url: webhookUrl,
       ...(split_rules.length > 0 && { split_rules }),
     };

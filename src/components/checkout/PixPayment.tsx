@@ -30,7 +30,9 @@ export default function PixPayment({
         const response = await createPixCharge(orderId, valueInCents);
         
         if (!response.ok || !response.pix) {
-          onError(response.error || "Erro ao criar cobrança PIX");
+          const errorMsg = response.error || "Erro ao criar cobrança PIX. Verifique sua integração em Financeiro.";
+          onError(errorMsg);
+          setLoading(false);
           return;
         }
 

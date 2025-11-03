@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.46.1";
 import { decrypt } from "../_shared/crypto.ts";
 import { handleOptions, withCorsError, withCorsJson } from "../_shared/cors.ts";
 
@@ -153,13 +153,17 @@ serve(async (req) => {
       // Não falha a requisição, mas loga o erro
     }
 
-    // 9) Retornar dados do PIX
+    // 9) Retornar dados do PIX (envelope "pix" para compatibilidade com frontend)
     return withCorsJson(req, {
       ok: true,
-      pix_id: pixData.id,
-      status: pixData.status,
-      qr_code: pixData.qr_code,
-      qr_code_base64: pixData.qr_code_base64,
+      pix: {
+        id: pixData.id,
+        pix_id: pixData.id,
+        qr_code: pixData.qr_code,
+        qr_code_base64: pixData.qr_code_base64,
+        status: pixData.status,
+        value: valueInCents,
+      }
     });
 
   } catch (error) {

@@ -749,7 +749,7 @@ export type Database = {
           created_at: string | null
           environment: string
           platform_fee_percent: number | null
-          pushinpay_token: string
+          pushinpay_token: string | null
           token_encrypted: string | null
           updated_at: string | null
           user_id: string
@@ -758,7 +758,7 @@ export type Database = {
           created_at?: string | null
           environment: string
           platform_fee_percent?: number | null
-          pushinpay_token: string
+          pushinpay_token?: string | null
           token_encrypted?: string | null
           updated_at?: string | null
           user_id: string
@@ -767,7 +767,7 @@ export type Database = {
           created_at?: string | null
           environment?: string
           platform_fee_percent?: number | null
-          pushinpay_token?: string
+          pushinpay_token?: string | null
           token_encrypted?: string | null
           updated_at?: string | null
           user_id?: string
@@ -1383,4 +1383,3 @@ export const Constants = {
     },
   },
 } as const
-

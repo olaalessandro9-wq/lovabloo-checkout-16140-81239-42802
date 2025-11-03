@@ -135,7 +135,7 @@ export default function PixPayment({
         <div className="flex flex-col items-center space-y-4">
           <div className="bg-white p-4 rounded-lg border-2 border-border">
             <img
-              src={`data:image/png;base64,${qrCodeBase64}`}
+              src={qrCodeBase64}
               alt="QR Code PIX"
               className="w-64 h-64"
             />
